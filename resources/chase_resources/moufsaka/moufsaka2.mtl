@@ -10,6 +10,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd black.png
 
 newmtl dark-light-fur
 Ns 225.000000
@@ -20,6 +21,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd pink.png
 
 newmtl nose
 Ns 225.000000
@@ -30,6 +32,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd white.png
 
 newmtl white-fur
 Ns 225.000000
@@ -40,3 +43,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd white.png

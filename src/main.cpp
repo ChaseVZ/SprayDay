@@ -70,7 +70,7 @@ public:
 	shared_ptr<Shape> welcomeTo;
 	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
-	shared_ptr<Shape> skunk;
+	vector<shared_ptr<Shape>> skunk;
 
 	vector<shared_ptr<Shape>> arrowShapes;
 
@@ -96,6 +96,7 @@ public:
 	/* ================ TEXTURES ================= */
 	
 	vector<shared_ptr<Texture>> arrowTexture;
+	vector<shared_ptr<Texture>> skunkTextures;
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> rifleTexture;
 	shared_ptr<Texture> grassTexture;
@@ -457,63 +458,6 @@ public:
 		vector<tinyobj::shape_t> TOshapes;
 		vector<tinyobj::material_t> objMaterials;
 		string errStr;
-		//load in the mesh and make the shape(s)
-		//bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-		//	(resourceDirectory + "/chase_resources/DustMap/dust2_map.obj").c_str(),
-		//	(resourceDirectory + "/chase_resources/DustMap/").c_str());
-
-		//setTexVector(mapTextures, resourceDirectory + "/chase_resources/DustMap/", numTextures, objMaterials);
-		//for (const auto& material : objMaterials) {
-		//	cout << "ambient: " << material.ambient[0] << " " << material.ambient[1] << " " << endl;
-		//	cout << "name: " << material.diffuse_texname << endl;
-		//	cout << "ambient: " << material.diffuse[0] << " " << material.diffuse[1] << " " << endl;
-		//	cout << "ambient: " << material.specular[0] << " " << material.specular[1] << " " << endl;
-		//	cout << " name: " << material.name << endl;
-		//}
-
-		//resize_obj(TOshapes);
-		//if (!rc) {
-		//	cerr << errStr << endl;
-		//}
-		//else {
-		//	for (int idx = 0; idx < TOshapes.size(); idx++) {
-		//		shared_ptr<Shape> map_piece = make_shared<Shape>();
-		//		map_piece->createShape(TOshapes[idx]);
-		//		map_piece->calcNorms();
-		//		map_piece->normalizeNorBuf();
-		//		//Map->reverseNormals();
-		//		map_piece->measure();
-		//		map_piece->init();
-		//		mapShapes.push_back(map_piece);
-
-		//		vector<vec3> bb;
-		//		vec3 minbb = map_piece->min;
-		//		vec3 maxbb = map_piece->max;
-
-		//		minbb = minbb * mapScale;
-		//		maxbb = maxbb * mapScale;
-
-		//		// Stash overall max boundaries
-		//		mapMin.x = std::min(mapMin.x, minbb.x);
-		//		mapMin.y = std::min(mapMin.y, minbb.y);
-		//		mapMin.z = std::min(mapMin.z, minbb.z);
-
-		//		mapMax.x = std::min(mapMax.x, maxbb.x);
-		//		mapMax.y = std::min(mapMax.y, maxbb.y);
-		//		mapMax.z = std::min(mapMax.z, maxbb.z);
-
-		//		bb.push_back(minbb);
-		//		bb.push_back(maxbb);
-
-		//		// filter out shapes with normals going along x and z axis (walls)
-		//		if (map_piece->norBuf[0] != 1 && map_piece->norBuf[2] != 1 && map_piece->norBuf[0] != -1 && map_piece->norBuf[2] != -1)
-		//			map_floor_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
-		//		else
-		//			map_wall_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
-		//	}
-		//}
-
-		numTextures += objMaterials.size();
 
 		// Initialize Arrow mesh.
 		loadMultiShapeOBJHelper(arrowShapes, arrowTexture,
@@ -532,7 +476,11 @@ public:
 		loadOBJHelper(ChargeCube, resourceDirectory + "/chargecube.obj");
 
 		// SKUNKY YUCKY
-		loadOBJHelper(skunk, resourceDirectory + "/chase_resources/moufsaka/moufsaka2.obj");
+		loadMultiShapeOBJHelper(skunk, skunkTextures, 
+			resourceDirectory + "/chase_resources/moufsaka/moufsaka2.obj",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			numTextures);
 
 		// Initialize word meshes/
 		loadOBJHelper(welcomeTo, resourceDirectory + "/chase_resources/Words/welcometo.obj");
@@ -1008,7 +956,11 @@ public:
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-		SetModel(vec3(0,10,0), 0, 0, 0, vec3(100,100,100), texProg);
+		SetModel(vec3(0,-1.5,0), 0, 0, 0, vec3(2,2,2), texProg);
+		for (int i = 0; i < skunk.size(); i++) {
+			skunkTextures[i]->bind(curS->getUniform("Texture0"));
+			skunk[i]->draw(curS);
+		}
 		curS->unbind();
 	}
 
@@ -1157,7 +1109,7 @@ public:
 			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
-			drawSkunk(prog, Projection, View);
+			drawSkunk(texProg, Projection, View);
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */
 			//drawMap(texProg, Projection, View);
