@@ -1,0 +1,75 @@
+#pragma once
+#ifndef __particleS__
+#define __particleS__
+
+#include <glm/glm.hpp>
+#include <vector>
+#include "Particle.h"
+#include "Program.h"
+
+using namespace glm;
+using namespace std;
+
+class ParticleSorter {
+public:
+   bool operator()(const shared_ptr<Particle> p0, const shared_ptr<Particle> p1) const
+   {
+      // Particle positions in world space
+      const vec3 &x0 = p0->getPosition();
+      const vec3 &x1 = p1->getPosition();
+      // Particle positions in camera space
+      vec4 x0w = C * vec4(x0.x, x0.y, x0.z, 1.0f);
+      vec4 x1w = C * vec4(x1.x, x1.y, x1.z, 1.0f);
+      return x0w.z < x1w.z;
+   }
+  
+   mat4 C; // current camera matrix
+};
+
+class particleSys {
+private:
+	vector<shared_ptr<Particle>> particles;
+	float t, h; //?
+	vec3 g; //gravity
+	vec3 start;
+	ParticleSorter sorter;
+	//int numP;
+	//GLfloat *points;
+	//GLfloat *pointColors;
+	GLfloat points[900];
+	GLfloat pointColors[1200];
+	int numP = 300;
+	mat4 theCamera;
+	unsigned vertArrObj;		// VAO: contains both buffer
+	unsigned vertBuffObj;
+	unsigned colorBuffObj;
+
+	float r_low;
+	float r_high;
+	float g_low;
+	float g_high;
+	float b_low;
+	float b_high;
+	float scale_low;
+	float scale_high;
+	
+public:
+	particleSys(vec3 source, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
+	void drawMe(std::shared_ptr<Program> prog);
+	void gpuSetup();
+	void update();
+	void reSet();
+	void setCamera(mat4 inC) {theCamera = inC;}
+	void setStart(vec3 setStart) { start = setStart; }
+	void setnumP(int numParticles) 
+	{ 
+		numP = numParticles;
+		//int p1 = numParticles * 3;
+		//int p2 = numParticles * 4;
+		//points = new GLfloat[p1];
+		//pointColors = new GLfloat[p2];
+	}
+};
+
+
+#endif

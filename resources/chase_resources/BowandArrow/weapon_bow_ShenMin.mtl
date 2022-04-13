@@ -1,0 +1,8 @@
+newmtl weapon_bow_ShenMin01
+map_Kd weapon_bow_ShenMin_A.tga
+
+newmtl weapon_bow_ShenMin02
+map_Kd weapon_bow_ShenMin_D.tga
+
+newmtl weapon_bow_ShenMin03
+map_Kd weapon_bow_ShenMin_N.tga

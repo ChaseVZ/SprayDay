@@ -1,0 +1,13 @@
+OpenGL version: 3.2.0 - Build 27.20.100.9664
+GLSL version: 1.50 - Build 27.20.100.9664
+Shader InfoLog:
+
+
+
+Error compiling vertex shader ../../../resources/simple_vert.glsl
+OpenGL error in file '..\..\..\src\Program.cpp' at line 50 calling function '{{BEFORE}} glShaderSource(VS, 1, &vshader, NULL)': 'Invalid value' '1281 0x501'
+Shader InfoLog:
+
+
+
+Error compiling vertex shader ../../../resources/tex_vert.glsl
