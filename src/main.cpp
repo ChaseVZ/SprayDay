@@ -21,6 +21,7 @@
 #include <chrono> 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include "draw.h"
 
 // Skybox
 #include "stb_image.h"
@@ -1099,6 +1100,11 @@ public:
 
 		if (!gameDone) {
 			/*  >>>>>>  DRAW SKYBOX  <<<<<<  */
+
+			/*
+			drawGround( make_shared<MatrixStack>(), texProg, rifleTexture,
+				GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen);
+			*/
 			drawSkybox(cubeProg, Projection, View);
 
 
