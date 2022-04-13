@@ -126,6 +126,7 @@ void drawGround(shared_ptr<MatrixStack> Model, shared_ptr<Program> curS, shared_
 	glBindVertexArray(GroundVertexArrayID);
 	texture2->bind(curS->getUniform("Texture0"));
 	Model->translate(vec3(0, -1, 0));
+	Model->scale(vec3(2, 1, 2));
 
 	setModel(curS, Model);
 	glEnableVertexAttribArray(0);

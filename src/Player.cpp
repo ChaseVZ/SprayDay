@@ -172,7 +172,7 @@ void Arrow::setVelocity(float holdTime, vec3 lookAt)
 	totalTime = 1.6 * scalar * (charges + 1);
 }
 
-void Arrow::update(float frameTime, vec3 playerPos, vec3 lookAt, std::map<int, vector<vec3>> floors, std::map<int, vector<vec3>> walls)
+void Arrow::update(float frameTime, vec3 playerPos, vec3 lookAt)
 {	
 	//totalTime = 2;
 
@@ -183,7 +183,7 @@ void Arrow::update(float frameTime, vec3 playerPos, vec3 lookAt, std::map<int, v
 		vec3 nextPos = pos + vel * lastTime;
 		//myQuaternion = RotationBetweenVectors(nextPos, lookAt);
 
-		if (lastTime != 0 && collision(floors, walls, nextPos)) {
+		if (lastTime != 0 && collision(nextPos)) {
 			if (charges > 0) {
 				vel.y = vel.y * -1.0;
 				charges -= 1;
@@ -227,63 +227,9 @@ void Arrow::update(float frameTime, vec3 playerPos, vec3 lookAt, std::map<int, v
 	}
 }
 
-bool Arrow::collision(std::map<int, vector<vec3>> floors, std::map<int, vector<vec3>> walls, vec3 nextPos)
+bool Arrow::collision(vec3 nextPos)
 {
-	float currShape = -1;
-	float localGround = -1;
-	for (auto& it : floors)
-	{
-		// retrieve bb of each shape
-		vec3 min = it.second[0];
-		vec3 max = it.second[1];
-
-		// Is the character inside this shape?
-		if (nextPos.x > min.x && nextPos.x < max.x && nextPos.z > min.z && nextPos.z < max.z) {
-			if (!std::count(excludeCollisionFloor.begin(), excludeCollisionFloor.end(), it.first)) {
-				//cout << "HIT GROUND " << it.first << endl;
-				//cout << max.y << " " << min.y << endl;
-				currShape = it.first;
-				localGround = max.y;
-			}
-		}
-	}
-
-	// if currShape == -1, means above no floor, means inside a wall
-	/* Do some manual ramp calulations */
-	if (currShape == -1) {
-		//localGround = 99;
-		return true;
-	}
-	else if (currShape == 94)
-		localGround = interpolate(-31, -39, 0, 2.112, pos.z);
-	else if (currShape == 41)
-		localGround = interpolate(-39, -47.8, 2.112, 4.224, pos.z);
-	else if (currShape == 612 || currShape == 364)
-		localGround = interpolate(6.8, 3.0, -3.168, -4.224, pos.z);
-	else if (currShape == 1150 || currShape == 978)
-		localGround = interpolate(19.49, 6.99, 0, -3.168, pos.z);
-	else if (currShape == 535 || currShape == 528 || currShape == 370)
-		localGround = interpolate(-70.4, -76.5, -4.224, -2.112, pos.x);
-	else if (currShape == 549 || currShape == 550 || currShape == 548)
-		localGround = interpolate(-76.5, -82.9, -2.112, 0, pos.x);
-	else if (currShape == 1387)
-		localGround = interpolate(-57.8, -61.7, 3.168, 4.224, pos.x);
-	else if (currShape == 1119)
-		localGround = interpolate(-45, -57.8, 0, 3.168, pos.x);
-	else if (currShape == 1415)
-		localGround = 4.224;
-	else if (currShape == 117)
-		localGround = interpolate(-11, -15.5, 0, -1.056, pos.x);
-	else if (currShape == 165)
-		localGround = interpolate(-15.4, -28, -1.056, -4.224, pos.x);
-	else if (currShape == 1358)
-		localGround = interpolate(53.8, 49.4, 1.188, 0, pos.z);
-	else if (currShape == 1481)
-		localGround = interpolate(65.8, 53.8, 4.224, 1.188, pos.z);
-	else if (currShape == 1283 || currShape == 1161)
-		localGround = 1.056;
-	//else
-	//	return true;
+	float localGround = 0;
 	 
 	//cout << "local " << localGround << endl;
 
@@ -292,19 +238,6 @@ bool Arrow::collision(std::map<int, vector<vec3>> floors, std::map<int, vector<v
 		return true;
 	}
 
-
-	for (auto& it : walls)
-	{
-		vec3 min = it.second[0];
-		vec3 max = it.second[1];
-
-		if (nextPos.x > min.x && nextPos.x < max.x && nextPos.z > min.z && nextPos.z < max.z) {
-			if (!std::count(excludeCollisionWall.begin(), excludeCollisionWall.end(), it.first)) {
-				//cout << "HIT WALL" << it.first << endl;
-				return true;
-			}
-		}
-	}
 	return false;
 }
 
@@ -323,98 +256,12 @@ Player::Player()
 }
 
 // returns the index of the shape that they player is in (for debugging purposes)
-int Player::collision(std::map<int, vector<vec3>> floors, std::map<int, vector<vec3>> walls)
+void Player::collision()
 {
-	// lazy way of making a tuple
-	std::list<vec2> elevations;
-
-	for (auto& it : floors)
-	{
-		// retrieve bb of each shape
-		vec3 min = it.second[0];
-		vec3 max = it.second[1];
-
-		// Is the character inside this shape?
-		if (nextPos.x > min.x && nextPos.x < max.x && nextPos.z > min.z && nextPos.z < max.z) {
-			if (!std::count(excludeCollisionFloor.begin(), excludeCollisionFloor.end(), it.first))
-				elevations.push_back(vec2(it.first, max.y));  // BAD FOR RAMPS
-		}
-	}
-
-	// if multiple elevations exist at given x,z then determine which elevation is closest to current player.y position
-	float closest = 99999;
-	float elevation = 999;
-	int currShape = 0;
-	for (vec2 item : elevations)
-	{
-		if (abs(item.y - localGround) < abs(closest)) {
-			currShape = item.x;  // to turn shape white
-			closest = abs(item.y - localGround);
-			elevation = item.y;
-		}
-	}
-
-	//cout << "FLOOR " << currShape << endl;
-	if (elevation == 999)
-		return 0;
-
-	/* Do some manual ramp calulations */
-	if (currShape == 94)
-		localGround = interpolate(-31, -39, 0, 2.112, pos.z);
-	else if (currShape == 41)
-		localGround = interpolate(-39, -47.8, 2.112, 4.224, pos.z);
-	else if (currShape == 612 || currShape == 364)
-		localGround = interpolate(6.8, 3.0, -3.168, -4.224, pos.z);
-	else if (currShape == 1150 || currShape == 978)
-		localGround = interpolate(19.49, 6.99, 0, -3.168, pos.z);
-	else if (currShape == 535 || currShape == 528 || currShape == 370)
-		localGround = interpolate(-70.4, -76.5, -4.224, -2.112, pos.x);
-	else if (currShape == 549 || currShape == 550 || currShape == 548)
-		localGround = interpolate(-76.5, -82.9, -2.112, 0, pos.x);
-	else if (currShape == 1387)
-		localGround = interpolate(-57.8, -61.7, 3.168, 4.224, pos.x);
-	else if (currShape == 1119)
-		localGround = interpolate(-45, -57.8, 0, 3.168, pos.x);
-	else if (currShape == 1415)
-		localGround = 4.224;
-	else if (currShape == 117)
-		localGround = interpolate(-11, -15.5, 0, -1.056, pos.x);
-	else if (currShape == 165)
-		localGround = interpolate(-15.4, -28, -1.056, -4.224, pos.x);
-	else if (currShape == 1358)
-		localGround = interpolate(53.8, 49.4, 1.188, 0, pos.z);
-	else if (currShape == 1481)
-		localGround = interpolate(65.8, 53.8, 4.224, 1.188, pos.z);
-	else if (currShape == 1283 || currShape == 1161)
-		localGround = 1.056;
-	else
-		localGround = elevation;
-
-	bool inWall = false;
-	for (auto& it : walls)
-	{
-		vec3 min = it.second[0];
-		vec3 max = it.second[1];
-
-		if (nextPos.x > min.x && nextPos.x < max.x && nextPos.z > min.z && nextPos.z < max.z) {
-			if (!std::count(excludeCollisionWall.begin(), excludeCollisionWall.end(), it.first)) {
-				currShape = it.first;
-				cout << "WALL " << it.first << endl;
-
-				/* allow to jump over walls*/
-				if (nextPos.y < max.y)
-					inWall = true;
-			}
-		}
-	}
-
-	if (!inWall && !manualWall(nextPos)) 
-		pos = nextPos;
-
-	return currShape;
+	pos = nextPos;
 }
 
-int Player::updatePos(vec3 lookAt, bool goCamera, float frametime, std::map<int, vector<vec3>> floors, std::map<int, vector<vec3>> walls)
+void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 {
 	vec3 tempw;
 	vec3 temps;
@@ -482,9 +329,6 @@ int Player::updatePos(vec3 lookAt, bool goCamera, float frametime, std::map<int,
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
 		if (!jumping && pos.y > localGround) { pos.y = localGround; }
-
-		return 0.0;
-
  	}
 }
 

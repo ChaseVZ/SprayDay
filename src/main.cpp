@@ -70,13 +70,9 @@ public:
 	shared_ptr<Shape> welcomeTo;
 	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
+	shared_ptr<Shape> skunk;
 
 	vector<shared_ptr<Shape>> arrowShapes;
-	vector<shared_ptr<Shape>> mapShapes;
-	//vector<tinyobj::material_t> objMaterials_Map;
-	// Dictionary of format: { shapeIdx : [ vec3 min, vec3 max ] ... }
-	std::map<int, vector<vec3>> map_floor_dict = {};
-	std::map<int, vector<vec3>> map_wall_dict = {};
 
 	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
 	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
@@ -100,7 +96,6 @@ public:
 	/* ================ TEXTURES ================= */
 	
 	vector<shared_ptr<Texture>> arrowTexture;
-	vector<shared_ptr<Texture>> mapTextures;
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> rifleTexture;
 	shared_ptr<Texture> grassTexture;
@@ -163,7 +158,6 @@ public:
 	int third = 0;
 
 	/* ================ DEBUG ================= */
-	int currShape = 0;
 	bool debugMode = 0;
 	bool gameBegin = false;
 	bool gameDone = false;
@@ -468,7 +462,7 @@ public:
 			(resourceDirectory + "/chase_resources/DustMap/dust2_map.obj").c_str(),
 			(resourceDirectory + "/chase_resources/DustMap/").c_str());
 
-		setTexVector(mapTextures, resourceDirectory + "/chase_resources/DustMap/", numTextures, objMaterials);
+		//setTexVector(mapTextures, resourceDirectory + "/chase_resources/DustMap/", numTextures, objMaterials);
 		//for (const auto& material : objMaterials) {
 		//	cout << "ambient: " << material.ambient[0] << " " << material.ambient[1] << " " << endl;
 		//	cout << "name: " << material.diffuse_texname << endl;
@@ -478,46 +472,46 @@ public:
 		//}
 
 		//resize_obj(TOshapes);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			for (int idx = 0; idx < TOshapes.size(); idx++) {
-				shared_ptr<Shape> map_piece = make_shared<Shape>();
-				map_piece->createShape(TOshapes[idx]);
-				map_piece->calcNorms();
-				map_piece->normalizeNorBuf();
-				//Map->reverseNormals();
-				map_piece->measure();
-				map_piece->init();
-				mapShapes.push_back(map_piece);
+		//if (!rc) {
+		//	cerr << errStr << endl;
+		//}
+		//else {
+		//	for (int idx = 0; idx < TOshapes.size(); idx++) {
+		//		shared_ptr<Shape> map_piece = make_shared<Shape>();
+		//		map_piece->createShape(TOshapes[idx]);
+		//		map_piece->calcNorms();
+		//		map_piece->normalizeNorBuf();
+		//		//Map->reverseNormals();
+		//		map_piece->measure();
+		//		map_piece->init();
+		//		mapShapes.push_back(map_piece);
 
-				vector<vec3> bb;
-				vec3 minbb = map_piece->min;
-				vec3 maxbb = map_piece->max;
+		//		vector<vec3> bb;
+		//		vec3 minbb = map_piece->min;
+		//		vec3 maxbb = map_piece->max;
 
-				minbb = minbb * mapScale;
-				maxbb = maxbb * mapScale;
+		//		minbb = minbb * mapScale;
+		//		maxbb = maxbb * mapScale;
 
-				// Stash overall max boundaries
-				mapMin.x = std::min(mapMin.x, minbb.x);
-				mapMin.y = std::min(mapMin.y, minbb.y);
-				mapMin.z = std::min(mapMin.z, minbb.z);
+		//		// Stash overall max boundaries
+		//		mapMin.x = std::min(mapMin.x, minbb.x);
+		//		mapMin.y = std::min(mapMin.y, minbb.y);
+		//		mapMin.z = std::min(mapMin.z, minbb.z);
 
-				mapMax.x = std::min(mapMax.x, maxbb.x);
-				mapMax.y = std::min(mapMax.y, maxbb.y);
-				mapMax.z = std::min(mapMax.z, maxbb.z);
+		//		mapMax.x = std::min(mapMax.x, maxbb.x);
+		//		mapMax.y = std::min(mapMax.y, maxbb.y);
+		//		mapMax.z = std::min(mapMax.z, maxbb.z);
 
-				bb.push_back(minbb);
-				bb.push_back(maxbb);
+		//		bb.push_back(minbb);
+		//		bb.push_back(maxbb);
 
-				// filter out shapes with normals going along x and z axis (walls)
-				if (map_piece->norBuf[0] != 1 && map_piece->norBuf[2] != 1 && map_piece->norBuf[0] != -1 && map_piece->norBuf[2] != -1)
-					map_floor_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
-				else
-					map_wall_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
-			}
-		}
+		//		// filter out shapes with normals going along x and z axis (walls)
+		//		if (map_piece->norBuf[0] != 1 && map_piece->norBuf[2] != 1 && map_piece->norBuf[0] != -1 && map_piece->norBuf[2] != -1)
+		//			map_floor_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
+		//		else
+		//			map_wall_dict.insert(std::pair<int, vector<vec3>>(idx, bb));
+		//	}
+		//}
 
 		numTextures += objMaterials.size();
 
@@ -536,6 +530,9 @@ public:
 
 		// Initialize Cube mesh.
 		loadOBJHelper(ChargeCube, resourceDirectory + "/chargecube.obj");
+
+		// SKUNKY YUCKY
+		loadOBJHelper(skunk, resourceDirectory + "/chase_resources/moufsaka/moufsaka2.obj");
 
 		// Initialize word meshes/
 		loadOBJHelper(welcomeTo, resourceDirectory + "/chase_resources/Words/welcometo.obj");
@@ -556,6 +553,7 @@ public:
 
 		player = Player();
 		player.pos = player.pos_default;
+		player.localGround = 0;
 		vcam = VirtualCamera(player.pos_default, vec3(-91, -20, 70));
 
 		// SKYBOX
@@ -586,7 +584,7 @@ public:
 			0, 1, 0
 		};
 
-		int num_tex = g_groundSize / 10;
+		GLfloat num_tex = g_groundSize / 10;
 		static GLfloat GrndTex[] = {
 			0, 0, // back
 			0, num_tex,
@@ -803,49 +801,6 @@ public:
 
 	/* =================== DRAW FUNCTIONS ================== */
 
-	void drawMap(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		auto Model = make_shared<MatrixStack>();
-
-		glUniform3f(curS->getUniform("lightPos"), 2.0, 28.0, 2.9);
-		glUniform1f(curS->getUniform("MatShine"), 27.9);
-		glUniform1i(curS->getUniform("flip"), 1);
-
-
-		Model->loadIdentity();
-		Model->scale(vec3(mapScale, mapScale, mapScale));
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-		//currShape = 1115;
-		shared_ptr<Texture> mapTexture;
-		for (int idx = 0; idx < mapShapes.size(); idx++) {
-
-			// DEBUG (COLOR SHAPE THAT PLAYER IS ABOVE, WHITE)
-			if (idx == currShape && debugMode) {
-				mapTextures[3]->bind(curS->getUniform("Texture0"));
-				mapShapes[idx]->draw(curS);
-				continue;
-			}
-			if (strstr(mapShapes[idx]->name.c_str(), "material_"))
-			{
-				string shapeTex;
-				if ((mapShapes[idx]->name).length() == 10)
-					shapeTex = (mapShapes[idx]->name).substr(9, 1);
-				else
-					shapeTex = (mapShapes[idx]->name).substr(9, 2);
-				mapTexture = mapTextures[stoi(shapeTex)];
-				mapTexture->bind(curS->getUniform("Texture0"));
-			}
-			else {
-				cout << "ERROR: texture not found - " << mapShapes[idx]->name << endl;
-			}
-
-			// DRAW
-			mapShapes[idx]->draw(curS);
-		}
-		curS->unbind();
-	}
 
 	void drawArrow(shared_ptr<Program> curS, mat4 V, shared_ptr<MatrixStack> Projection)
 	{
@@ -1047,6 +1002,17 @@ public:
 		curS->unbind();
 	}
 
+	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
+	{
+		curS->bind();
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniform1i(curS->getUniform("flip"), 1);
+
+		SetModel(vec3(0,0,0), 0, 0, 0, vec3(100,100,100), texProg);
+		curS->unbind();
+	}
+
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		curS->bind();
@@ -1120,7 +1086,7 @@ public:
 	void updatePlayer(float frametime)
 	{
 		// check if done
-		if (enemyPositions.size() == 6) 
+		if (enemyPositions.size() == 0) 
 			gameDone = true;
 
 
@@ -1131,13 +1097,14 @@ public:
 
 		else {
 			// player
-			currShape = player.updatePos(vcam.lookAt, vcam.goCamera, frametime, map_floor_dict, map_wall_dict);
+			player.updatePos(vcam.lookAt, vcam.goCamera, frametime);
+			//cout << player.pos.x << " " << player.pos.z << endl;
 
 			// camera
 			vcam.updatePos(player.pos);
 
 			// arrow
-			player.arrow.update(frametime, player.pos, vcam.lookAt, map_floor_dict, map_wall_dict);
+			player.arrow.update(frametime, player.pos, vcam.lookAt);
 
 			// gun
 			player.rifle.update(frametime, player.pos + vec3(0.2, 2, 0.1), vcam.lookAt, playerShooting, enemyPositions);
@@ -1168,8 +1135,6 @@ public:
 
 		if (!gameDone) {
 			/*  >>>>>>  DRAW SKYBOX  <<<<<<  */
-
-			
 			drawSkybox(cubeProg, Projection, View);
 			texProg->bind();
 			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
@@ -1186,13 +1151,14 @@ public:
 				drawOverlay(prog, Projection, View);
 				drawJett(prog, Projection, View);
 			}
-			else
-				drawStationaryJett(prog, Projection, View);
+			//else
+			//	drawStationaryJett(prog, Projection, View);
 
-			for (int i = 0; i < enemyPositions.size(); i++)
-				drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
+			//for (int i = 0; i < enemyPositions.size(); i++)
+			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
+			drawSkunk(prog, Projection, View);
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */
 			//drawMap(texProg, Projection, View);
