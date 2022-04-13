@@ -458,9 +458,9 @@ public:
 		vector<tinyobj::material_t> objMaterials;
 		string errStr;
 		//load in the mesh and make the shape(s)
-		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-			(resourceDirectory + "/chase_resources/DustMap/dust2_map.obj").c_str(),
-			(resourceDirectory + "/chase_resources/DustMap/").c_str());
+		//bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+		//	(resourceDirectory + "/chase_resources/DustMap/dust2_map.obj").c_str(),
+		//	(resourceDirectory + "/chase_resources/DustMap/").c_str());
 
 		//setTexVector(mapTextures, resourceDirectory + "/chase_resources/DustMap/", numTextures, objMaterials);
 		//for (const auto& material : objMaterials) {
@@ -1007,9 +1007,8 @@ public:
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform1i(curS->getUniform("flip"), 1);
 
-		SetModel(vec3(0,0,0), 0, 0, 0, vec3(100,100,100), texProg);
+		SetModel(vec3(0,10,0), 0, 0, 0, vec3(100,100,100), texProg);
 		curS->unbind();
 	}
 
