@@ -119,6 +119,9 @@ void drawTree(vector<shared_ptr<Shape>> tree, shared_ptr<MatrixStack> Model, sha
 void drawGround(shared_ptr<MatrixStack> Model, shared_ptr<Program> curS, shared_ptr<Texture> texture2,
 	GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen) {
 	curS->bind();
+	
+
+	Model->loadIdentity();
 	Model->pushMatrix();
 	glBindVertexArray(GroundVertexArrayID);
 	texture2->bind(curS->getUniform("Texture0"));

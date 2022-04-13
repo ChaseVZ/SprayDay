@@ -476,13 +476,14 @@ int Player::updatePos(vec3 lookAt, bool goCamera, float frametime, std::map<int,
 		}
 
 		nextPos = pos + vel;
-		float res = collision(floors, walls);
+		pos = nextPos;
+		//float res = collision(floors, walls);
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
 		if (!jumping && pos.y > localGround) { pos.y = localGround; }
 
-		return res;
+		return 0.0;
 
  	}
 }

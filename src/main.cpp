@@ -78,6 +78,12 @@ public:
 	std::map<int, vector<vec3>> map_floor_dict = {};
 	std::map<int, vector<vec3>> map_wall_dict = {};
 
+	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
+	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
+	int g_GiboLen;
+	// ground VAO
+	GLuint GroundVertexArrayID;
+
 	vector<vec3> enemyPositions = { vec3(-5.8, 4.224, -53.54), vec3(-34.9, 3.168, -28.08), vec3(-66.73, 0, 29.93), vec3(-21.5, 0, 29.98),
 									vec3(-92.2, 1.056, 10.0), vec3(-91.79, 0.452, -46.43), vec3(-50.33, -4.224, -23.79)};
 	vector<float> enemyRotations = { 45.0, -40.0, 5.0, 120.0, -180.0, -240.0, 120.0 };
@@ -97,6 +103,7 @@ public:
 	vector<shared_ptr<Texture>> mapTextures;
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> rifleTexture;
+	shared_ptr<Texture> grassTexture;
 
 	// Skybox Texture Files
 	vector<std::string> space_faces{
@@ -423,6 +430,12 @@ public:
 		rifleTexture->setUnit(0);
 		rifleTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
+		grassTexture = make_shared<Texture>();
+		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass.jpg");
+		grassTexture->init();
+		grassTexture->setUnit(0);
+		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+
 		particleTexture = make_shared<Texture>();
 		particleTexture->setFilename(resourceDirectory + "/alpha.bmp");
 		particleTexture->init();
@@ -547,6 +560,61 @@ public:
 
 		// SKYBOX
 		cubeMapTexture = createSky(resourceDirectory + "/skybox/", sky_faces);
+
+		//GROUND
+		initGround();
+	}
+
+	void initGround() {
+		float g_groundSize = 80;
+		float g_groundY = -0.25;
+
+		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
+		float GrndPos[] = {
+			-g_groundSize, g_groundY, -g_groundSize,
+			-g_groundSize, g_groundY,  g_groundSize,
+			g_groundSize, g_groundY,  g_groundSize,
+			g_groundSize, g_groundY, -g_groundSize
+		};
+
+		float GrndNorm[] = {
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0
+		};
+
+		int num_tex = g_groundSize / 10;
+		static GLfloat GrndTex[] = {
+			0, 0, // back
+			0, num_tex,
+			num_tex, num_tex,
+			num_tex, 0 };
+
+		unsigned short idx[] = { 0, 1, 2, 0, 2, 3 };
+
+		//generate the ground VAO
+		glGenVertexArrays(1, &GroundVertexArrayID);
+		glBindVertexArray(GroundVertexArrayID);
+
+		g_GiboLen = 6;
+		glGenBuffers(1, &GrndBuffObj);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &GrndNorBuffObj);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &GrndTexBuffObj);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &GIndxBuffObj);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
 	}
 
 	/* NOTE: this CAN break (in render) if .mtl file has materials out of order */
@@ -1101,11 +1169,16 @@ public:
 		if (!gameDone) {
 			/*  >>>>>>  DRAW SKYBOX  <<<<<<  */
 
-			/*
-			drawGround( make_shared<MatrixStack>(), texProg, rifleTexture,
-				GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen);
-			*/
+			
 			drawSkybox(cubeProg, Projection, View);
+			texProg->bind();
+			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+			glDepthFunc(GL_LEQUAL);
+			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+
+			drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
+				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
+			texProg->unbind();
 
 
 			/*  >>>>>>>  DRAW UNTEXTURED OBJs  <<<<<<<  */
