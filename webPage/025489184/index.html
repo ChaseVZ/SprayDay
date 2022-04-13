@@ -1,0 +1,115 @@
+<html>
+ <head>
+   <title>ROLL_NO_CONTROL</title>
+   <link rel="stylesheet" href="style.css">
+ </head>
+<body>
+
+
+   <div class="header" style="background-image: url('img_girl.jpg');">
+      <h1>ROLL NO CONTROL</h1>
+      <h4>made for CSC 471, Fall 2021</h4>
+      <h4>By Xander Wallace</h4>
+  </div>
+  <br />
+  <br />
+  <style>
+   div {
+     background-image: url('img_girl.jpg');
+   }
+   </style>
+
+   <div class="images">
+      <img alt="example image" src="overview.jpg">
+   </div>
+
+   <div class="content">
+      <div class="section">
+         <p>For my project, I built a game where you try to make the robot
+            follow the path.
+         </p>
+      </div>
+   </div>
+
+   <div class="images">
+      <img style="width:40%;" alt="example image" src="onPath.jpeg">
+   </div>
+
+   <div class="content">
+      <div class="section">
+         <p>But there is a catch! You cannot directly control the robot's velocity.<br/>
+            Instead, you use the IJKL keys to control the tilt of the plane!<br/>
+            This causes the robot's acceleration to change accordingly. 
+         </p>
+      </div>
+   </div>
+   <div class="images">
+      <img style="width:40%;" alt="example image" src="onPath2.jpg">
+   </div>
+
+   <div class="content">
+      <div class="section">
+         <p>Since most games don't work this way, it takes a while to get used to this, 
+            but that is part of the fun! <br/>
+         </p>
+      </div>
+   </div>
+
+   <div class="content">
+      <div class="section">
+         <h2>TECHNOLOGIES</h2>
+         <p>(all are demo'ed in the video below)</p>
+         <h3>Physical Forces</h3>
+         <p>
+            While the steepest direction of the plane determines the direction of acceleration,
+            there are three factors involved in calculating the strength of the acceleration. 
+            These factors are:<br/>
+            -gravity (a posive amount proportional to the tilt angle) <br/>
+            -friction (a constant negative amount)<br/>
+            -drag (a negative amount proportional to velocity)
+         </p>
+         <h3>Collision</h3>
+         <p> the robot collides elastically with all four of the rock walls. (and nothing else)</p>
+         <h3>"worldPivot"</h3>
+         <p> where the robot touches the ground is tracked as the "worldPivot". <br/>
+            on pressing IJKL, the world will pivot (along Z or X) around the world pivot point.<br/>
+            The camera is always offset from this point (though you can change the direction the camera looks by scrolling)
+         </p>
+         <h3>Animation</h3>
+         <p> The robot body "rolls" (the bottom point does not slide!). <br/>
+            The robot head stays perpendicular to the plane.
+            (this is difficult due to the way the robot is simulated.)<br/>
+            The robot always looks in the diection of its velocity
+         </p>
+      </div>
+   </div>
+
+
+   <br />
+   <br />
+   <div class="images">
+      <video style="width:75%;"controls loop muted>
+         <source src="demoRun.mp4" type="video/mp4">
+      </video>
+   </div>
+
+   
+      
+
+
+   
+
+
+
+
+
+ <p>
+  <h1>References</h1>
+ <p> heavily inspired by Forrest Hansen's
+    <a href="http://users.csc.calpoly.edu/~zwood/teaching/csc471/finalW14_1/fdhansen/">Marble Blast Moderate</a><br/>
+   I originally wanted to do more effects like in 
+    <a href="https://users.csc.calpoly.edu/~zwood/teaching/csc471/finalW15_1/desousaf/"> Restore the Light</a>
+   
+</p>
+</body>
+</html>
