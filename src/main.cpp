@@ -37,7 +37,7 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
-int NUM_SKUNKS = 22;
+int NUM_SKUNKS = 32;
 class Application : public EventCallbacks
 {
 
@@ -1111,15 +1111,14 @@ public:
 		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
 	}
 	vec3 faceAway(vec3 p1, vec3 p2) {
-		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z));
+		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
 	}
-	bool checkCollisions(Enemy s1, int sID) {
+	bool checkCollisions(int sID) {
 		for (int i = 0; i < enemies.size(); i++) {
 			if (i != sID) {
-				if (length(vec3(s1.pos - enemies[i].pos)) < s1.boRad) {
-					cout << "totalLen: " << length(vec3(s1.pos - enemies[i].pos)) << endl;
-					s1.vel = faceAway(s1.pos, enemies[i].pos);
-					printVec(s1.vel);
+				if (length(vec3(enemies[sID].pos - enemies[i].pos)) < enemies[sID].boRad*2) {
+					enemies[sID].vel = faceAway(enemies[sID].pos, enemies[i].pos);
+					//enemies[sID].vel = vec3(0, 0.8, 0);
 					return true;
 				}
 			}
@@ -1129,7 +1128,10 @@ public:
 	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View) {
 		vector<int> toRemove;
 		for (int i = 0; i < enemies.size(); i++) {
-			checkCollisions(enemies[i], i );
+			checkCollisions(i);
+		}
+		for (int i = 0; i < enemies.size(); i++) {
+			
 			enemies[i].move(player);
 
 			if (enemies[i].exploding)

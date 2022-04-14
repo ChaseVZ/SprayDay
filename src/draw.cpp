@@ -4,8 +4,6 @@
  * adapted from CPE 471 Cal Poly Z. Wood + S. Sueda + I. Dunn
  * written by Xander Wallace
  */
- // idea: dangling items 
- // idea: lillies in a pond 
 
 #include <iostream>
 #include <glad/glad.h>
