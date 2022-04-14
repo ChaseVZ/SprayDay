@@ -37,6 +37,7 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
+int NUM_SKUNKS = 22;
 class Application : public EventCallbacks
 {
 
@@ -70,6 +71,7 @@ public:
 	shared_ptr<Shape> welcomeTo;
 	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
+	shared_ptr<Shape> Sphere;
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
 
@@ -455,8 +457,8 @@ public:
 
 		//SKUNK
 
-		for (int i = 0; i < 8; i++) {
-			Enemy e = *new Enemy(vec3(rand() % 100 - 50 ,-1.5,rand() % 100 -50 ), vec3(randFloat() / 5.0 - 0.10, 0, randFloat() / 5.0 - 0.10), 2);
+		for (int i = 0; i < NUM_SKUNKS; i++) {
+			Enemy e = *new Enemy(vec3(rand() % 100 - 50 ,-1.5,rand() % 100 -50 ), vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), 2);
 			enemies.push_back(e); 
 		}
 	}
@@ -704,14 +706,13 @@ public:
   		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
   	}
 
-	void SetModel_LookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
+	void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
 		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 		mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
 		mat4 RotY = glm::rotate(glm::mat4(1.0f), rotY, vec3(0, 1, 0));
 		mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
 		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
-		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS;
-		ctm = _look * ctm;
+		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS* _look;
 		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 	}
 
@@ -973,15 +974,17 @@ public:
 
 		curS->unbind();
 	}
+	void printVec(vec3 v) {
+		cout << v.x << " " << v.y << " " << v.z << endl;
+	}
 
 	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
-		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(enemy.vel), vec3(0, 1, 0));
-		SetModel_LookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
+		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
+		SetModelLookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
 		
 		for (int i = 0; i < skunkObjs.size(); i++) {
 			skunkTextures[i]->bind(curS->getUniform("Texture0"));
@@ -989,6 +992,23 @@ public:
 		}
 		curS->unbind();
 	}
+
+	void drawTrail(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
+	{
+		curS->bind();
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
+		SetModelLookAt(enemy.pos - vec3(0,0, 2), 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
+
+		for (int i = 0; i < skunkObjs.size(); i++) {
+			skunkTextures[i]->bind(curS->getUniform("Texture0"));
+			skunkObjs[i]->draw(curS);
+		}
+		curS->unbind();
+	}
+
+	
 
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
@@ -1087,7 +1107,50 @@ public:
 			player.rifle.update(frametime, player.pos + vec3(0.2, 2, 0.1), vcam.lookAt, playerShooting, enemyPositions);
 		}
 	}
+	vec3 calcScareVel(vec3 ePos, vec3 pPos) {
+		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
+	}
+	vec3 faceAway(vec3 p1, vec3 p2) {
+		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z));
+	}
+	bool checkCollisions(Enemy s1, int sID) {
+		for (int i = 0; i < enemies.size(); i++) {
+			if (i != sID) {
+				if (length(vec3(s1.pos - enemies[i].pos)) < s1.boRad) {
+					cout << "totalLen: " << length(vec3(s1.pos - enemies[i].pos)) << endl;
+					s1.vel = faceAway(s1.pos, enemies[i].pos);
+					printVec(s1.vel);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View) {
+		vector<int> toRemove;
+		for (int i = 0; i < enemies.size(); i++) {
+			checkCollisions(enemies[i], i );
+			enemies[i].move(player);
 
+			if (enemies[i].exploding)
+			{
+				if (enemies[i].explodeFrame == 0) {
+					enemies[i].vel = calcScareVel(enemies[i].pos, player.pos);
+				}
+				enemies[i].explodeFrame += 1;
+				if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
+				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0005); enemies[i].scale -= 0.0005; }
+			}
+			else {
+				drawSkunk(texProg, Projection, View, enemies[i], 1);
+			}
+		}
+
+		for (int i : toRemove)
+		{
+			enemies.erase(enemies.begin() + i);
+		}
+	}
 
 	void render(float frametime) {
 		int width, height;
@@ -1135,24 +1198,8 @@ public:
 			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
-			vector<int> toRemove;
-			for (int i = 0; i < enemies.size(); i++) {
-				enemies[i].move(player);
-
-				if (enemies[i].exploding)
-				{
-					if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
-					else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.1); enemies[i].scale -= 0.1; }
-				}
-				else {
-					drawSkunk(texProg, Projection, View, enemies[i], 1);
-				}
-			}
-
-			for (int i : toRemove)
-			{
-				enemies.erase(enemies.begin() + i);
-			}
+			simulateEnemies(Projection, View);
+			
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */
 			//drawMap(texProg, Projection, View);
