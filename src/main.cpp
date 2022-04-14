@@ -19,9 +19,8 @@
 #include "VirtualCamera.h"
 #include "particleSys.h"
 #include <chrono> 
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include "draw.h"
+#include "Enemy.h"
 
 // Skybox
 #include "stb_image.h"
@@ -70,7 +69,9 @@ public:
 	shared_ptr<Shape> welcomeTo;
 	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
-	vector<shared_ptr<Shape>> skunk;
+	vector<shared_ptr<Shape>> skunkObjs;
+	vector<Enemy> enemies;
+
 
 	vector<shared_ptr<Shape>> arrowShapes;
 
@@ -451,6 +452,17 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 
+		//SKUNK
+
+		for (int i = 0; i < 8; i++) {
+			Enemy e = *new Enemy(vec3(rand()%100 - 50 ,-1.5,rand()%100 -50 ), vec3(randFloat()/10.0-.05, 0, randFloat()/ 10.0-.05), 1);
+			enemies.push_back(e);
+		}
+	}
+
+	float randFloat() {
+		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		return r;
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -476,7 +488,7 @@ public:
 		loadOBJHelper(ChargeCube, resourceDirectory + "/chargecube.obj");
 
 		// SKUNKY YUCKY
-		loadMultiShapeOBJHelper(skunk, skunkTextures, 
+		loadMultiShapeOBJHelper(skunkObjs, skunkTextures, 
 			resourceDirectory + "/chase_resources/moufsaka/moufsaka2.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
@@ -950,16 +962,16 @@ public:
 		curS->unbind();
 	}
 
-	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
+	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy)
 	{
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-		SetModel(vec3(0,-1.5,0), 0, 0, 0, vec3(2,2,2), texProg);
-		for (int i = 0; i < skunk.size(); i++) {
+		SetModel(enemy.pos, 0, 0, 0, vec3(2,2,2), texProg);
+		for (int i = 0; i < skunkObjs.size(); i++) {
 			skunkTextures[i]->bind(curS->getUniform("Texture0"));
-			skunk[i]->draw(curS);
+			skunkObjs[i]->draw(curS);
 		}
 		curS->unbind();
 	}
@@ -1109,7 +1121,10 @@ public:
 			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
-			drawSkunk(texProg, Projection, View);
+			for (int i = 0; i < enemies.size(); i++) {
+				enemies[i].move();
+				drawSkunk(texProg, Projection, View, enemies[i]);
+			}
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */
 			//drawMap(texProg, Projection, View);
