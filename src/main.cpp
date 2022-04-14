@@ -21,6 +21,7 @@
 #include <chrono> 
 #include "draw.h"
 #include "Enemy.h"
+#include "GameManager.h"
 
 // Skybox
 #include "stb_image.h"
@@ -455,8 +456,8 @@ public:
 		//SKUNK
 
 		for (int i = 0; i < 8; i++) {
-			Enemy e = *new Enemy(vec3(rand()%100 - 50 ,-1.5,rand()%100 -50 ), vec3(randFloat()/10.0-.05, 0, randFloat()/ 10.0-.05), 1);
-			enemies.push_back(e);
+			Enemy e = *new Enemy(vec3(rand() % 100 - 50 ,-1.5,rand() % 100 -50 ), vec3(randFloat() / 5.0 - 0.10, 0, randFloat() / 5.0 - 0.10), 2);
+			enemies.push_back(e); 
 		}
 	}
 
@@ -702,6 +703,17 @@ public:
   		mat4 ctm = Trans*RotX*RotY*RotZ*ScaleS;
   		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
   	}
+
+	void SetModel_LookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
+		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
+		mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
+		mat4 RotY = glm::rotate(glm::mat4(1.0f), rotY, vec3(0, 1, 0));
+		mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
+		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
+		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS;
+		ctm = _look * ctm;
+		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+	}
 
 	void SetModelReverse(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
@@ -962,13 +974,15 @@ public:
 		curS->unbind();
 	}
 
-	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy)
+	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-		SetModel(enemy.pos, 0, 0, 0, vec3(2,2,2), texProg);
+		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(enemy.vel), vec3(0, 1, 0));
+		SetModel_LookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
+		
 		for (int i = 0; i < skunkObjs.size(); i++) {
 			skunkTextures[i]->bind(curS->getUniform("Texture0"));
 			skunkObjs[i]->draw(curS);
@@ -1121,9 +1135,23 @@ public:
 			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
+			vector<int> toRemove;
 			for (int i = 0; i < enemies.size(); i++) {
-				enemies[i].move();
-				drawSkunk(texProg, Projection, View, enemies[i]);
+				enemies[i].move(player);
+
+				if (enemies[i].exploding)
+				{
+					if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
+					else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.1); enemies[i].scale -= 0.1; }
+				}
+				else {
+					drawSkunk(texProg, Projection, View, enemies[i], 1);
+				}
+			}
+
+			for (int i : toRemove)
+			{
+				enemies.erase(enemies.begin() + i);
 			}
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */

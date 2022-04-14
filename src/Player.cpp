@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Player.h"
+#include "GameManager.h"
 #include <map>
 #include <vector>
 #include <list>
@@ -253,12 +254,18 @@ Player::Player()
 	abilityTwoInUse = false;
 	pos = pos_default;
 	mvm_type = 1;
+	boRad = 2;
 }
 
 // returns the index of the shape that they player is in (for debugging purposes)
 void Player::collision()
 {
-	pos = nextPos;
+	GameManager* gm = gm->GetInstance();
+
+	if (!gm->getCollision()) {
+		pos = nextPos;
+	}
+	//pos = nextPos;
 }
 
 void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)

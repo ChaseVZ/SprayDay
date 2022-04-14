@@ -81,7 +81,8 @@ public:
 	bool abilityTwoInUse;
 	bool debugMode = false;
 	float localGround;
-	vec3 pos_default = vec3(-91.226, 4.224, 72.539);
+	float boRad;
+	vec3 pos_default = vec3(0, 4.224, 0);
 	vec3 win_loc = vec3(-41, -20, 70);
 	Arrow arrow = Arrow();
 	Gun rifle = Gun();
