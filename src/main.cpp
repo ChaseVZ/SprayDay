@@ -1083,7 +1083,7 @@ public:
 	void updatePlayer(float frametime)
 	{
 		// check if done
-		if (enemyPositions.size() == 0) 
+		if (enemies.size() == 0) 
 			gameDone = true;
 
 
