@@ -1115,7 +1115,7 @@ public:
 	}
 	bool checkCollisions(int sID) {
 		for (int i = 0; i < enemies.size(); i++) {
-			if (i != sID) {
+			if (i != sID && !enemies[sID].exploding ) {
 				if (length(vec3(enemies[sID].pos - enemies[i].pos)) < enemies[sID].boRad*2) {
 					enemies[sID].vel = faceAway(enemies[sID].pos, enemies[i].pos);
 					//enemies[sID].vel = vec3(0, 0.8, 0);
