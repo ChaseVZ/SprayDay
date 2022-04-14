@@ -1125,7 +1125,7 @@ public:
 		}
 		return false;
 	}
-	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View) {
+	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime) {
 		vector<int> toRemove;
 		bool delta = false;
 
@@ -1143,7 +1143,7 @@ public:
 				}
 				enemies[i].explodeFrame += 1;
 				if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
-				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0105); enemies[i].scale -= 0.0105; }
+				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0015); enemies[i].scale -= 0.0015; }
 			}
 			else {
 				drawSkunk(texProg, Projection, View, enemies[i], 1);
@@ -1212,7 +1212,7 @@ public:
 			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
 
-			simulateEnemies(Projection, View);
+			simulateEnemies(Projection, View, frametime);
 			
 
 			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */

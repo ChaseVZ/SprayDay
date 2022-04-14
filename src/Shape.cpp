@@ -1,4 +1,3 @@
-
 #include "Shape.h"
 #include <iostream>
 #include <cassert>
