@@ -11,8 +11,8 @@ Enemy::Enemy(vec3 position, vec3 velocity, float boundingRadius) {
 	scale = 1.0;
 };
 
-void Enemy::move(Player p) {
-	if (!collide(pos + vel, p))
+void Enemy::move(Player p, float dt) {
+	if (!collide(pos + vel*dt, p))
 	{
 		pos += vel;
 	}

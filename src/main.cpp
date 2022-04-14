@@ -74,7 +74,7 @@ public:
 	shared_ptr<Shape> Sphere;
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
-
+	float dt = 1;
 
 	vector<shared_ptr<Shape>> arrowShapes;
 
@@ -1132,7 +1132,7 @@ public:
 		}
 		for (int i = 0; i < enemies.size(); i++) {
 			
-			enemies[i].move(player);
+			enemies[i].move(player, dt);
 
 			if (enemies[i].exploding)
 			{
@@ -1154,7 +1154,14 @@ public:
 		}
 	}
 
+	void updateTime() {
+		
+		dt = 1;
+		
+	}
+
 	void render(float frametime) {
+		updateTime();
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);

@@ -15,7 +15,7 @@ public:
 	int explodeFrame;
 	float scale;
 
-	void move(Player p);
+	void move(Player p, float dt);
 	bool collide(vec3 nextPos, Player p);
 	void explode();
 	Enemy(vec3 position, vec3 velocity, float boundingRadius);
