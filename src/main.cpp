@@ -1127,6 +1127,8 @@ public:
 	}
 	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View) {
 		vector<int> toRemove;
+		bool delta = false;
+
 		for (int i = 0; i < enemies.size(); i++) {
 			checkCollisions(i);
 		}
@@ -1141,7 +1143,7 @@ public:
 				}
 				enemies[i].explodeFrame += 1;
 				if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
-				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0005); enemies[i].scale -= 0.0005; }
+				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0105); enemies[i].scale -= 0.0105; }
 			}
 			else {
 				drawSkunk(texProg, Projection, View, enemies[i], 1);
@@ -1150,8 +1152,11 @@ public:
 
 		for (int i : toRemove)
 		{
+			delta = true;
 			enemies.erase(enemies.begin() + i);
 		}
+
+		if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
 	}
 
 	void updateTime() {

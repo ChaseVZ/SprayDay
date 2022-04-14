@@ -40,6 +40,7 @@ bool Enemy::collide(vec3 nextPos, Player p) {
 
 void Enemy::explode() {
 	exploding = true;
+	cout << "caught one!" << endl;
 
 	GameManager* gm = gm->GetInstance();
 	gm->setCollision(true);
