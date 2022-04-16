@@ -14,7 +14,7 @@ Enemy::Enemy(vec3 position, vec3 velocity, float boundingRadius) {
 void Enemy::move(Player p, float dt) {
 	if (!collide(pos + vel*dt, p))
 	{
-		pos += vel;
+		pos += vel*dt;
 	}
 }
 bool Enemy::collide(vec3 nextPos, Player p) {
@@ -40,8 +40,6 @@ bool Enemy::collide(vec3 nextPos, Player p) {
 
 void Enemy::explode() {
 	exploding = true;
-	cout << "caught one!" << endl;
-
 	GameManager* gm = gm->GetInstance();
 	gm->setCollision(true);
 }
