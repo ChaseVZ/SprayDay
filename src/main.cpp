@@ -39,6 +39,7 @@ using namespace glm;
 using namespace chrono;
 
 int NUM_SKUNKS = 32;
+int numFlying = 0;
 class Application : public EventCallbacks
 {
 
@@ -77,7 +78,6 @@ public:
 	ShapeGroup* bear;
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
-	float dt = 1;
 
 	vector<shared_ptr<Shape>> arrowShapes;
 
@@ -1168,18 +1168,24 @@ public:
 		for (int i = 0; i < enemies.size(); i++) {
 			checkCollisions(i);
 		}
+		
 		for (int i = 0; i < enemies.size(); i++) {
 			
-			enemies[i].move(player, dt);
+			enemies[i].move(player, frametime*50);
 
 			if (enemies[i].exploding)
 			{
 				if (enemies[i].explodeFrame == 0) {
+					numFlying += 1;
 					enemies[i].vel = calcScareVel(enemies[i].pos, player.pos);
+					cout << "caught one! " << enemies.size()-numFlying << " grounded skunks remaining" <<endl;
 				}
 				enemies[i].explodeFrame += 1;
-				if (enemies[i].scale < 0.1) { toRemove.push_back(i); }
-				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0015); enemies[i].scale -= 0.0015; }
+				if (enemies[i].scale < 0.1) {
+					toRemove.push_back(i); 
+					numFlying -= 1;
+				}
+				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0005); enemies[i].scale -= 0.0005; }
 			}
 			else {
 				drawSkunk(texProg, Projection, View, enemies[i], 1);
@@ -1192,17 +1198,9 @@ public:
 			enemies.erase(enemies.begin() + i);
 		}
 
-		if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
+		//if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
 	}
-
-	void updateTime() {
-		
-		dt = 1;
-		
-	}
-
 	void render(float frametime) {
-		updateTime();
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
