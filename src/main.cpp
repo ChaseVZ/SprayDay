@@ -22,6 +22,7 @@
 #include "draw.h"
 #include "Enemy.h"
 #include "GameManager.h"
+#include "ShapeGroup.h"
 
 // Skybox
 #include "stb_image.h"
@@ -72,6 +73,8 @@ public:
 	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
 	shared_ptr<Shape> Sphere;
+	vector<shared_ptr<Shape>> Bear;
+	ShapeGroup* bear;
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
 	float dt = 1;
@@ -104,6 +107,7 @@ public:
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> rifleTexture;
 	shared_ptr<Texture> grassTexture;
+	vector<shared_ptr<Texture>> animalsTexture;
 
 	// Skybox Texture Files
 	vector<std::string> space_faces{
@@ -470,6 +474,7 @@ public:
 
 	void initGeom(const std::string& resourceDirectory)
 	{
+		
 		vector<tinyobj::shape_t> TOshapes;
 		vector<tinyobj::material_t> objMaterials;
 		string errStr;
@@ -510,6 +515,20 @@ public:
 
 		// Initialize Skybox mesh.x
 		loadOBJHelper(Skybox, resourceDirectory + "/cube.obj");
+
+		//loadMultiShapeOBJHelper(Bear, animalsTexture,
+		//	resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
+		//	resourceDirectory + "/chase_resources/low-poly-animals/obj/",
+		//	resourceDirectory + "/chase_resources/low-poly-animals/texture/",
+		//	numTextures);
+
+		bear = new ShapeGroup(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
+			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
+			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
+			true, false, numTextures);
+
+		bear->load();
+		numTextures += bear->getNumMats();
 
 		// Initialize Gun mesh.
 		loadOBJHelper(Rifle, resourceDirectory + "/chase_resources/AssualtRifle/AssaultRifle.obj");
@@ -993,6 +1012,23 @@ public:
 		curS->unbind();
 	}
 
+	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
+	{
+		curS->bind();
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		
+		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(1, 1, 1), curS);
+
+		/*for (int i = 0; i < Bear.size(); i++) {
+			animalsTexture[i]->bind(curS->getUniform("Texture0"));
+			Bear[i]->draw(curS);
+		}*/
+		bear->draw(curS);
+		
+		curS->unbind();
+	}
+
 	void drawTrail(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
 		curS->bind();
@@ -1198,6 +1234,8 @@ public:
 			drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
 				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 			texProg->unbind();
+
+			drawBear(texProg, Projection, View);
 
 
 			/*  >>>>>>>  DRAW UNTEXTURED OBJs  <<<<<<<  */
