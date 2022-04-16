@@ -23,6 +23,7 @@
 #include "Enemy.h"
 #include "GameManager.h"
 #include "ShapeGroup.h"
+#include "initShapes.h"
 
 // Skybox
 #include "stb_image.h"
@@ -522,13 +523,11 @@ public:
 		//	resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 		//	numTextures);
 
-		bear = new ShapeGroup(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
+		load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-			true, false, numTextures);
-
-		bear->load();
-		numTextures += bear->getNumMats();
+			true, false, &numTextures);
+		//numTextures += bear->getNumMats();
 
 		// Initialize Gun mesh.
 		loadOBJHelper(Rifle, resourceDirectory + "/chase_resources/AssualtRifle/AssaultRifle.obj");
