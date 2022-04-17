@@ -1,6 +1,6 @@
-
 #include "initShapes.h"
 #include "Texture.h"
+#include <iostream>
 
 void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
 	float minX, minY, minZ;
@@ -63,8 +63,6 @@ void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
 	}
 }
 
-
-
 void initTOShapes(ShapeGroup sg, bool rc, vector<tinyobj::shape_t> TOshapes, bool reverse_norms)
 {
 	for (int idx = 0; idx < TOshapes.size(); idx++) {
@@ -81,28 +79,27 @@ void initTOShapes(ShapeGroup sg, bool rc, vector<tinyobj::shape_t> TOshapes, boo
 
 void setTexVector(ShapeGroup sg, const std::string& textureDir, int numTextures, vector<tinyobj::material_t> objMaterials) {
 	for (int i = numTextures; i < objMaterials.size() + numTextures; i++) {
-		shared_ptr<Texture> mapTextureX = make_shared<Texture>();
-		mapTextureX->setFilename(textureDir + (objMaterials[i - numTextures].diffuse_texname));
-		mapTextureX->init();
-		mapTextureX->setUnit(i);
-		mapTextureX->setWrapModes(GL_REPEAT, GL_REPEAT);
-		sg.textures.push_back(mapTextureX);
+		shared_ptr<Texture> texture = make_shared<Texture>();
+		texture->setFilename(textureDir + (objMaterials[i - numTextures].diffuse_texname));
+		texture->init();
+		texture->setUnit(i);
+		texture->setWrapModes(GL_REPEAT, GL_REPEAT);
+		sg.textures.push_back(texture);
 	}
 	numTextures += objMaterials.size();
 }
 
+// returns a ShapeGroup and tex_idx (output parameter)
 ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, bool reverse_norms, int* tex_idx)
 {
-
 	vector<tinyobj::shape_t> TOshapes;
 	vector<tinyobj::material_t> objMaterials;
 
-	vector<shared_ptr<Texture>> textures;
-
-	struct ShapeGroup sg;
+	struct ShapeGroup sg; // return value
 
 	string errStr;
 	bool rc;
+
 	if (textured) {
 		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str(), (mtl_dir).c_str());
 		setTexVector(sg, tex_dir, *tex_idx, objMaterials);
@@ -110,6 +107,7 @@ ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, b
 	else {
 		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
 	}
+
 	resize_obj(TOshapes);
 
 	if (!rc) {
@@ -118,8 +116,6 @@ ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, b
 	else {
 		initTOShapes(sg, rc, TOshapes, reverse_norms);
 	}
-	sg.textures = textures;
-	return sg;
 
-	//num_mats = objMaterials.size();
+	return sg;
 }
