@@ -63,7 +63,7 @@ void resize_obj(std::vector<tinyobj::shape_t>& shapes) {
 	}
 }
 
-void initTOShapes(ShapeGroup sg, bool rc, vector<tinyobj::shape_t> TOshapes, bool reverse_norms)
+void initTOShapes(ShapeGroup* sg, bool rc, vector<tinyobj::shape_t> TOshapes, bool reverse_norms)
 {
 	for (int idx = 0; idx < TOshapes.size(); idx++) {
 		shared_ptr<Shape> piece = make_shared<Shape>();
@@ -73,20 +73,20 @@ void initTOShapes(ShapeGroup sg, bool rc, vector<tinyobj::shape_t> TOshapes, boo
 		if (reverse_norms) { piece->reverseNormals(); }
 		piece->measure();
 		piece->init();
-		sg.shapes.push_back(piece);
+		sg->shapes.push_back(piece);
 	}
 }
 
-void setTexVector(ShapeGroup sg, const std::string& textureDir, int numTextures, vector<tinyobj::material_t> objMaterials) {
-	for (int i = numTextures; i < objMaterials.size() + numTextures; i++) {
+void setTexVector(ShapeGroup* sg, const std::string& textureDir, int* numTextures, vector<tinyobj::material_t> objMaterials) {
+	for (int i = *numTextures; i < objMaterials.size() + *numTextures; i++) {
 		shared_ptr<Texture> texture = make_shared<Texture>();
-		texture->setFilename(textureDir + (objMaterials[i - numTextures].diffuse_texname));
+		texture->setFilename(textureDir + (objMaterials[i - *numTextures].diffuse_texname));
 		texture->init();
 		texture->setUnit(i);
 		texture->setWrapModes(GL_REPEAT, GL_REPEAT);
-		sg.textures.push_back(texture);
+		sg->textures.push_back(texture);
 	}
-	numTextures += objMaterials.size();
+	*numTextures += objMaterials.size();
 }
 
 // returns a ShapeGroup and tex_idx (output parameter)
@@ -95,14 +95,14 @@ ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, b
 	vector<tinyobj::shape_t> TOshapes;
 	vector<tinyobj::material_t> objMaterials;
 
-	struct ShapeGroup sg; // return value
+	ShapeGroup sg; // return value
 
 	string errStr;
 	bool rc;
 
 	if (textured) {
 		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str(), (mtl_dir).c_str());
-		setTexVector(sg, tex_dir, *tex_idx, objMaterials);
+		setTexVector(&sg, tex_dir, tex_idx, objMaterials);
 	}
 	else {
 		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
@@ -114,7 +114,7 @@ ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, b
 		cerr << errStr << endl;
 	}
 	else {
-		initTOShapes(sg, rc, TOshapes, reverse_norms);
+		initTOShapes(&sg, rc, TOshapes, reverse_norms);
 	}
 
 	return sg;

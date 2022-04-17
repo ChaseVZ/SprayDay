@@ -24,6 +24,7 @@
 #include "GameManager.h"
 #include "ShapeGroup.h"
 #include "initShapes.h"
+#include "RenderSystem.h"
 
 // Skybox
 #include "stb_image.h"
@@ -76,7 +77,7 @@ public:
 	shared_ptr<Shape> roundWon;
 	shared_ptr<Shape> Sphere;
 	vector<shared_ptr<Shape>> Bear;
-	ShapeGroup* bear;
+	//ShapeGroup* bear;
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
 
@@ -172,6 +173,8 @@ public:
 	bool gameBegin = false;
 	bool gameDone = false;
 	bool charging = false;
+
+	ShapeGroup bear;
 
 
 
@@ -523,11 +526,12 @@ public:
 		//	resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 		//	numTextures);
 
-		load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
+		bear = load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
 		//numTextures += bear->getNumMats();
+
 
 		// Initialize Gun mesh.
 		loadOBJHelper(Rifle, resourceDirectory + "/chase_resources/AssualtRifle/AssaultRifle.obj");
@@ -1017,14 +1021,15 @@ public:
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		
-		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(1, 1, 1), curS);
+		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(10, 10, 10), curS);
 
 		/*for (int i = 0; i < Bear.size(); i++) {
 			animalsTexture[i]->bind(curS->getUniform("Texture0"));
 			Bear[i]->draw(curS);
 		}*/
-		bear->draw(curS);
-		
+
+		RenderSystem::draw(bear, curS);
+		//bear->draw(curS);
 		curS->unbind();
 	}
 
