@@ -374,7 +374,7 @@ public:
 
 		// SKUNKY YUCKY
 		loadMultiShapeOBJHelper(skunkObjs, skunkTextures, 
-			resourceDirectory + "/chase_resources/moufsaka/moufsaka2.obj",
+			resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			numTextures);
