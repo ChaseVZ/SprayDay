@@ -65,49 +65,21 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	shared_ptr<Shape> Jett;
-	shared_ptr<Shape> Cypher;
 	shared_ptr<Shape> Skybox;
-	shared_ptr<Shape> Rifle;
 	shared_ptr<Shape> Cube;
-	shared_ptr<Shape> ChargeCube;
-	shared_ptr<Shape> createdBy;
-	shared_ptr<Shape> welcomeTo;
-	shared_ptr<Shape> valorant;
 	shared_ptr<Shape> roundWon;
 	shared_ptr<Shape> Sphere;
-	vector<shared_ptr<Shape>> Bear;
-	//ShapeGroup* bear;
+	vector<shared_ptr<Shape>> arrowShapes;
+
 	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
 
-	vector<shared_ptr<Shape>> arrowShapes;
-
-	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
-	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
-	int g_GiboLen;
-	// ground VAO
-	GLuint GroundVertexArrayID;
-
-	vector<vec3> enemyPositions = { vec3(-5.8, 4.224, -53.54), vec3(-34.9, 3.168, -28.08), vec3(-66.73, 0, 29.93), vec3(-21.5, 0, 29.98),
-									vec3(-92.2, 1.056, 10.0), vec3(-91.79, 0.452, -46.43), vec3(-50.33, -4.224, -23.79)};
-	vector<float> enemyRotations = { 45.0, -40.0, 5.0, 120.0, -180.0, -240.0, 120.0 };
-
-	vec3 mapMin = vec3(999, 999, 999);
-	vec3 mapMax = vec3(-999, -999, -999);
-	float mapScale = (1.0f / 100.0f);
-	float playerScale = (1.0f / 100.0f);
-	float arrowScale = (1.0f / 100.0f);
-	float rifleScale = (1.0f / 100.0f);
-	float crosshairScale = (1.0f / 250.0f);
-	float overlayScale = (1.0f / 10.0f);
+	ShapeGroup bear;
 
 	/* ================ TEXTURES ================= */
 	
-	vector<shared_ptr<Texture>> arrowTexture;
 	vector<shared_ptr<Texture>> skunkTextures;
 	shared_ptr<Texture> particleTexture;
-	shared_ptr<Texture> rifleTexture;
 	shared_ptr<Texture> grassTexture;
 	vector<shared_ptr<Texture>> animalsTexture;
 
@@ -133,11 +105,20 @@ public:
 	unsigned int cubeMapTexture = 0;
 	int numTextures = 0;
 
+	/* ============== GROUND ============== */
+
+	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
+	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
+	int g_GiboLen;
+	// ground VAO
+	GLuint GroundVertexArrayID;
+
+	float playerScale = (1.0f / 100.0f);
+	float crosshairScale = (1.0f / 250.0f);
+
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
-	particleSys* arrowParticleSys;
-	particleSys* rifleParticleSys;
 	particleSys* winParticleSys;
 
 	// Animation data
@@ -157,13 +138,6 @@ public:
 	double player_y_range = radians(80.0);
 	double player_x_range = radians(360.0);
 
-	// Arrow info
-	std::chrono::steady_clock::time_point holdTimeStart;
-	float holdTimeFinish = 0;
-
-	// Gun info
-	bool playerShooting = false;
-
 	// 3rd person
 	float third_person[2] = { 0.0f, -0.7f };
 	int third = 0;
@@ -172,9 +146,6 @@ public:
 	bool debugMode = 0;
 	bool gameBegin = false;
 	bool gameDone = false;
-	bool charging = false;
-
-	ShapeGroup bear;
 
 
 
@@ -205,38 +176,12 @@ public:
 				if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) { player.mvm_type = 0; }
 				if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) { player.mvm_type = 1; }
 
-				// Gun Ability
-				if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
-					player.abilityOneInUse = false;
-					player.abilityTwoInUse = !player.abilityTwoInUse;
-					player.arrow.charges = 0;
-					charging = false;
-				}
-
-				// Arrow Ability
-				if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
-					player.abilityTwoInUse = false;
-					player.abilityOneInUse = !player.abilityOneInUse;
-					if (!player.abilityOneInUse) {
-						player.arrow.charges = 0;
-						charging = false;
-					}
-				}
-
 				// Third person
 				if (key == GLFW_KEY_3 && action == GLFW_PRESS)
 					third = (third + 1) % 2;
 
 				// PolyMode
 				if (key == GLFW_KEY_Z && action == GLFW_PRESS) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
-			}
-
-			// BoundingBox DEBUG
-			if (key == GLFW_KEY_C && action == GLFW_PRESS) {
-				debugMode = !debugMode;
-				player.debugMode = !player.debugMode;
-				player.arrow.debugMode = !player.arrow.debugMode;
-				vcam.goCamera = false;
 			}
 		}
 
@@ -261,56 +206,10 @@ public:
 			gameBegin = true;
 			//vcam.goCamera = true;
 		}
-
-		if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-
-			/* ABILITY ONE */
-			if (!player.arrow.instanced && player.abilityOneInUse && button == RIGHT_CLICK && action == GLFW_PRESS) {
-				player.arrow.charges = (player.arrow.charges + 1) % 3;
-			}
-			if (!player.arrow.instanced && player.abilityOneInUse && button == LEFT_CLICK && action == GLFW_PRESS) 
-			{ 
-				charging = true;
-				holdTimeStart = chrono::high_resolution_clock::now();
-			}
-			if (charging && player.abilityOneInUse && button == LEFT_CLICK && action == GLFW_RELEASE) {
-				float deltaTime =
-					chrono::duration_cast<std::chrono::microseconds>(
-						chrono::high_resolution_clock::now() - holdTimeStart)
-					.count();
-				deltaTime *= 0.000001;
-
-				charging = false;
-				player.arrow.setVelocity(deltaTime, vcam.lookAt);
-			}
-
-			/* ABILITY TWO */
-			if (player.abilityTwoInUse && button == LEFT_CLICK && action == GLFW_PRESS) { playerShooting = true; }
-			if (player.abilityTwoInUse && button == LEFT_CLICK && action == GLFW_RELEASE) { playerShooting = false; }
-		}
 	}
 
 	void scrollCallback(GLFWwindow* window, double in_deltaX, double in_deltaY)
-	{
-		//cout << "theta " << g_theta << " deltax " << in_deltaX << endl;
-
-		//// Pitch and Yaw
-		//g_theta += 4 * in_deltaX * player_x_range / g_width;
-		//g_phi += 4 * in_deltaY * player_y_range / g_height;
-
-		//// Cap y range to +- 80 degrees
-		//if (g_phi > player_y_range)
-		//	g_phi = player_y_range;
-		//if (g_phi < -player_y_range)
-		//	g_phi = -player_y_range;
-
-		//// Set LookAt Position
-		//float radius = 1.0;
-		//float lookAt_x = radius * cos(g_phi) * cos(g_theta);
-		//float lookAt_y = radius * sin(g_phi);
-		//float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
-		//g_lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
-	}
+	{}
 
 	void cursorPositionCallback(GLFWwindow* window, double xPos, double yPos) {
 
@@ -417,25 +316,14 @@ public:
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
 
-		arrowParticleSys = new particleSys(vec3(0, -10, 0), 0.2f, 0.2f, 0.0f, 0.4f, 0.6f, 0.8f, 0.1f, 0.3f); // start off screen
-		arrowParticleSys->setnumP(300);
-		arrowParticleSys->gpuSetup();
-
-		rifleParticleSys = new particleSys(vec3(0, -15, 5), 0.2f, 0.2f, 0.6f, 0.8f, 0.2f, 0.2f, 0.1f, 0.12f); // start off screen
-		rifleParticleSys->setnumP(30);
-		rifleParticleSys->gpuSetup();
+		// code to reference if needed
+		//arrowParticleSys = new particleSys(vec3(0, -10, 0), 0.2f, 0.2f, 0.0f, 0.4f, 0.6f, 0.8f, 0.1f, 0.3f); // start off screen
+		//arrowParticleSys->setnumP(300);
+		//arrowParticleSys->gpuSetup();
 
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);
 		winParticleSys->gpuSetup();
-
-
-		//read in a load the texture
-		rifleTexture = make_shared<Texture>();
-		rifleTexture->setFilename(resourceDirectory + "/chase_resources/AssualtRifle/texture/SS2_SS2_BaseColor.png");
-		rifleTexture->init();
-		rifleTexture->setUnit(0);
-		rifleTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass.jpg");
@@ -478,26 +366,11 @@ public:
 
 	void initGeom(const std::string& resourceDirectory)
 	{
-		
-		vector<tinyobj::shape_t> TOshapes;
-		vector<tinyobj::material_t> objMaterials;
-		string errStr;
-
-		// Initialize Arrow mesh.
-		loadMultiShapeOBJHelper(arrowShapes, arrowTexture,
-			resourceDirectory + "/chase_resources/BowandArrow/weapon_bow_ShenMin.obj",
-			resourceDirectory + "/chase_resources/BowandArrow/",
-			resourceDirectory + "/chase_resources/BowandArrow/",
-			numTextures);
-
 		// Initialize Cube mesh.
 		loadOBJHelper(Cube, resourceDirectory + "/cube.obj");
 
 		// Initialize RoundWon mesh.
 		loadOBJHelper(roundWon, resourceDirectory + "/roundWon.obj");
-
-		// Initialize Cube mesh.
-		loadOBJHelper(ChargeCube, resourceDirectory + "/chargecube.obj");
 
 		// SKUNKY YUCKY
 		loadMultiShapeOBJHelper(skunkObjs, skunkTextures, 
@@ -506,35 +379,13 @@ public:
 			resourceDirectory + "/chase_resources/moufsaka/",
 			numTextures);
 
-		// Initialize word meshes/
-		loadOBJHelper(welcomeTo, resourceDirectory + "/chase_resources/Words/welcometo.obj");
-		loadOBJHelper(createdBy, resourceDirectory + "/chase_resources/Words/createdby.obj");
-		loadOBJHelper(valorant, resourceDirectory + "/chase_resources/Words/valorant.obj");
-
-		// Initialize Jett mesh.
-		loadOBJHelper(Jett, resourceDirectory + "/chase_resources/Valorant-Jett/jett.obj");
-
-		// Initialize Cypher (ENEMY) mesh.
-		loadOBJHelper(Cypher, resourceDirectory + "/chase_resources/Valorant-Cypher/Cypher.obj");
-
 		// Initialize Skybox mesh.x
 		loadOBJHelper(Skybox, resourceDirectory + "/cube.obj");
-
-		//loadMultiShapeOBJHelper(Bear, animalsTexture,
-		//	resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
-		//	resourceDirectory + "/chase_resources/low-poly-animals/obj/",
-		//	resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-		//	numTextures);
 
 		bear = load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
-		//numTextures += bear->getNumMats();
-
-
-		// Initialize Gun mesh.
-		loadOBJHelper(Rifle, resourceDirectory + "/chase_resources/AssualtRifle/AssaultRifle.obj");
 
 		player = Player();
 		player.pos = player.pos_default;
@@ -666,8 +517,6 @@ public:
 	}
 
 
-
-
 	/* =================== HELPER FUNCTIONS ================== */
 
 	void SetMaterial(shared_ptr<Program> curS, int i) {
@@ -792,145 +641,7 @@ public:
 	}
 
 
-
-
 	/* =================== DRAW FUNCTIONS ================== */
-
-
-	void drawArrow(shared_ptr<Program> curS, mat4 V, shared_ptr<MatrixStack> Projection)
-	{
-		SetModel(vec3(0, 0, -0.6), radians(100.0), radians(95.0), 0, vec3(arrowScale, arrowScale, arrowScale), curS);
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V));
-
-		arrowTexture[1]->bind(curS->getUniform("Texture0"));
-		arrowShapes[2]->draw(curS);
-
-		// pre-render out of the map
-		drawParticles(partProg, Projection, V, vec3(0.7, 0.2, -2), arrowParticleSys);
-	}
-
-	void drawArrowShot(shared_ptr<Program> curS, mat4 V, shared_ptr<MatrixStack> Projection)
-	{
-		float rotY = 0;
-		float rotX = 0;
-		//if ()
-		SetModelReverse(player.arrow.pos, radians(-player.arrow.rotationZ), 0, radians(player.arrow.rotationX),
-			vec3(arrowScale * 3, arrowScale * 3, arrowScale * 3), curS);
-		//SetModelQuat(player.arrow.pos, player.arrow.myQuaternion, vec3(arrowScale * 3, arrowScale * 3, arrowScale * 3), curS);
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V));
-
-		// Arrow
-		arrowTexture[1]->bind(curS->getUniform("Texture0"));
-		arrowShapes[2]->draw(curS);
-
-		if (!debugMode)
-			drawParticles(partProg, Projection, V, player.arrow.pos, arrowParticleSys);
-	}
-
-	void drawBow(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniform3f(curS->getUniform("lightPos"), 2.0, 28.0, 2.9);
-		//glUniform1f(curS->getUniform("MatShine"), 27.9);
-		glUniform1i(curS->getUniform("flip"), 1);
-
-
-		/* For "BowandArrow" (medieval) */
-		// [0] = bow	[1] = sheath	[2] = arrow
-
-		/* DRAW BOW */
-		auto V = make_shared <MatrixStack>();
-		V->loadIdentity();
-		V->translate(vec3(0.3, -0.5, -0.0));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()));
-		SetModel(vec3(0, 0, -0.6), radians(20.0), radians(110.0), 0, vec3(arrowScale, arrowScale, arrowScale), curS);
-
-		if (player.abilityOneInUse) {
-			arrowTexture[1]->bind(curS->getUniform("Texture0"));
-			arrowShapes[0]->draw(curS);
-		}
-
-		/* DRAW ARROW */
-		V->translate(vec3(0, 0.6, -0.1));
-		if (player.arrow.instanced)
-			drawArrowShot(curS, View, Projection);
-		if (!player.arrow.instanced && player.abilityOneInUse)
-			drawArrow(curS, V->topMatrix(), Projection);
-
-		curS->unbind();
-	}
-
-	void drawRifle(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniform3f(curS->getUniform("lightPos"), 2.0, 28.0, 2.9);
-		//glUniform1f(curS->getUniform("MatShine"), 27.9);
-		glUniform1i(curS->getUniform("flip"), 1);
-
-		auto V = make_shared <MatrixStack>();
-		V->loadIdentity();
-		V->translate(vec3(0.15, -0.1, -0.25f));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()));
-		SetModel(vec3(0, 0, 0), radians(15.0), radians(180.0), 0, vec3(rifleScale, rifleScale, rifleScale), curS);
-
-		if (player.abilityTwoInUse) {
-			rifleTexture->bind(curS->getUniform("Texture0"));
-			Rifle->draw(curS);
-		}
-
-		for (auto b : player.rifle.bullets) {
-			drawParticles(partProg, Projection, View, b->pos, rifleParticleSys);
-		}
-		curS->unbind();
-	}
-
-	void drawCypher(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 pos, float rotation) {
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		SetModel(pos, radians(-rotation), 0, radians(-90.0), vec3(playerScale * 10, playerScale * 10, playerScale * 10), curS);
-
-		SetMaterial(prog, 3);
-		glUniform3f(curS->getUniform("lightPos"), 20.0, 40.0, 60.9);
-		glUniform1f(curS->getUniform("MatShine"), 27.9);
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-		//glUniform1i(curS->getUniform("flip"), 1);
-		Cypher->draw(curS);
-		curS->bind();
-	}
-
-	void drawJett(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
-		curS->bind();
-
-		auto V = make_shared <MatrixStack>();
-		V->loadIdentity();
-		V->translate(vec3(0, 0, 0 + third_person[third]));	// z = -0.8f 
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-		SetModel(vec3(0, -2, 0), radians(90.0), 0, radians(-90.0), vec3(playerScale, playerScale, playerScale), curS);
-
-		SetMaterial(curS, 2);
-		Jett->draw(curS);
-		curS->unbind();
-	}
-
-	void drawStationaryJett(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		SetModel(player.pos_default, radians(90.0), 0, radians(-90.0), vec3(playerScale, playerScale, playerScale), curS);
-
-		SetMaterial(prog, 2);
-		glUniform3f(curS->getUniform("lightPos"), 20.0, 10.0, 70.9);
-		glUniform1f(curS->getUniform("MatShine"), 27.9);
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-		Jett->draw(curS);
-		curS->bind();
-	}
-
 	void drawSkybox(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		auto Model = make_shared<MatrixStack>();
@@ -988,14 +699,9 @@ public:
 
 		// draw words
 		SetModel(vec3(-91, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
-		SetMaterial(prog, 0);
-		welcomeTo->draw(curS);
-		createdBy->draw(curS);
-		SetMaterial(prog, 3);
-		valorant->draw(curS);
-
 		curS->unbind();
 	}
+
 	void printVec(vec3 v) {
 		cout << v.x << " " << v.y << " " << v.z << endl;
 	}
@@ -1020,16 +726,13 @@ public:
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniform3f(curS->getUniform("lightPos"), -91.0, 6, 74);
+		glUniform3f(curS->getUniform("lightPos"), 2.0, 28.0, 2.9);
+		glUniform3f(curS->getUniform("lightPos"), 20.0, 10.0, 70.9);
 		
 		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(10, 10, 10), curS);
 
-		/*for (int i = 0; i < Bear.size(); i++) {
-			animalsTexture[i]->bind(curS->getUniform("Texture0"));
-			Bear[i]->draw(curS);
-		}*/
-
 		RenderSystem::draw(bear, curS);
-		//bear->draw(curS);
 		curS->unbind();
 	}
 
@@ -1047,8 +750,6 @@ public:
 		}
 		curS->unbind();
 	}
-
-	
 
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
@@ -1074,52 +775,6 @@ public:
 		curS->unbind();
 	}
 
-	void drawOverlay(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		curS->bind();
-		auto V = make_shared <MatrixStack>();
-		V->loadIdentity();
-		V->translate(vec3(0, 0, -0.50f));	// z = -0.8f 
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniform3f(curS->getUniform("lightPos"), -91.0, 6, 74);
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-		SetMaterial(prog, 1);
-
-		// crosshair
-		SetModel(vec3(0, 0.012, 0), 0, 0, 0, vec3(crosshairScale, crosshairScale*3, 0.001f), curS);
-		Cube->draw(curS);
-		SetModel(vec3(0.012, 0, 0), 0, 0, 0, vec3(crosshairScale*3, crosshairScale, 0.001f), curS);
-		Cube->draw(curS);
-		SetModel(vec3(0, -0.012, 0), 0, 0, 0, vec3(crosshairScale, crosshairScale*3, 0.001f), curS);
-		Cube->draw(curS);
-		SetModel(vec3(-0.012, 0, 0), 0, 0, 0, vec3(crosshairScale*3, crosshairScale, 0.001f), curS);
-		Cube->draw(curS);
-
-		// arrow charges
-		if (!player.arrow.instanced) {
-			SetMaterial(prog, 2);
-			vector<vec3> arrowCharges = { vec3(-0.60f, -0.45, -0.5), vec3(-0.40f, -0.45, -0.5) };
-			for (int i = 0; i < player.arrow.charges; i++) {
-				SetModel(arrowCharges[i], 0, 0, 0, vec3(overlayScale, overlayScale, 0.001f), curS);
-				Cube->draw(curS);
-			}
-		}
-
-		// arrow charge
-		if (charging && !player.arrow.instanced) {
-			float chargeTime = duration_cast<microseconds>(high_resolution_clock::now() - holdTimeStart).count();
-			chargeTime *= 0.000001;
-
-			SetMaterial(prog, 1);
-			chargeTime = std::min(chargeTime, 3.0f) / 2.0f;
-			SetModel(vec3(0.2, -0.45, -0.5), 0, 0, 0, vec3(overlayScale * chargeTime, overlayScale / 2.0f, 0.001f), curS);
-			ChargeCube->draw(curS);
-		}
-
-		curS->unbind();
-	}
-
 	void updatePlayer(float frametime)
 	{
 		// check if done
@@ -1135,24 +790,20 @@ public:
 		else {
 			// player
 			player.updatePos(vcam.lookAt, vcam.goCamera, frametime);
-			//cout << player.pos.x << " " << player.pos.z << endl;
 
 			// camera
 			vcam.updatePos(player.pos);
-
-			// arrow
-			player.arrow.update(frametime, player.pos, vcam.lookAt);
-
-			// gun
-			player.rifle.update(frametime, player.pos + vec3(0.2, 2, 0.1), vcam.lookAt, playerShooting, enemyPositions);
 		}
 	}
+
 	vec3 calcScareVel(vec3 ePos, vec3 pPos) {
 		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
 	}
+
 	vec3 faceAway(vec3 p1, vec3 p2) {
 		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
 	}
+
 	bool checkCollisions(int sID) {
 		for (int i = 0; i < enemies.size(); i++) {
 			if (i != sID && !enemies[sID].exploding ) {
@@ -1165,6 +816,7 @@ public:
 		}
 		return false;
 	}
+
 	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime) {
 		vector<int> toRemove;
 		bool delta = false;
@@ -1204,6 +856,7 @@ public:
 
 		//if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
 	}
+
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -1226,9 +879,11 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 300.0f);
 
 		if (!gameDone) {
-			/*  >>>>>>  DRAW SKYBOX  <<<<<<  */
+
 			drawSkybox(cubeProg, Projection, View);
+
 			texProg->bind();
+			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
 			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 			glDepthFunc(GL_LEQUAL);
 			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
@@ -1238,29 +893,11 @@ public:
 			texProg->unbind();
 
 			drawBear(texProg, Projection, View);
-
-
-			/*  >>>>>>>  DRAW UNTEXTURED OBJs  <<<<<<<  */
-			if (gameBegin && !vcam.goCamera) {
-				drawOverlay(prog, Projection, View);
-				drawJett(prog, Projection, View);
-			}
-			//else
-			//	drawStationaryJett(prog, Projection, View);
-
-			//for (int i = 0; i < enemyPositions.size(); i++)
-			//	drawCypher(prog, Projection, View, enemyPositions[i], enemyRotations[i]);
 			drawTitle(prog, Projection, View);
-
 			simulateEnemies(Projection, View, frametime);
-			
 
-			/*  >>>>>>  DRAW TEXTURED OBJs  <<<<<< */
-			//drawMap(texProg, Projection, View);
-			
-			drawBow(texProg, Projection, View);
-			drawRifle(texProg, Projection, View);
 		}
+
 		else
 			drawEnd(prog, Projection, View);
 
