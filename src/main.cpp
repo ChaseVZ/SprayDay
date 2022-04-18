@@ -65,23 +65,22 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	shared_ptr<Shape> Skybox;
-	shared_ptr<Shape> Cube;
-	shared_ptr<Shape> roundWon;
-	shared_ptr<Shape> Sphere;
-	vector<shared_ptr<Shape>> arrowShapes;
-
-	vector<shared_ptr<Shape>> skunkObjs;
 	vector<Enemy> enemies;
 
 	ShapeGroup bear;
+	ShapeGroup skunk;
+	ShapeGroup sphere;
+	ShapeGroup cube;
+	ShapeGroup skybox;
+
+	ShapeGroup roundWon;
 
 	/* ================ TEXTURES ================= */
 	
-	vector<shared_ptr<Texture>> skunkTextures;
+	//vector<shared_ptr<Texture>> skunkTextures;
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
-	vector<shared_ptr<Texture>> animalsTexture;
+	//vector<shared_ptr<Texture>> animalsTexture;
 
 	// Skybox Texture Files
 	vector<std::string> space_faces{
@@ -354,7 +353,7 @@ public:
 		//SKUNK
 
 		for (int i = 0; i < NUM_SKUNKS; i++) {
-			Enemy e = *new Enemy(vec3(rand() % 100 - 50 ,-1.5,rand() % 100 -50 ), vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), 2);
+			Enemy e = *new Enemy(vec3(rand() % 100 - 50 , 0,rand() % 100 -50 ), vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), 2);
 			enemies.push_back(e); 
 		}
 	}
@@ -367,22 +366,26 @@ public:
 	void initGeom(const std::string& resourceDirectory)
 	{
 		// Initialize Cube mesh.
-		loadOBJHelper(Cube, resourceDirectory + "/cube.obj");
+		//loadOBJHelper(Cube, resourceDirectory + "/cube.obj");
+		cube = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
 
 		// Initialize RoundWon mesh.
-		loadOBJHelper(roundWon, resourceDirectory + "/roundWon.obj");
+		//loadOBJHelper(roundWon, resourceDirectory + "/roundWon.obj");
+		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
 
 		// SKUNKY YUCKY
-		loadMultiShapeOBJHelper(skunkObjs, skunkTextures, 
-			resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
+		//loadMultiShapeOBJHelper(skunkObjs, skunkTextures, 	);
+		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
-			numTextures);
+			true, false, &numTextures);
+
 
 		// Initialize Skybox mesh.x
-		loadOBJHelper(Skybox, resourceDirectory + "/cube.obj");
+		//loadOBJHelper(Skybox, resourceDirectory + "/cube.obj");
+		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
 
-		bear = load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
+		bear = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
@@ -450,72 +453,6 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
 	}
-
-	/* NOTE: this CAN break (in render) if .mtl file has materials out of order */
-	void setTexVector(vector<shared_ptr<Texture>>& mapTexture, const std::string& textureDir, int numTextures, vector<tinyobj::material_t> objMaterials) {
-		// there are 1-34 textures for the map
-		for (int i = numTextures; i < objMaterials.size() + numTextures; i++) {
-			shared_ptr<Texture> mapTextureX = make_shared<Texture>();
-			mapTextureX->setFilename(textureDir + (objMaterials[i - numTextures].diffuse_texname));
-			mapTextureX->init();
-			mapTextureX->setUnit(i);
-			mapTextureX->setWrapModes(GL_REPEAT, GL_REPEAT);
-			mapTexture.push_back(mapTextureX);
-		}
-	}
-
-	void loadOBJHelper(shared_ptr<Shape> &shape, string obj_dir) 
-	{
-		vector<tinyobj::shape_t> TOshapes;
-		vector<tinyobj::material_t> objMaterials;
-		string errStr;
-		bool rc;
-		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
-
-		//resize_obj(TOshapes);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			shape = make_shared<Shape>();
-			shape->createShape(TOshapes[0]);
-			shape->calcNorms();
-			shape->normalizeNorBuf();
-			//shape->reverseNormals();
-			shape->measure();
-			shape->init();
-		}
-	}
-
-	void loadMultiShapeOBJHelper(vector<shared_ptr<Shape>>& v, vector<shared_ptr<Texture>>& v_tex, string obj_dir, string mtl_dir, string textureDir, int numTextures) {
-		vector<tinyobj::shape_t> TOshapes;
-		vector<tinyobj::material_t> objMaterials;
-		string errStr;
-		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str(), (mtl_dir).c_str());
-		//bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
-
-		setTexVector(v_tex, textureDir, numTextures, objMaterials);
-
-		//resize_obj(TOshapes);
-		if (!rc) {
-			cerr << errStr << endl;
-		}
-		else {
-			for (int idx = 0; idx < TOshapes.size(); idx++) {
-				shared_ptr<Shape> piece = make_shared<Shape>();
-				piece->createShape(TOshapes[idx]);
-				piece->calcNorms();
-				piece->normalizeNorBuf();
-				//Map->reverseNormals();
-				piece->measure();
-				piece->init();
-				v.push_back(piece);
-			}
-		}
-
-		numTextures += objMaterials.size();
-	}
-
 
 	/* =================== HELPER FUNCTIONS ================== */
 
@@ -658,7 +595,9 @@ public:
 		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 		//bind the cube map texture
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
-		Skybox->draw(curS);
+
+		RenderSystem::draw(skybox, curS);
+		//Skybox->draw(curS);
 		//set the depth test back to normal!
 		glDepthFunc(GL_LESS);
 
@@ -695,7 +634,8 @@ public:
 		// background
 		SetModel(vec3(-91, -19, 67), 0, 0, 0, vec3(25.0, 25.0, 25.0), curS);
 		SetMaterial(prog, 5);
-		Cube->draw(curS);
+		RenderSystem::draw(cube, curS);
+		//Cube->draw(curS);
 
 		// draw words
 		SetModel(vec3(-91, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
@@ -714,10 +654,11 @@ public:
 		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
 		SetModelLookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
 		
-		for (int i = 0; i < skunkObjs.size(); i++) {
-			skunkTextures[i]->bind(curS->getUniform("Texture0"));
-			skunkObjs[i]->draw(curS);
-		}
+		RenderSystem::draw(skunk, curS);
+		//for (int i = 0; i < skunkObjs.size(); i++) {
+		//	skunkTextures[i]->bind(curS->getUniform("Texture0"));
+		//	skunkObjs[i]->draw(curS);
+		//}
 		curS->unbind();
 	}
 
@@ -744,10 +685,11 @@ public:
 		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
 		SetModelLookAt(enemy.pos - vec3(0,0, 2), 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
 
-		for (int i = 0; i < skunkObjs.size(); i++) {
-			skunkTextures[i]->bind(curS->getUniform("Texture0"));
-			skunkObjs[i]->draw(curS);
-		}
+		RenderSystem::draw(skunk, curS);
+		//for (int i = 0; i < skunkObjs.size(); i++) {
+		//	skunkTextures[i]->bind(curS->getUniform("Texture0"));
+		//	skunkObjs[i]->draw(curS);
+		//}
 		curS->unbind();
 	}
 
@@ -762,12 +704,14 @@ public:
 		// background
 		SetModel(vec3(-41, -19, 67), 0, 0, 0, vec3(25.0, 25.0, 25.0), curS);
 		SetMaterial(prog, 5);
-		Cube->draw(curS);
+		RenderSystem::draw(cube, curS);
+		//Cube->draw(curS);
 
 		// draw words
 		SetModel(vec3(-41, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
 		SetMaterial(prog, 3);
-		roundWon->draw(curS);
+		RenderSystem::draw(roundWon, curS);
+		//roundWon->draw(curS);
 
 		drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys);
 		drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys);
