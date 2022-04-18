@@ -653,7 +653,7 @@ public:
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
 		SetModelLookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
-		
+
 		RenderSystem::draw(skunk, curS);
 		//for (int i = 0; i < skunkObjs.size(); i++) {
 		//	skunkTextures[i]->bind(curS->getUniform("Texture0"));
@@ -668,8 +668,6 @@ public:
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		glUniform3f(curS->getUniform("lightPos"), -91.0, 6, 74);
-		glUniform3f(curS->getUniform("lightPos"), 2.0, 28.0, 2.9);
-		glUniform3f(curS->getUniform("lightPos"), 20.0, 10.0, 70.9);
 		
 		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(10, 10, 10), curS);
 

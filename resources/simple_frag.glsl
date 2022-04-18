@@ -31,5 +31,5 @@ void main()
 	vec3 h = (cam + light) / 2.0;
 	float Sc = pow(max(0.0, dot(normal, h)), MatShine);
 	color = vec4(MatDif * Dc + MatAmb + MatSpec * Sc, 1.0);
-	//color = vec4(vec3(MatSpec * Sc), );
+	//color = vec4(normal, 1.0);
 }
