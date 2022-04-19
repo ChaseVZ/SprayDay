@@ -25,6 +25,7 @@
 #include "ShapeGroup.h"
 #include "initShapes.h"
 #include "systems/RenderSystem.h"
+#include "systems/PathingSystem.h"
 
 // Skybox
 #include "stb_image.h"
@@ -353,8 +354,22 @@ public:
 		//SKUNK
 
 		for (int i = 0; i < NUM_SKUNKS; i++) {
-			Enemy e = *new Enemy(vec3(rand() % 100 - 50 , 0,rand() % 100 -50 ), vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), 2);
+			Enemy e = {
+				2.0,
+				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ),
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125),
+				false,
+				0,
+				1.0
+			};
 			enemies.push_back(e); 
+
+			// float boRad;
+			// vec3 pos;
+			// vec3 vel;
+			// bool exploding;
+			// int explodeFrame;
+			// float scale;
 		}
 	}
 
@@ -738,66 +753,6 @@ public:
 		}
 	}
 
-	vec3 calcScareVel(vec3 ePos, vec3 pPos) {
-		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
-	}
-
-	vec3 faceAway(vec3 p1, vec3 p2) {
-		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
-	}
-
-	bool checkCollisions(int sID) {
-		for (int i = 0; i < enemies.size(); i++) {
-			if (i != sID && !enemies[sID].exploding ) {
-				if (length(vec3(enemies[sID].pos - enemies[i].pos)) < enemies[sID].boRad*2) {
-					enemies[sID].vel = faceAway(enemies[sID].pos, enemies[i].pos);
-					//enemies[sID].vel = vec3(0, 0.8, 0);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	void simulateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime) {
-		vector<int> toRemove;
-		bool delta = false;
-
-		for (int i = 0; i < enemies.size(); i++) {
-			checkCollisions(i);
-		}
-		
-		for (int i = 0; i < enemies.size(); i++) {
-			
-			enemies[i].move(player, frametime*50);
-
-			if (enemies[i].exploding)
-			{
-				if (enemies[i].explodeFrame == 0) {
-					numFlying += 1;
-					enemies[i].vel = calcScareVel(enemies[i].pos, player.pos);
-					cout << "caught one! " << enemies.size()-numFlying << " grounded skunks remaining" <<endl;
-				}
-				enemies[i].explodeFrame += 1;
-				if (enemies[i].scale < 0.1) {
-					toRemove.push_back(i); 
-					numFlying -= 1;
-				}
-				else { drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale - 0.0005); enemies[i].scale -= 0.0005; }
-			}
-			else {
-				drawSkunk(texProg, Projection, View, enemies[i], 1);
-			}
-		}
-
-		for (int i : toRemove)
-		{
-			delta = true;
-			enemies.erase(enemies.begin() + i);
-		}
-
-		//if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
-	}
 
 	void render(float frametime) {
 		int width, height;
@@ -836,7 +791,10 @@ public:
 
 			drawBear(texProg, Projection, View);
 			drawTitle(prog, Projection, View);
-			simulateEnemies(Projection, View, frametime);
+			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
+			for (int i=0; i<enemies.size(); i++){
+				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
+			}
 
 		}
 
