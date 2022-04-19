@@ -13,10 +13,10 @@ void main() {
 
 	// My Code - Lab7
 	vec3 matDif = texColor0.xyz;
-	vec3 matAmb = matDif * 0.68;
+	vec3 matAmb = matDif * 0.4;
 	vec3 matSpec = matDif * 0.3;
 
-    vec3 normal = normalize(fragNor) * flip;
+    vec3 normal = normalize(fragNor);
 	vec3 light = normalize(lightDir);
 	vec3 cam = normalize(-1 * EPos);
 
@@ -25,6 +25,7 @@ void main() {
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
 	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, 1.0);
+	//vec4 color = vec4(matSpec * 2, 1.0);
 	//vec4 color = vec4(normal, 1.0);
 
 	//if (color.g > 0.5)

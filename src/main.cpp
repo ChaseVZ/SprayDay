@@ -280,7 +280,7 @@ public:
 		prog->addUniform("alpha");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
-		prog->addAttribute("vertTex");	// unused on purpose
+		//prog->addAttribute("vertTex");	// unused on purpose
 
 		// Initialize the GLSL program that we will use for texture mapping
 		texProg = make_shared<Program>();
@@ -290,7 +290,6 @@ public:
 		texProg->addUniform("P");
 		texProg->addUniform("V");
 		texProg->addUniform("M");
-		texProg->addUniform("flip");
 		texProg->addUniform("Texture0");
 		texProg->addUniform("MatShine");
 		texProg->addUniform("lightPos");
@@ -315,11 +314,6 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-
-		// code to reference if needed
-		//arrowParticleSys = new particleSys(vec3(0, -10, 0), 0.2f, 0.2f, 0.0f, 0.4f, 0.6f, 0.8f, 0.1f, 0.3f); // start off screen
-		//arrowParticleSys->setnumP(300);
-		//arrowParticleSys->gpuSetup();
 
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);

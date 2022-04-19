@@ -66,6 +66,7 @@ void Shape::init()
 	// Send the normal array to the GPU
 	if (norBuf.empty())
 	{
+		cout << name << "no norms" << endl;
 		norBufID = 0;
 	}
 	else
