@@ -24,7 +24,7 @@
 #include "GameManager.h"
 #include "ShapeGroup.h"
 #include "initShapes.h"
-#include "systems/RenderSystem.h"
+#include "systems/renderSystem.h"
 #include "systems/PathingSystem.h"
 
 // Skybox
