@@ -818,7 +818,7 @@ public:
 		mat4 View = glm::lookAt(vcam.pos, vcam.lookAt + vcam.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
-		Projection->perspective(45.0f, aspect, 0.17f, 300.0f);
+		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 
 		if (!gameDone) {
 
