@@ -475,73 +475,73 @@ public:
 		cout << v.x << " " << v.y << " " << v.z << endl;
 	}
 
-	void SetMaterial(shared_ptr<Program> curS, int i) {
+	//void SetMaterial(shared_ptr<Program> curS, int i) {
 
-    	switch (i) {
-    		case 0: // Pearl
-    			glUniform3f(curS->getUniform("MatAmb"), 0.25f, 0.20725f, 0.20725f);
-    			glUniform3f(curS->getUniform("MatDif"), 1.0f, 0.829f, 0.829f);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.296648f, 0.296648f, 0.296648f);
-    			glUniform1f(curS->getUniform("MatShine"), 11.264f);
-    		break;
-    		case 1: // Turqoise
-    			glUniform3f(curS->getUniform("MatAmb"), 0.1f*2, 0.18725f*2, 0.1745f*2);
-    			glUniform3f(curS->getUniform("MatDif"), 0.396f, 0.74151f, 0.69102f);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.297254f, 0.30829f, 0.306678f);
-    			glUniform1f(curS->getUniform("MatShine"), 12.8f);
-    		break;
-    		case 2: // Blue
-    			glUniform3f(curS->getUniform("MatAmb"), 0.004, 0.05, 0.09);
-    			glUniform3f(curS->getUniform("MatDif"), 0.04, 0.5, 0.9);
-    			glUniform3f(curS->getUniform("MatSpec"), 0.02, 0.25, 0.45);
-    			glUniform1f(curS->getUniform("MatShine"), 27.9);
-    		break;
-			case 3: // Ruby
-				glUniform3f(curS->getUniform("MatAmb"), 0.1745f*2, 0.01175f*2, 0.01175f*2);
-				glUniform3f(curS->getUniform("MatDif"), 0.61424f, 0.04136f, 0.04136f);
-				glUniform3f(curS->getUniform("MatSpec"), 0.727811f, 0.626959f, 0.626959f);
-				glUniform1f(curS->getUniform("MatShine"), 76.8f);
-				break;
-			case 4: // Bronze
-				glUniform3f(curS->getUniform("MatAmb"), 0.2125f * 2, 0.1275f * 2, 0.054f * 2);
-				glUniform3f(curS->getUniform("MatDif"), 0.714f, 0.4284f, 0.18144f);
-				glUniform3f(curS->getUniform("MatSpec"), 0.393548f, 0.271906f, 0.166721f);
-				glUniform1f(curS->getUniform("MatShine"), 25.6f);
-				break;
-			case 5: // Obsidian
-				glUniform3f(curS->getUniform("MatAmb"), 0.05375f, 0.05f, 0.06625f);
-				glUniform3f(curS->getUniform("MatDif"), 0.18275f, 0.17f, 0.22525f);
-				glUniform3f(curS->getUniform("MatSpec"), 0.332741f, 0.328634f, 0.346435f);
-				glUniform1f(curS->getUniform("MatShine"), 38.4f);
-				break;
-			case 6: // Yellow
-				glUniform3f(curS->getUniform("MatAmb"), 0.05f, 0.05f, 0.0f);
-				glUniform3f(curS->getUniform("MatDif"), 0.5f, 0.5f, 0.4f);
-				glUniform3f(curS->getUniform("MatSpec"), 0.7f, 0.7f, 0.04f);
-				glUniform1f(curS->getUniform("MatShine"), 10.0f);
-				break;
-  		}
-	}
+ //   	switch (i) {
+ //   		case 0: // Pearl
+ //   			glUniform3f(curS->getUniform("MatAmb"), 0.25f, 0.20725f, 0.20725f);
+ //   			glUniform3f(curS->getUniform("MatDif"), 1.0f, 0.829f, 0.829f);
+ //   			glUniform3f(curS->getUniform("MatSpec"), 0.296648f, 0.296648f, 0.296648f);
+ //   			glUniform1f(curS->getUniform("MatShine"), 11.264f);
+ //   		break;
+ //   		case 1: // Turqoise
+ //   			glUniform3f(curS->getUniform("MatAmb"), 0.1f*2, 0.18725f*2, 0.1745f*2);
+ //   			glUniform3f(curS->getUniform("MatDif"), 0.396f, 0.74151f, 0.69102f);
+ //   			glUniform3f(curS->getUniform("MatSpec"), 0.297254f, 0.30829f, 0.306678f);
+ //   			glUniform1f(curS->getUniform("MatShine"), 12.8f);
+ //   		break;
+ //   		case 2: // Blue
+ //   			glUniform3f(curS->getUniform("MatAmb"), 0.004, 0.05, 0.09);
+ //   			glUniform3f(curS->getUniform("MatDif"), 0.04, 0.5, 0.9);
+ //   			glUniform3f(curS->getUniform("MatSpec"), 0.02, 0.25, 0.45);
+ //   			glUniform1f(curS->getUniform("MatShine"), 27.9);
+ //   		break;
+	//		case 3: // Ruby
+	//			glUniform3f(curS->getUniform("MatAmb"), 0.1745f*2, 0.01175f*2, 0.01175f*2);
+	//			glUniform3f(curS->getUniform("MatDif"), 0.61424f, 0.04136f, 0.04136f);
+	//			glUniform3f(curS->getUniform("MatSpec"), 0.727811f, 0.626959f, 0.626959f);
+	//			glUniform1f(curS->getUniform("MatShine"), 76.8f);
+	//			break;
+	//		case 4: // Bronze
+	//			glUniform3f(curS->getUniform("MatAmb"), 0.2125f * 2, 0.1275f * 2, 0.054f * 2);
+	//			glUniform3f(curS->getUniform("MatDif"), 0.714f, 0.4284f, 0.18144f);
+	//			glUniform3f(curS->getUniform("MatSpec"), 0.393548f, 0.271906f, 0.166721f);
+	//			glUniform1f(curS->getUniform("MatShine"), 25.6f);
+	//			break;
+	//		case 5: // Obsidian
+	//			glUniform3f(curS->getUniform("MatAmb"), 0.05375f, 0.05f, 0.06625f);
+	//			glUniform3f(curS->getUniform("MatDif"), 0.18275f, 0.17f, 0.22525f);
+	//			glUniform3f(curS->getUniform("MatSpec"), 0.332741f, 0.328634f, 0.346435f);
+	//			glUniform1f(curS->getUniform("MatShine"), 38.4f);
+	//			break;
+	//		case 6: // Yellow
+	//			glUniform3f(curS->getUniform("MatAmb"), 0.05f, 0.05f, 0.0f);
+	//			glUniform3f(curS->getUniform("MatDif"), 0.5f, 0.5f, 0.4f);
+	//			glUniform3f(curS->getUniform("MatSpec"), 0.7f, 0.7f, 0.04f);
+	//			glUniform1f(curS->getUniform("MatShine"), 10.0f);
+	//			break;
+ // 		}
+	//}
 
-  	void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
-  		mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
-  		mat4 RotX = glm::rotate( glm::mat4(1.0f), rotX, vec3(1, 0, 0));
-  		mat4 RotY = glm::rotate( glm::mat4(1.0f), rotY, vec3(0, 1, 0));
-		mat4 RotZ = glm::rotate( glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
-  		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
-  		mat4 ctm = Trans*RotX*RotY*RotZ*ScaleS;
-  		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
-  	}
+ // 	void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
+ // 		mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
+ // 		mat4 RotX = glm::rotate( glm::mat4(1.0f), rotX, vec3(1, 0, 0));
+ // 		mat4 RotY = glm::rotate( glm::mat4(1.0f), rotY, vec3(0, 1, 0));
+	//	mat4 RotZ = glm::rotate( glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
+ // 		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
+ // 		mat4 ctm = Trans*RotX*RotY*RotZ*ScaleS;
+ // 		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+ // 	}
 
-	void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
-		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
-		mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
-		mat4 RotY = glm::rotate(glm::mat4(1.0f), rotY, vec3(0, 1, 0));
-		mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
-		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
-		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS* _look;
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
-	}
+	//void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
+	//	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
+	//	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
+	//	mat4 RotY = glm::rotate(glm::mat4(1.0f), rotY, vec3(0, 1, 0));
+	//	mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
+	//	mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
+	//	mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS* _look;
+	//	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+	//}
 
 	void SetModelQuat(vec3 trans, quat rot, vec3 sc, shared_ptr<Program> curS) {
 		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
@@ -606,7 +606,7 @@ public:
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
 
 		RenderSystem::draw(skybox, curS);
-		//Skybox->draw(curS);
+
 		//set the depth test back to normal!
 		glDepthFunc(GL_LESS);
 
@@ -632,25 +632,6 @@ public:
 		curS->unbind();
 	}
 
-	void drawTitle(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform3f(curS->getUniform("lightPos"), -91.0, -18, 70);
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-
-		// background
-		SetModel(vec3(-91, -19, 67), 0, 0, 0, vec3(25.0, 25.0, 25.0), curS);
-		SetMaterial(prog, 5);
-		RenderSystem::draw(cube, curS);
-		//Cube->draw(curS);
-
-		// draw words
-		SetModel(vec3(-91, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
-		curS->unbind();
-	}
-
 	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
 		//curS->bind();
@@ -669,57 +650,57 @@ public:
 
 	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform3f(curS->getUniform("lightPos"), -91.0, 6, 74);
+		//curS->bind();
+		//glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		//glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		//glUniform3f(curS->getUniform("lightPos"), -91.0, 6, 74);
 		
-		SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(10, 10, 10), curS);
+		//SetModel(vec3(0, 0, 0), 0, 0, 0, vec3(10, 10, 10), curS);
 
-		RenderSystem::draw(bear, curS);
+		RenderSystem::draw(bear, curS, Projection, View, vec3(0,0,0), vec3(10,10,10), vec3(0,0,0), false, vec3(0,0,0));
 		curS->unbind();
 	}
 
 	void drawTrail(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
-		SetModelLookAt(enemy.pos - vec3(0,0, 2), 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
+		//curS->bind();
+		//glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		//glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		//mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
+		//SetModelLookAt(enemy.pos - vec3(0,0, 2), 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
 
-		RenderSystem::draw(skunk, curS);
-		//for (int i = 0; i < skunkObjs.size(); i++) {
-		//	skunkTextures[i]->bind(curS->getUniform("Texture0"));
-		//	skunkObjs[i]->draw(curS);
-		//}
-		curS->unbind();
+		RenderSystem::draw(skunk, curS, Projection, View, vec3(enemy.pos) - vec3(0,0,2), vec3(scale, scale, scale), vec3(0,0,0), true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
+		//curS->unbind();
 	}
 
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform3f(curS->getUniform("lightPos"), -41.0, -18, 70);
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
+		//curS->bind();
+		//glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		//glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		//glUniform3f(curS->getUniform("lightPos"), -41.0, -18, 70);
+		//glUniform1f(curS->getUniform("alpha"), 1.0f);
 
 		// background
-		SetModel(vec3(-41, -19, 67), 0, 0, 0, vec3(25.0, 25.0, 25.0), curS);
-		SetMaterial(prog, 5);
-		RenderSystem::draw(cube, curS);
+		// SetModel(vec3(-41, -19, 67), 0, 0, 0, vec3(25.0, 25.0, 25.0), curS);
+		//SetMaterial(prog, 5);
+		RenderSystem::SetMaterial(curS, 5);
+		RenderSystem::draw(cube, curS, Projection, View, vec3(-41, -19, 67), vec3(1, 1, 1), vec3(0, 0, 0), false, vec3(0, 0, 0));
 		//Cube->draw(curS);
 
 		// draw words
-		SetModel(vec3(-41, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
-		SetMaterial(prog, 3);
-		RenderSystem::draw(roundWon, curS);
-		//roundWon->draw(curS);
+		//SetModel(vec3(-41, -17.8, 65), 0, 0, radians(90.0), vec3(1.0, 1.0, 1.0), curS);
+		//SetMaterial(prog, 3);
+		RenderSystem::SetMaterial(curS, 3);
+		RenderSystem::draw(roundWon, curS, Projection, View, vec3(-41, -17.8, 65), vec3(1, 1, 1), vec3(0, 0, 90), false, vec3(0, 0, 0));
 
-		drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys);
-		drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys);
+		RenderSystem::drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys, particleTexture);
+		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
 
-		curS->unbind();
+		//drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys);
+		//drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys);
+
+		//curS->unbind();
 	}
 
 	void updatePlayer(float frametime)
@@ -780,7 +761,6 @@ public:
 			texProg->unbind();
 
 			drawBear(texProg, Projection, View);
-			drawTitle(prog, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
 			for (int i=0; i<enemies.size(); i++){
 				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
