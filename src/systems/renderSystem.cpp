@@ -14,6 +14,10 @@ void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_pt
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
+void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
+	glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+}
+
 void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS, mat4 _look) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
@@ -97,6 +101,42 @@ namespace RenderSystem {
 		partSys->drawMe(curS);
 		partSys->update();
 
+		curS->unbind();
+	}
+
+	//code to draw the ground plane
+	void drawGround(shared_ptr<MatrixStack> Model, shared_ptr<Program> curS, shared_ptr<Texture> tex,
+		GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen) {
+		curS->bind();
+
+		Model->loadIdentity();
+		Model->pushMatrix();
+		glBindVertexArray(GroundVertexArrayID);
+		tex->bind(curS->getUniform("Texture0"));
+		Model->translate(vec3(0, -1, 0));
+		Model->scale(vec3(2, 1, 2));
+
+		setModel(curS, Model);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		// draw!
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+		glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
+		Model->popMatrix();
 		curS->unbind();
 	}
 
