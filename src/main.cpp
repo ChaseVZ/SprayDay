@@ -360,7 +360,7 @@ public:
 				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125),
 				false,
 				0,
-				1.0
+				2.0
 			};
 			enemies.push_back(e); 
 
@@ -471,6 +471,10 @@ public:
 
 	/* =================== HELPER FUNCTIONS ================== */
 
+	void printVec(vec3 v) {
+		cout << v.x << " " << v.y << " " << v.z << endl;
+	}
+
 	void SetMaterial(shared_ptr<Program> curS, int i) {
 
     	switch (i) {
@@ -536,16 +540,6 @@ public:
 		mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
 		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
 		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS* _look;
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
-	}
-
-	void SetModelReverse(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
-		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
-		mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
-		mat4 RotY = glm::rotate(glm::mat4(1.0f), rotY, vec3(0, 1, 0));
-		mat4 RotZ = glm::rotate(glm::mat4(1.0f), rotZ, vec3(0, 0, 1));
-		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
-		mat4 ctm = Trans * RotX * RotY * RotZ * ScaleS;
 		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 	}
 
@@ -657,24 +651,20 @@ public:
 		curS->unbind();
 	}
 
-	void printVec(vec3 v) {
-		cout << v.x << " " << v.y << " " << v.z << endl;
-	}
-
 	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
-		SetModelLookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
+		//curS->bind();
+		//glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		//glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		//mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-enemy.vel.x, enemy.vel.y, enemy.vel.z)), vec3(0, 1, 0));
+		//SetModelLookAt(enemy.pos, 0, 0, 0, vec3(2 * scale, 2 * scale, 2 * scale), texProg, _look);
 
-		RenderSystem::draw(skunk, curS);
+		RenderSystem::draw(skunk, curS, Projection, View, enemy.pos, vec3(scale, scale, scale), vec3(0, 0, 0), true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
 		//for (int i = 0; i < skunkObjs.size(); i++) {
 		//	skunkTextures[i]->bind(curS->getUniform("Texture0"));
 		//	skunkObjs[i]->draw(curS);
 		//}
-		curS->unbind();
+		//curS->unbind();
 	}
 
 	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
