@@ -569,6 +569,18 @@ public:
 		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
 	}
 
+	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
+		curS->bind();
+		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glDepthFunc(GL_LEQUAL);
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+
+		RenderSystem::drawGround(make_shared<MatrixStack>(), curS, grassTexture,
+			GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
+		curS->unbind();
+	}
+
 	void updatePlayer(float frametime)
 	{
 		if (gameDone) {
@@ -612,23 +624,13 @@ public:
 		if (!gameDone) {
 
 			drawSkybox(cubeProg, Projection, View);
-
-			texProg->bind();
-			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
-			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-			glDepthFunc(GL_LEQUAL);
-			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
-			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
-				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
-			texProg->unbind();
-
+			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
+
 			for (int i=0; i<enemies.size(); i++){
 				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
 			}
-
 		}
 
 		else
