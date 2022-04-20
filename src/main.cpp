@@ -360,6 +360,10 @@ public:
 			};
 			enemies.push_back(e); 
 		}
+
+		// GM
+		//GameManager gm = GameManager::setSize(10);
+
 	}
 
 	float randFloat() {

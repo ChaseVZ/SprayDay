@@ -67,8 +67,6 @@ namespace PathingSystem {
 
     void explode(Enemy* e) {
         e->exploding = true;
-        GameManager* gm = gm->GetInstance();
-        gm->setCollision(true);
     }
 
     void move(Player p, float dt, Enemy* e) {
