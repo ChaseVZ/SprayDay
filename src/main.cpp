@@ -42,6 +42,8 @@ using namespace chrono;
 
 int NUM_SKUNKS = 32;
 int numFlying = 0;
+float TIME_UNTIL_SPRAY = .2;
+float timeSinceLastSpray = 0;
 class Application : public EventCallbacks
 {
 
@@ -70,7 +72,7 @@ public:
 	/* ================ GEOMETRY ================= */
 
 	vector<Enemy> enemies;
-
+	vector<RenderComponent> trail;
 	ShapeGroup bear;
 	ShapeGroup skunk;
 	ShapeGroup sphere;
@@ -349,21 +351,14 @@ public:
 
 		for (int i = 0; i < NUM_SKUNKS; i++) {
 			Enemy e = {
-				2.0,
-				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ),
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125),
-				false,
-				0,
-				2.0
+				2.0, // float boRad;
+				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ), // vec3 pos;
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+				false, // bool exploding;
+				0, // int explodeFrame;
+				2.0 // float scale;
 			};
 			enemies.push_back(e); 
-
-			// float boRad;
-			// vec3 pos;
-			// vec3 vel;
-			// bool exploding;
-			// int explodeFrame;
-			// float scale;
 		}
 	}
 
@@ -385,6 +380,11 @@ public:
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			true, false, &numTextures);
+
+		sphere = initShapes::load(resourceDirectory + "/sphere.obj",
+			resourceDirectory + "",
+			resourceDirectory + "",
+			false, false, &numTextures);
 
 		// Initialize Skybox mesh.x
 		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
@@ -545,11 +545,6 @@ public:
 		RenderSystem::draw(bear, curS, Projection, View, vec3(10,2,0), vec3(8,8,8), ZERO_VEC, false, ZERO_VEC);
 	}
 
-	void drawTrail(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
-	{
-		RenderSystem::draw(skunk, curS, Projection, View, vec3(enemy.pos) - vec3(0,0,2), vec3(scale, scale, scale), ZERO_VEC, true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
-	}
-
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		RenderSystem::SetMaterial(curS, 5);
@@ -589,6 +584,28 @@ public:
 		}
 	}
 
+	void generateSpray() {
+		RenderComponent trailPart = {
+		&sphere, //ShapeGroup*
+		player.pos, // pos
+		mat4(1.0f), //lookMat;
+		1.0, //scale
+		1.0, //transparency
+		};
+		trail.push_back(trailPart);
+	}
+
+	void manageSpray(float frametime) {
+		timeSinceLastSpray += frametime;
+		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
+			timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
+			if (player.mvm_type == 1) {
+				timeSinceLastSpray = 0;
+				generateSpray();
+			}
+		}
+	}
+
 
 	void render(float frametime) {
 		int width, height;
@@ -625,6 +642,14 @@ public:
 			for (int i=0; i<enemies.size(); i++){
 				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
 			}
+
+			manageSpray(frametime);
+			
+			for (int i = 0; i < trail.size(); i++) {
+				RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
+				//RenderSystem::draw(texProg, Projection, View, &(trail[i]));
+			}
+			
 		}
 
 		else
@@ -692,18 +717,6 @@ int main(int argc, char *argv[])
 		// Poll for and process events.
 		glfwPollEvents();
 	}
-
-
-	//while (!glfwWindowShouldClose(windowManager->getHandle()))
-	//{
-	//	// Render scene.
-	//	application->render();
-
-	//	// Swap front and back buffers.
-	//	glfwSwapBuffers(windowManager->getHandle());
-	//	// Poll for and process events.
-	//	glfwPollEvents();
-	//}
 
 	// Quit program.
 	windowManager->shutdown();

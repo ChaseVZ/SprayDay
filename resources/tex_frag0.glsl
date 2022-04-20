@@ -25,8 +25,7 @@ void main() {
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
 	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, 1.0);
-	//vec4 color = vec4(matSpec * 2, 1.0);
-	//vec4 color = vec4(normal, 1.0);
+	//vec4 color = vec4(matSpec*Sc, 1.0);
 
 	//if (color.g > 0.5)
 	//	discard;

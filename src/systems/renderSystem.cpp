@@ -28,8 +28,40 @@ void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, sha
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
+void setModelRC(shared_ptr<Program> curS, RenderComponent* rc) {
+	mat4 Trans = glm::translate(glm::mat4(1.0f), rc->pos);
+	mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(rc->scale));
+	mat4 ctm = Trans * ScaleS * rc->lookMat;
+	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
+}
+
 
 namespace RenderSystem {
+
+	void draw(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
+	{
+		// Why doesn't this function work !?
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
+		setModelRC(curS, rc);
+		// non-textured shapes draw
+		if ((rc->sg)->textures.size() == 0)
+		{
+			for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
+				(rc->sg)->shapes[i]->draw(curS);
+			}
+		}
+
+		else {
+			// textured shapes draw
+			for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
+				(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
+				(rc->sg)->shapes[i]->draw(curS);
+			}
+		}
+	}
+
 	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir)
 	{
 		curS->bind();
@@ -46,7 +78,7 @@ namespace RenderSystem {
 		// non-textured shapes draw
 		if (sg.textures.size() == 0)
 		{
-			glUniform1f(curS->getUniform("alpha"), 1.0f); // only 'prog' uses alpha
+			//glUniform1f(curS->getUniform("alpha"), 1.0f); // only 'prog' uses alpha
 			for (int i = 0; i < sg.shapes.size(); i++) {
 				sg.shapes[i]->draw(curS);
 			}

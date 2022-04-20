@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace RenderSystem {
+	void draw(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,  RenderComponent* rc);
 	void draw(ShapeGroup sg, shared_ptr<Program> curS);
 	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir);
 	void drawParticles(shared_ptr<Program> curS, shared_ptr<MatrixStack> P, mat4 View, vec3 pos, particleSys* partSys, shared_ptr<Texture> tex);
