@@ -652,7 +652,7 @@ public:
 			glDepthFunc(GL_LEQUAL);
 			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-			drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
+			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
 				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 			texProg->unbind();
 
