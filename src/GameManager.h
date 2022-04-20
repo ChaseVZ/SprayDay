@@ -5,6 +5,7 @@
 #include <iostream>
 
 using namespace glm;
+
 class GameManager
 {
 private:
@@ -27,19 +28,18 @@ private:
 	}
 
 	// private constructor
-	GameManager() { 
-		setColMap(); 
-	}
+	GameManager() { }
 
 public:
-	GameManager* GetInstance()
+	static GameManager* GetInstance()
 	{
 		if (!instance) { instance = new GameManager(); }
 		return instance;
 	}
 
-	void setSize(int _size) { MAP_SIZE = _size; }
-
+	void setSize(int _size) { MAP_SIZE = _size; setColMap(); }
 };
+
+//GameManager* GameManager::instance = NULL;
 
 #endif

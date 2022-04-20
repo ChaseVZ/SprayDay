@@ -362,7 +362,8 @@ public:
 		}
 
 		// GM
-		//GameManager gm = GameManager::setSize(10);
+		//GameManager* gm = GameManager::GetInstance();
+		//gm->setSize(10);
 
 	}
 
