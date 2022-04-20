@@ -616,6 +616,14 @@ public:
 		}
 	}
 
+	vec3 makeCameraPos(vec3 vcamlookAt){
+		vec3 camPos = vcamlookAt;
+		if (camPos.y > 0){
+			camPos.y=0;
+		}
+		return 20.0f*camPos;
+	}
+
 
 	void render(float frametime) {
 		int width, height;
@@ -638,7 +646,8 @@ public:
 		vec3 camera_offset = vec3(3, 3, 3);
 
 		// Create the matrix stacks playerPos-vcam.lookAt
-		mat4 View = lookAt(playerPos-20.0f*vcam.lookAt, playerPos, vec3(0, 1, 0));
+		vec3 cameraPos = makeCameraPos(vcam.lookAt);
+		mat4 View = lookAt(playerPos-cameraPos, playerPos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
