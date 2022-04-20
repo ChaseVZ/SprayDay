@@ -19,7 +19,6 @@
 #include "VirtualCamera.h"
 #include "particleSys.h"
 #include <chrono> 
-#include "draw.h"
 #include "Enemy.h"
 #include "GameManager.h"
 #include "ShapeGroup.h"
@@ -43,6 +42,8 @@ using namespace chrono;
 
 int NUM_SKUNKS = 32;
 int numFlying = 0;
+float TIME_UNTIL_SPRAY = .2;
+float timeSinceLastSpray = 0;
 class Application : public EventCallbacks
 {
 
@@ -71,7 +72,7 @@ public:
 	/* ================ GEOMETRY ================= */
 
 	vector<Enemy> enemies;
-
+	vector<RenderComponent> trail;
 	ShapeGroup bear;
 	ShapeGroup skunk;
 	ShapeGroup sphere;
@@ -281,7 +282,7 @@ public:
 		prog->addUniform("alpha");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
-		prog->addAttribute("vertTex");	// unused on purpose
+		//prog->addAttribute("vertTex");	// unused on purpose
 
 		// Initialize the GLSL program that we will use for texture mapping
 		texProg = make_shared<Program>();
@@ -291,7 +292,6 @@ public:
 		texProg->addUniform("P");
 		texProg->addUniform("V");
 		texProg->addUniform("M");
-		texProg->addUniform("flip");
 		texProg->addUniform("Texture0");
 		texProg->addUniform("MatShine");
 		texProg->addUniform("lightPos");
@@ -316,11 +316,6 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-
-		// code to reference if needed
-		//arrowParticleSys = new particleSys(vec3(0, -10, 0), 0.2f, 0.2f, 0.0f, 0.4f, 0.6f, 0.8f, 0.1f, 0.3f); // start off screen
-		//arrowParticleSys->setnumP(300);
-		//arrowParticleSys->gpuSetup();
 
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);
@@ -356,21 +351,14 @@ public:
 
 		for (int i = 0; i < NUM_SKUNKS; i++) {
 			Enemy e = {
-				2.0,
-				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ),
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125),
-				false,
-				0,
-				2.0
+				2.0, // float boRad;
+				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ), // vec3 pos;
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+				false, // bool exploding;
+				0, // int explodeFrame;
+				2.0 // float scale;
 			};
 			enemies.push_back(e); 
-
-			// float boRad;
-			// vec3 pos;
-			// vec3 vel;
-			// bool exploding;
-			// int explodeFrame;
-			// float scale;
 		}
 	}
 
@@ -392,6 +380,11 @@ public:
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			true, false, &numTextures);
+
+		sphere = initShapes::load(resourceDirectory + "/sphere.obj",
+			resourceDirectory + "",
+			resourceDirectory + "",
+			false, false, &numTextures);
 
 		// Initialize Skybox mesh.x
 		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
@@ -557,11 +550,6 @@ public:
 		RenderSystem::draw(bear, curS, Projection, View, vec3(10,2,0), vec3(8,8,8), ZERO_VEC, false, ZERO_VEC);
 	}
 
-	void drawTrail(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
-	{
-		RenderSystem::draw(skunk, curS, Projection, View, vec3(enemy.pos) - vec3(0,0,2), vec3(scale, scale, scale), ZERO_VEC, true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
-	}
-
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		RenderSystem::SetMaterial(curS, 5);
@@ -575,8 +563,19 @@ public:
 		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
 	}
 
-	vec3 updatePlayer(float frametime)
-	{
+	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
+		curS->bind();
+		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glDepthFunc(GL_LEQUAL);
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+
+		RenderSystem::drawGround(make_shared<MatrixStack>(), curS, grassTexture,
+			GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
+		curS->unbind();
+	}
+
+	vec3 updatePlayer(float frametime)	{
 		if (gameDone) {
 			vcam.updatePos(player.win_loc);
 			vcam.lookAt = vec3(0, 0, -1);
@@ -588,6 +587,28 @@ public:
 			vcam.updatePos(player.pos);
 		}
 		return player.pos;
+	}
+
+	void generateSpray() {
+		RenderComponent trailPart = {
+		&sphere, //ShapeGroup*
+		player.pos, // pos
+		mat4(1.0f), //lookMat;
+		1.0, //scale
+		1.0, //transparency
+		};
+		trail.push_back(trailPart);
+	}
+
+	void manageSpray(float frametime) {
+		timeSinceLastSpray += frametime;
+		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
+			timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
+			if (player.mvm_type == 1) {
+				timeSinceLastSpray = 0;
+				generateSpray();
+			}
+		}
 	}
 
 
@@ -633,12 +654,21 @@ public:
 
 			drawPlayerSkunk(texProg, Projection, View, playerPos, vcam.lookAt);
 
+			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
+
 			for (int i=0; i<enemies.size(); i++){
 				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
 			}
 
+			manageSpray(frametime);
+			
+			for (int i = 0; i < trail.size(); i++) {
+				RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
+				//RenderSystem::draw(texProg, Projection, View, &(trail[i]));
+			}
+			
 		}
 
 		else
@@ -706,18 +736,6 @@ int main(int argc, char *argv[])
 		// Poll for and process events.
 		glfwPollEvents();
 	}
-
-
-	//while (!glfwWindowShouldClose(windowManager->getHandle()))
-	//{
-	//	// Render scene.
-	//	application->render();
-
-	//	// Swap front and back buffers.
-	//	glfwSwapBuffers(windowManager->getHandle());
-	//	// Poll for and process events.
-	//	glfwPollEvents();
-	//}
 
 	// Quit program.
 	windowManager->shutdown();
