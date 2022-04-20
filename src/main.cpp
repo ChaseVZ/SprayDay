@@ -547,6 +547,11 @@ public:
 		RenderSystem::draw(skunk, curS, Projection, View, enemy.pos, vec3(scale, scale, scale), ZERO_VEC, true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
 	}
 
+	void drawPlayerSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 pos, vec3 lookAt) 
+	{
+		RenderSystem::draw(skunk, curS, Projection, View, pos, vec3(2, 2, 2), ZERO_VEC, true, vec3(lookAt.x, pos.y, lookAt.z));
+	}
+
 	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		RenderSystem::draw(bear, curS, Projection, View, vec3(10,2,0), vec3(8,8,8), ZERO_VEC, false, ZERO_VEC);
@@ -570,7 +575,7 @@ public:
 		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
 	}
 
-	void updatePlayer(float frametime)
+	vec3 updatePlayer(float frametime)
 	{
 		if (gameDone) {
 			vcam.updatePos(player.win_loc);
@@ -582,6 +587,7 @@ public:
 			// camera
 			vcam.updatePos(player.pos);
 		}
+		return player.pos;
 	}
 
 
@@ -602,10 +608,11 @@ public:
 
 		/* update all player attributes */
 		//if (gameBegin) 
-		updatePlayer(frametime);
+		vec3 playerPos = updatePlayer(frametime);
+		vec3 camera_offset = vec3(3, 3, 3);
 
-		// Create the matrix stacks
-		mat4 View = glm::lookAt(vcam.pos, vcam.lookAt + vcam.pos, vec3(0, 1, 0));
+		// Create the matrix stacks playerPos-vcam.lookAt
+		mat4 View = lookAt(playerPos-20.0f*vcam.lookAt, playerPos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
@@ -623,6 +630,8 @@ public:
 			drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
 				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 			texProg->unbind();
+
+			drawPlayerSkunk(texProg, Projection, View, playerPos, vcam.lookAt);
 
 			drawBear(texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
