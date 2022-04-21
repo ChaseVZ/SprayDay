@@ -3,6 +3,12 @@
 using namespace glm;
 
 vec3 lightPos = vec3(0, 10, 0);
+vector<vec3> obstaclePos = 
+{
+	vec3(1,0,1),
+	vec3(4,0,4),
+	vec3(4,0,1)
+};
 
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
@@ -180,6 +186,22 @@ namespace RenderSystem {
 		glDisableVertexAttribArray(2);
 		Model->popMatrix();
 		curS->unbind();
+	}
+
+	void drawObstacles(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
+	{
+		curS->bind();
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+		for (int j = 0; j < obstaclePos.size(); j++) {
+			for (int i = 0; i < sg.shapes.size(); i++) {
+				SetModel(obstaclePos[j], 0, 0, 0, vec3(1,1,1), curS);
+				sg.textures[i]->bind(curS->getUniform("Texture0"));
+				sg.shapes[i]->draw(curS);
+			}
+		}
 	}
 
 	void SetMaterial(shared_ptr<Program> curS, int i) {
