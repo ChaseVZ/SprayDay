@@ -48,8 +48,8 @@ int numFlying = 0;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
-float spawnTimer = 4;
-float SPAWN_TIME = 5;
+float spawnTimer = 3;
+float SPAWN_TIME = 4;
 class Application : public EventCallbacks
 {
 
@@ -755,7 +755,12 @@ public:
 
 			manageSpray(frametime);
 			spawnEnemies(frametime);
-			DamageSystem::run(&(compManager->damageComps));
+			/*
+			if (trail.size() > 0) {
+				cout << "trailpos" << (trail[0]).pos.x << " " << (trail[0]).pos.z << endl;
+			}
+			*/
+			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
 				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
