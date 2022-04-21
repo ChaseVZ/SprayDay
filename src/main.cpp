@@ -79,6 +79,7 @@ public:
 	ShapeGroup cube;
 	ShapeGroup skybox;
 	ShapeGroup roundWon;
+	ShapeGroup crate;
 
 	/* ================ TEXTURES ================= */
 	
@@ -400,6 +401,11 @@ public:
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
 
+		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate.obj",
+			resourceDirectory + "/chase_resources/crate/",
+			resourceDirectory + "/chase_resources/crate/",
+			true, false, &numTextures);
+
 		player = Player();
 		player.pos = player.pos_default;
 		player.localGround = 0;
@@ -673,6 +679,7 @@ public:
 
 			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
+			RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
 
 			for (int i=0; i<enemies.size(); i++){
