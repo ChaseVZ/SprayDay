@@ -5,15 +5,13 @@ using namespace glm;
 
 vector<vec3> obstaclePos = 
 {
-	vec3(4,0,0),
-	vec3(4,0,2),
+	vec3(12,0,0),
 	vec3(4,0,4),
-	vec3(4,0,6),
-	vec3(2,0,0),
-	vec3(2,0,2),
-	vec3(2,0,4),
-	vec3(2,0,6),
-	vec3(2,2,4)
+	vec3(20,0,12),
+	vec3(60,0,20),
+	vec3(0,0,4),
+	vec3(0,0,40),
+	vec3(10,0,20)
 };
 
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
@@ -214,15 +212,11 @@ namespace RenderSystem {
 		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-		//for (int j = 0; j < obstaclePos.size(); j++) {
-		//	for (int i = 0; i < sg.shapes.size(); i++) {
-		//		SetModel(obstaclePos[j] * vec3(crateScale, crateScale, crateScale), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
-		//		sg.textures[i]->bind(curS->getUniform("Texture0"));
-		//		sg.shapes[i]->draw(curS);
-		//	}
-		//}
+		for (int j = 0; j < obstaclePos.size(); j++) {
+			drawCrateAtVec(obstaclePos[j], curS, sg);
+		}
 
-		int offset = 5 * GameManager::GetInstance()->getTileSize(); // 5 * 4 = 20
+		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
 		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
 		int interval = s / offset; // 120 / 20 = 6
 
@@ -237,6 +231,8 @@ namespace RenderSystem {
 				} 
 			}
 		}
+
+		//cout << endl << "next" << endl;
 	}
 
 	void SetMaterial(shared_ptr<Program> curS, int i) {

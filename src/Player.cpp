@@ -60,7 +60,7 @@ Player::Player()
 void Player::checkCollision()
 {
 	GameManager* gm = GameManager::GetInstance();
-	if (gm->checkCollide(nextPos)) { cout << "collision!" << endl; }
+	if (gm->checkCollide(nextPos, 1)) {  }
 	else { pos = nextPos; }
 }
 
