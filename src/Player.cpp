@@ -12,7 +12,7 @@ using namespace glm;
 /* HELPER INFO */
 float speeds[2] = { 0.65, 0.2 };
 float ep = 0.85f;		// hitbox epsilon
-vec3 up = vec3(0, 1, 0);
+vec3 up = vec3(0.0, 1.0, 0.0);
 
 float interpolate(float x1, float x2, float y1, float y2, float x)
 {
@@ -80,27 +80,27 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		if (w) 
 			tempw = (speeds[mvm_type] - speednerf) * moveDir;
 		if (!w)
-			tempw = vec3(0, 0, 0);
+			tempw = vec3(0.0);
 		if (s)
 			temps = -((speeds[mvm_type] - speednerf) * moveDir);
 		if (!s)
-			temps = vec3(0, 0, 0);
+			temps = vec3(0.0);
 		if (a)
 			tempa = -((speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up)));
 		if (!a)
-			tempa = vec3(0, 0, 0);
+			tempa = vec3(0.0);
 		if (d)
 			tempd = (speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up));
 		if (!d)
-			tempd = vec3(0, 0, 0);
+			tempd = vec3(0.0);
 
 		// velocity = sum of WASD movements, but do not effect y direction
 		tempv = tempw + temps + tempa + tempd;
 		//tempv = normalize(tempv);
-		tempv.y = 0;
+		tempv.y = 0.0;
 		vec3 nortempv = abs(normalize(tempv));
-		if (tempv.x == 0 && tempv.y == 0 && tempv.z == 0){
-			nortempv = vec3(0);
+		if (tempv.x == 0.0 && tempv.y == 0.0 && tempv.z == 0.0){
+			nortempv = vec3(0.0);
 		}
 		tempv = tempv*nortempv;
 
@@ -136,7 +136,7 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		nextPos = pos + vel;
 		pos = nextPos;
 
-		cout << pos.x << " " << pos.z << endl;
+		//cout << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}

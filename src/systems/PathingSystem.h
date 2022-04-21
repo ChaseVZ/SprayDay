@@ -11,7 +11,7 @@ namespace PathingSystem {
 	//Enemy Enemy(vec3 position, vec3 velocity, float boundingRadius);
     void move(Player p, float dt, Enemy* e);
     bool collide(vec3 nextPos, Player p, Enemy* e);
-    void explode(Enemy* e);
+    // void explode(Enemy* e);
     void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies, Player player, shared_ptr<Program> texProg);
     bool checkCollisions(int sID, vector<Enemy>* enemies);
     vec3 faceAway(vec3 p1, vec3 p2);

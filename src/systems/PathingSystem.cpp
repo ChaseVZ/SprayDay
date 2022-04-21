@@ -55,24 +55,29 @@ namespace PathingSystem {
             e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
             return true;
         }
-
+		/*
         if (sqrtf(pow((nextPos.x - p.pos.x), 2) + pow((nextPos.z - p.pos.z), 2)) < e->boRad + p.boRad) 
         {
             explode(e);
             return true;
         }
+		*/
         return false;
     }
 
-
+	/*
     void explode(Enemy* e) {
         e->exploding = true;
     }
+	*/
 
     void move(Player p, float dt, Enemy* e) {
         if (!collide(e->pos + e->vel*dt, p, e))
         {
             e->pos += e->vel*dt;
+			vec3 lookDir = normalize(p.pos - e->pos);
+			float mag = glm::length(e->vel);
+			e->vel = lookDir * mag;
         }
     }
 
@@ -87,7 +92,7 @@ namespace PathingSystem {
 		for (int i = 0; i < enemies->size(); i++) {
 			
 			move(player, frametime*50, &(*enemies)[i]);
-
+			/*
 			if ((*enemies)[i].exploding)
 			{
 				if ((*enemies)[i].explodeFrame == 0) {
@@ -107,6 +112,7 @@ namespace PathingSystem {
 			// else {
 			// 	drawSkunk(texProg, Projection, View, enemies[i], 1);
 			// }
+			*/
 		}
 
 		for (int i : toRemove)

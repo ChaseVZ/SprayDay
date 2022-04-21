@@ -71,7 +71,7 @@ namespace RenderSystem {
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
 
-		glUniform1f(curS->getUniform("alpha"), 0.6f);
+		glUniform1f(curS->getUniform("alpha"), rc->transparency);
 
 		
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);

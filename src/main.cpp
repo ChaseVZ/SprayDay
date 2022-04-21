@@ -40,7 +40,7 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
-int NUM_SKUNKS = 32;
+int NUM_SKUNKS = 12;
 int numFlying = 0;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
@@ -616,7 +616,7 @@ public:
 		player.pos, // pos
 		mat4(1.0f), //lookMat;
 		1.0, //scale
-		0.3, //transparency
+		0.4, //transparency
 		};
 		trail.push_back(trailPart);
 	}
@@ -625,7 +625,7 @@ public:
 		timeSinceLastSpray += frametime;
 		for (int i = 0; i < trail.size(); i++) {
 			trail[i].scale += 0.15*frametime;
-			trail[i].transparency -= 0.15*frametime;
+			trail[i].transparency -= 0.005*frametime;
 			if (trail[i].scale >= 3) {
 				trail.erase(trail.begin() + i);
 				i -= 1;
@@ -663,8 +663,10 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// check if done
+		/*
 		if (enemies.size() == 0)
 			gameDone = true;
+			*/
 
 		/* update all player attributes */
 		//if (gameBegin) 
@@ -696,18 +698,21 @@ public:
 
 			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
-			RenderSystem::draw(wolf, texProg, Projection, View, vec3(10, 2, 0), vec3(8, 8, 8), ZERO_VEC, false, ZERO_VEC);
+			
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
 
+			
 			for (int i=0; i<enemies.size(); i++){
-				drawSkunk(texProg, Projection, View, enemies[i], enemies[i].scale);
+				
+				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 			}
 
 			manageSpray(frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
 				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
+
 				RenderSystem::draw(texProg, Projection, View, &(trail[i]));
 			}
 			
