@@ -6,6 +6,7 @@ uniform mat4 P;
 uniform mat4 M;
 uniform mat4 V;
 uniform vec3 lightPos;
+uniform float alpha;
 
 out vec3 fragNor;
 out vec3 lightDir;

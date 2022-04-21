@@ -1,6 +1,7 @@
 #version 330 core
 uniform sampler2D Texture0;
 uniform int flip;
+uniform float alpha;
 
 in vec3 fragNor;
 in vec3 lightDir;
@@ -24,7 +25,7 @@ void main() {
 	vec3 h = (cam + light) / 2.0;
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
-	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, 1.0);
+	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, alpha);
 	//vec4 color = vec4(matSpec*Sc, 1.0);
 
 	//if (color.g > 0.5)

@@ -40,9 +40,14 @@ namespace RenderSystem {
 
 	void draw(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
 	{
-		// Why doesn't this function work !?
+		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+
+
+		glUniform1f(curS->getUniform("alpha"), 0.6f);
+
+		
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 		setModelRC(curS, rc);
 		// non-textured shapes draw
@@ -60,6 +65,8 @@ namespace RenderSystem {
 				(rc->sg)->shapes[i]->draw(curS);
 			}
 		}
+		//rc->sg->textures[0]->bind(curS->getUniform("Texture0"));
+		curS->unbind();
 	}
 
 	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir)
@@ -67,6 +74,7 @@ namespace RenderSystem {
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniform1f(curS->getUniform("alpha"), 1.0f);
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 		if (!useLookAt) { SetModel(trans, rot.z, rot.y, rot.x, sc, curS); }
@@ -97,6 +105,7 @@ namespace RenderSystem {
 
 	void draw(ShapeGroup sg, shared_ptr<Program> curS)
 	{
+		//glUniform1f(curS->getUniform("alpha"), 1.0f);
 		// non-textured shapes draw
 		if (sg.textures.size() == 0)
 		{
@@ -145,6 +154,7 @@ namespace RenderSystem {
 		Model->pushMatrix();
 		glBindVertexArray(GroundVertexArrayID);
 		tex->bind(curS->getUniform("Texture0"));
+		glUniform1f(curS->getUniform("alpha"), 1.0f);
 		Model->translate(vec3(0, -1, 0));
 		Model->scale(vec3(2, 1, 2));
 

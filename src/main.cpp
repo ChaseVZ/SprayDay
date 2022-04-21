@@ -295,9 +295,11 @@ public:
 		texProg->addUniform("Texture0");
 		texProg->addUniform("MatShine");
 		texProg->addUniform("lightPos");
+		texProg->addUniform("alpha");
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+		
 
 		// Initialize the GLSL program.
 		partProg = make_shared<Program>();
@@ -382,9 +384,8 @@ public:
 			true, false, &numTextures);
 
 		sphere = initShapes::load(resourceDirectory + "/sphere.obj",
-			resourceDirectory + "",
-			resourceDirectory + "",
-			false, false, &numTextures);
+			grassTexture,
+			false, &numTextures);
 
 		// Initialize Skybox mesh.x
 		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
@@ -590,7 +591,7 @@ public:
 		player.pos, // pos
 		mat4(1.0f), //lookMat;
 		1.0, //scale
-		1.0, //transparency
+		0.4, //transparency
 		};
 		trail.push_back(trailPart);
 	}
@@ -598,10 +599,12 @@ public:
 	void manageSpray(float frametime) {
 		timeSinceLastSpray += frametime;
 		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
-			timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
 			if (player.mvm_type == 1) {
-				timeSinceLastSpray = 0;
+				timeSinceLastSpray -= TIME_UNTIL_SPRAY;
 				generateSpray();
+			}
+			else {
+				timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
 			}
 		}
 	}
@@ -646,8 +649,8 @@ public:
 			manageSpray(frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
-				RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
-				//RenderSystem::draw(texProg, Projection, View, &(trail[i]));
+				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
+				RenderSystem::draw(texProg, Projection, View, &(trail[i]));
 			}
 			
 		}

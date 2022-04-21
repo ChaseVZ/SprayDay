@@ -120,4 +120,29 @@ namespace initShapes {
 
 		return sg;
 	}
+
+	ShapeGroup load(string obj_dir, shared_ptr<Texture> tex, bool reverse_norms, int* tex_idx)
+	{
+		vector<tinyobj::shape_t> TOshapes;
+		vector<tinyobj::material_t> objMaterials;
+
+		ShapeGroup sg; // return value
+
+		string errStr;
+		bool rc;
+
+		rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
+
+		resize_obj(TOshapes);
+
+		if (!rc) {
+			cerr << errStr << endl;
+		}
+		else {
+			initTOShapes(&sg, rc, TOshapes, reverse_norms);
+		}
+		(sg.textures).push_back(tex);
+
+		return sg;
+	}
 }
