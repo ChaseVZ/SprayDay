@@ -410,7 +410,7 @@ public:
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
 
-		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate.obj",
+		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate_small.obj",
 			resourceDirectory + "/chase_resources/crate/",
 			resourceDirectory + "/chase_resources/crate/",
 			true, false, &numTextures);

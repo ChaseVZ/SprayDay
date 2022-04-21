@@ -10,8 +10,7 @@
 using namespace glm;
 
 /* HELPER INFO */
-float speeds[2] = { 0.65, 0.2 };
-float ep = 0.85f;		// hitbox epsilon
+float speeds[2] = { 22, 10 };  // from 0.65 and 2.0
 vec3 up = vec3(0, 1, 0);
 
 float interpolate(float x1, float x2, float y1, float y2, float x)
@@ -58,10 +57,11 @@ Player::Player()
 }
 
 // returns the index of the shape that they player is in (for debugging purposes)
-void Player::collision()
+void Player::checkCollision()
 {
-	pos = nextPos;
-	cout << pos.x << " " << pos.z << endl;
+	GameManager* gm = GameManager::GetInstance();
+	if (gm->checkCollide(nextPos)) { cout << "collision!" << endl; }
+	else { pos = nextPos; }
 }
 
 void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
@@ -72,25 +72,23 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 	vec3 tempd;
 	vec3 tempv;
 
-	float speednerf = 0.0;
-
 	vec3 moveDir = normalize(vec3(lookAt.x, 0, lookAt.z));
 
 	if (!goCamera) {
 		if (w) 
-			tempw = (speeds[mvm_type] - speednerf) * moveDir;
+			tempw = speeds[mvm_type] * moveDir;
 		if (!w)
 			tempw = vec3(0, 0, 0);
 		if (s)
-			temps = -((speeds[mvm_type] - speednerf) * moveDir);
+			temps = -(speeds[mvm_type] * moveDir);
 		if (!s)
 			temps = vec3(0, 0, 0);
 		if (a)
-			tempa = -((speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up)));
+			tempa = -(speeds[mvm_type] * normalize(glm::cross(moveDir, up)));
 		if (!a)
 			tempa = vec3(0, 0, 0);
 		if (d)
-			tempd = (speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up));
+			tempd = speeds[mvm_type] * normalize(glm::cross(moveDir, up));
 		if (!d)
 			tempd = vec3(0, 0, 0);
 
@@ -133,10 +131,11 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 				lastTime = lastTime + frametime;
 		}
 
-		nextPos = pos + vel;
-		pos = nextPos;
+		nextPos = pos + vel*frametime;
+		checkCollision();
+		//pos = nextPos;
 
-		cout << pos.x << " " << pos.z << endl;
+		//cout << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}

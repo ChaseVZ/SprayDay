@@ -3,11 +3,6 @@
 
 using namespace glm;
 
-vec3 lightPos = vec3(0, 10, 0);
-
-// crate size = 2x2 (world size) * crateScale
-int crateScale = 2;
-
 vector<vec3> obstaclePos = 
 {
 	vec3(4,0,0),
@@ -55,10 +50,13 @@ void setModelRC(shared_ptr<Program> curS, RenderComponent* rc) {
 void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
 {
 	for (int i = 0; i < sg.shapes.size(); i++) {
+		int crateScale = GameManager::GetInstance()->getTileSize();
 		SetModel(pos, 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
 		sg.textures[i]->bind(curS->getUniform("Texture0"));
 		sg.shapes[i]->draw(curS);
 	}
+
+	GameManager::GetInstance()->addCollision(pos);
 }
 
 
@@ -70,10 +68,8 @@ namespace RenderSystem {
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-
 		glUniform1f(curS->getUniform("alpha"), 0.6f);
-
-		
+		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 		setModelRC(curS, rc);
 		// non-textured shapes draw
@@ -101,6 +97,7 @@ namespace RenderSystem {
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		glUniform1f(curS->getUniform("alpha"), 1.0f);
+		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 		if (!useLookAt) { SetModel(trans, rot.z, rot.y, rot.x, sc, curS); }
@@ -213,6 +210,7 @@ namespace RenderSystem {
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 		//for (int j = 0; j < obstaclePos.size(); j++) {
@@ -223,24 +221,9 @@ namespace RenderSystem {
 		//	}
 		//}
 
-		int offset = 3;
-		for (int j = 0; j < 10; j++)
-		{
-			for (int k = 0; k < 10; k++) 
-			{
-				//for (int i = 0; i < sg.shapes.size(); i++) {
-				//	SetModel(vec3(j * offset, 0, k * offset) * vec3(crateScale*2, crateScale*2, crateScale*2), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
-				//	sg.textures[i]->bind(curS->getUniform("Texture0"));
-				//	sg.shapes[i]->draw(curS);
-				//}
-				//drawCrateAtVec(vec3(j * offset, 0, k * offset) * vec3(crateScale * 2, crateScale * 2, crateScale * 2), curS, sg);
-			}
-		}
-
-
-		offset = 10;
-		int s = GameManager::GetInstance()->getSize() / 2; // 100 / 2 = 50
-		int interval = s / offset; // 50 / 10 = 5
+		int offset = 5 * GameManager::GetInstance()->getTileSize(); // 5 * 4 = 20
+		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
+		int interval = s / offset; // 120 / 20 = 6
 
 		for (int j = -interval; j <= interval; j++)
 		{
@@ -248,7 +231,7 @@ namespace RenderSystem {
 			{
 				if (j == -interval || j == interval) { drawCrateAtVec(vec3(j * offset, 0, k * offset), curS, sg); }
 				else {
-					drawCrateAtVec(vec3(j * offset, 0, -s), curS, sg); 
+					drawCrateAtVec(vec3(j * offset, 0, -s), curS, sg);
 					drawCrateAtVec(vec3(j * offset, 0, s), curS, sg);
 				} 
 			}
