@@ -4,6 +4,7 @@
 #include "../MatrixStack.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "../CompManager.h""
 
 using namespace glm;
 
@@ -12,7 +13,8 @@ namespace PathingSystem {
     void move(Player p, float dt, Enemy* e);
     bool collide(vec3 nextPos, Player p, Enemy* e);
     // void explode(Enemy* e);
-    void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies, Player player, shared_ptr<Program> texProg);
+    void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies, 
+        Player player, shared_ptr<Program> texProg, CompManager *compManager);
     bool checkCollisions(int sID, vector<Enemy>* enemies);
     vec3 faceAway(vec3 p1, vec3 p2);
     vec3 calcScareVel(vec3 ePos, vec3 pPos);

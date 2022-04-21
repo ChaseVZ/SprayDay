@@ -25,6 +25,9 @@
 #include "initShapes.h"
 #include "systems/renderSystem.h"
 #include "systems/PathingSystem.h"
+#include "DamageComponent.h"
+#include "systems/DamageSystem.h"
+#include "CompManager.h"
 
 // Skybox
 #include "stb_image.h"
@@ -45,7 +48,7 @@ int numFlying = 0;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
-float spawnTimer = 0;
+float spawnTimer = 4;
 float SPAWN_TIME = 5;
 class Application : public EventCallbacks
 {
@@ -75,6 +78,7 @@ public:
 	/* ================ GEOMETRY ================= */
 
 	vector<Enemy> enemies;
+	//vector<DamageComponent> damageComps;
 	vector<RenderComponent> trail;
 	ShapeGroup bear;
 	ShapeGroup wolf;
@@ -126,6 +130,7 @@ public:
 	VirtualCamera vcam;
 	particleSys* winParticleSys;
 	GameManager* gm;
+	CompManager* compManager;
 
 	// Animation data
 	float sTheta = 0;
@@ -371,11 +376,20 @@ public:
 				0, // int explodeFrame;
 				2.0 // float scale;
 			};
+
+			DamageComponent dc = {
+				20.0, // total hp
+				20.0, // current hp
+			};
+
+			compManager->damageComps.push_back(dc);
 			enemies.push_back(e); 
+			
 		}
 
 		// GM
 		gm = GameManager::GetInstance();
+		compManager = CompManager::GetInstance();
 	}
 
 	float randFloat() {
@@ -657,6 +671,13 @@ public:
 				0, // int explodeFrame;
 				5.0 // float scale;
 		};
+
+		DamageComponent dc = {
+				20.0, // total hp
+				20.0, // current hp
+		};
+
+		compManager->damageComps.push_back(dc);
 		enemies.push_back(newWolf);
 	}
 	void spawnEnemies(float frametime) {
@@ -725,16 +746,16 @@ public:
 			drawBear(texProg, Projection, View);
 			
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
+			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
 
 			
 			for (int i=0; i<enemies.size(); i++){
-				
 				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 			}
 
 			manageSpray(frametime);
 			spawnEnemies(frametime);
+			DamageSystem::run(&(compManager->damageComps));
 			
 			for (int i = 0; i < trail.size(); i++) {
 				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);

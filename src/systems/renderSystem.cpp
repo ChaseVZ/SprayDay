@@ -226,9 +226,9 @@ namespace RenderSystem {
 		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
 		int interval = s / offset; // 120 / 20 = 6
 
-		for (int j = -interval; j <= interval; j++)
+		for (int j = -interval; j < interval; j++)
 		{
-			for (int k = -interval; k <= interval; k++)
+			for (int k = -interval; k < interval; k++)
 			{
 				if (j == -interval || j == interval) { drawCrateAtVec(vec3(j * offset, 0, k * offset), curS, sg); }
 				else {

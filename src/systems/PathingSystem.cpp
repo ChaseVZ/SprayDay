@@ -80,7 +80,8 @@ namespace PathingSystem {
         }
     }
 
-    void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies, Player player, shared_ptr<Program> texProg) {
+    void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies,
+		Player player, shared_ptr<Program> texProg, CompManager* compManager) {
 		vector<int> toRemove;
 		bool delta = false;
 
@@ -93,7 +94,11 @@ namespace PathingSystem {
 			move(player, frametime*50, &(*enemies)[i]);
 			if ((*enemies)[i].exploding)
 			{
+				/*
 				enemies->erase(enemies->begin() + i);
+				compManager->damageComps->erase(compManager->damageComps->begin() + i);
+				i -= 1;
+				*/
 
 				/*
 				if ((*enemies)[i].explodeFrame == 0) {
