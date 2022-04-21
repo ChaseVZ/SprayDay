@@ -42,7 +42,7 @@ using namespace chrono;
 
 int NUM_SKUNKS = 32;
 int numFlying = 0;
-float TIME_UNTIL_SPRAY = .2;
+float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 class Application : public EventCallbacks
 {
@@ -85,6 +85,7 @@ public:
 	
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
+	shared_ptr<Texture> sprayTexture;
 
 	// Skybox Texture Files
 	vector<std::string> space_faces{
@@ -330,6 +331,12 @@ public:
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
 
+		sprayTexture = make_shared<Texture>();
+		sprayTexture->setFilename(resourceDirectory + "/chase_resources/yellow_gas_tex.png");
+		sprayTexture->init();
+		sprayTexture->setUnit(0);
+		sprayTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+
 		particleTexture = make_shared<Texture>();
 		particleTexture->setFilename(resourceDirectory + "/alpha.bmp");
 		particleTexture->init();
@@ -390,7 +397,7 @@ public:
 			true, false, &numTextures);
 
 		sphere = initShapes::load(resourceDirectory + "/sphere.obj",
-			grassTexture,
+			sprayTexture,
 			false, &numTextures);
 
 		// Initialize Skybox mesh.x
@@ -614,6 +621,14 @@ public:
 
 	void manageSpray(float frametime) {
 		timeSinceLastSpray += frametime;
+		for (int i = 0; i < trail.size(); i++) {
+			trail[i].scale += 0.15*frametime;
+			trail[i].transparency -= 0.15*frametime;
+			if (trail[i].scale >= 3) {
+				trail.erase(trail.begin() + i);
+				i -= 1;
+			}
+		}
 		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
 			if (player.mvm_type == 1) {
 				timeSinceLastSpray -= TIME_UNTIL_SPRAY;
