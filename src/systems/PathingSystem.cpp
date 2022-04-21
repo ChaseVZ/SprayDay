@@ -55,13 +55,12 @@ namespace PathingSystem {
             e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
             return true;
         }
-		/*
+
         if (sqrtf(pow((nextPos.x - p.pos.x), 2) + pow((nextPos.z - p.pos.z), 2)) < e->boRad + p.boRad) 
         {
-            explode(e);
+            e->exploding = true;
             return true;
         }
-		*/
         return false;
     }
 
@@ -92,9 +91,11 @@ namespace PathingSystem {
 		for (int i = 0; i < enemies->size(); i++) {
 			
 			move(player, frametime*50, &(*enemies)[i]);
-			/*
 			if ((*enemies)[i].exploding)
 			{
+				enemies->erase(enemies->begin() + i);
+
+				/*
 				if ((*enemies)[i].explodeFrame == 0) {
 					//numFlying += 1;
 					(*enemies)[i].vel = calcScareVel((*enemies)[i].pos, player.pos);
@@ -108,11 +109,12 @@ namespace PathingSystem {
 				else { //drawSkunk(texProg, Projection, View, enemies[i], enemies[i]->scale - 0.0005); 
                     (*enemies)[i].scale -= 0.0005; 
                 }
+				*/
 			}
 			// else {
 			// 	drawSkunk(texProg, Projection, View, enemies[i], 1);
 			// }
-			*/
+			
 		}
 
 		for (int i : toRemove)
