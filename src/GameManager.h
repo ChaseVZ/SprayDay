@@ -2,19 +2,44 @@
 #define GM_H
 
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 using namespace glm;
+
 class GameManager
 {
+private:
+	// instance
 	static GameManager* instance;
-	bool collision;
 
-	GameManager() { collision = false; }
+	// data
+	int** colMap;
+	int MAP_SIZE;
+
+	// private functions
+	void setColMap() {
+		colMap[MAP_SIZE][MAP_SIZE] = { 0 };
+
+		for (int i = 0; i < MAP_SIZE; i++) {
+			for (int j = 0; j < MAP_SIZE; j++) {
+				std::cout << colMap[i][j];
+			}
+		}
+	}
+
+	// private constructor
+	GameManager() { }
 
 public:
-	static GameManager* GetInstance();
-	bool getCollision();
-	void setCollision(bool setter);
+	static GameManager* GetInstance()
+	{
+		if (!instance) { instance = new GameManager(); }
+		return instance;
+	}
+
+	void setSize(int _size) { MAP_SIZE = _size; setColMap(); }
 };
+
+//GameManager* GameManager::instance = NULL;
 
 #endif

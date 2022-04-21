@@ -1,4 +1,4 @@
-#include "RenderSystem.h"
+#include "renderSystem.h"
 
 using namespace glm;
 

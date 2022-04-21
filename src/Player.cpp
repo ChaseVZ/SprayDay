@@ -58,12 +58,7 @@ Player::Player()
 // returns the index of the shape that they player is in (for debugging purposes)
 void Player::collision()
 {
-	GameManager* gm = gm->GetInstance();
-
-	if (!gm->getCollision()) {
-		pos = nextPos;
-	}
-	//pos = nextPos;
+	pos = nextPos;
 }
 
 void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)

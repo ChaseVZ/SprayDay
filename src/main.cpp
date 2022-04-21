@@ -23,7 +23,7 @@
 #include "GameManager.h"
 #include "ShapeGroup.h"
 #include "initShapes.h"
-#include "systems/RenderSystem.h"
+#include "systems/renderSystem.h"
 #include "systems/PathingSystem.h"
 
 // Skybox
@@ -362,6 +362,11 @@ public:
 			};
 			enemies.push_back(e); 
 		}
+
+		// GM
+		//GameManager* gm = GameManager::GetInstance();
+		//gm->setSize(10);
+
 	}
 
 	float randFloat() {
@@ -541,6 +546,11 @@ public:
 		RenderSystem::draw(skunk, curS, Projection, View, enemy.pos, vec3(scale, scale, scale), ZERO_VEC, true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
 	}
 
+	void drawPlayerSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 pos, vec3 lookAt) 
+	{
+		RenderSystem::draw(skunk, curS, Projection, View, pos, vec3(2, 2, 2), ZERO_VEC, true, vec3(lookAt.x, pos.y, lookAt.z));
+	}
+
 	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		RenderSystem::draw(bear, curS, Projection, View, vec3(10,2,0), vec3(8,8,8), ZERO_VEC, false, ZERO_VEC);
@@ -571,8 +581,7 @@ public:
 		curS->unbind();
 	}
 
-	void updatePlayer(float frametime)
-	{
+	vec3 updatePlayer(float frametime)	{
 		if (gameDone) {
 			vcam.updatePos(player.win_loc);
 			vcam.lookAt = vec3(0, 0, -1);
@@ -583,6 +592,7 @@ public:
 			// camera
 			vcam.updatePos(player.pos);
 		}
+		return player.pos;
 	}
 
 	void generateSpray() {
@@ -609,6 +619,14 @@ public:
 		}
 	}
 
+	vec3 makeCameraPos(vec3 vcamlookAt){
+		vec3 camPos = vcamlookAt;
+		if (camPos.y > 0){
+			camPos.y=0;
+		}
+		return 20.0f*camPos;
+	}
+
 
 	void render(float frametime) {
 		int width, height;
@@ -627,10 +645,12 @@ public:
 
 		/* update all player attributes */
 		//if (gameBegin) 
-		updatePlayer(frametime);
+		vec3 playerPos = updatePlayer(frametime);
+		vec3 camera_offset = vec3(3, 3, 3);
 
-		// Create the matrix stacks
-		mat4 View = glm::lookAt(vcam.pos, vcam.lookAt + vcam.pos, vec3(0, 1, 0));
+		// Create the matrix stacks playerPos-vcam.lookAt
+		vec3 cameraPos = makeCameraPos(vcam.lookAt);
+		mat4 View = lookAt(playerPos-cameraPos, playerPos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
@@ -638,6 +658,19 @@ public:
 		if (!gameDone) {
 
 			drawSkybox(cubeProg, Projection, View);
+
+			texProg->bind();
+			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+			glDepthFunc(GL_LEQUAL);
+			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+
+			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
+				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
+			texProg->unbind();
+
+			drawPlayerSkunk(texProg, Projection, View, playerPos, vcam.lookAt);
+
 			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
