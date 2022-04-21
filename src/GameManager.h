@@ -45,7 +45,7 @@ public:
 	vec3 getLightPos() { return lightPos; }
 
 	void addCollision(vec3 pos);
-	bool checkCollide(vec3 pos);
+	bool checkCollide(vec3 pos, float radius);
 };
 
 //GameManager* GameManager::instance = NULL;
