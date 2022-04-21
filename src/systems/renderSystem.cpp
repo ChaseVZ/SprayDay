@@ -3,11 +3,21 @@
 using namespace glm;
 
 vec3 lightPos = vec3(0, 10, 0);
+
+// crate size = 2x2 (world size)
+int crateScale = 2;
+
 vector<vec3> obstaclePos = 
 {
-	vec3(1,0,1),
+	vec3(4,0,0),
+	vec3(4,0,2),
 	vec3(4,0,4),
-	vec3(4,0,1)
+	vec3(4,0,6),
+	vec3(2,0,0),
+	vec3(2,0,2),
+	vec3(2,0,4),
+	vec3(2,0,6),
+	vec3(2,2,4)
 };
 
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
@@ -195,11 +205,24 @@ namespace RenderSystem {
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
-		for (int j = 0; j < obstaclePos.size(); j++) {
-			for (int i = 0; i < sg.shapes.size(); i++) {
-				SetModel(obstaclePos[j], 0, 0, 0, vec3(1,1,1), curS);
-				sg.textures[i]->bind(curS->getUniform("Texture0"));
-				sg.shapes[i]->draw(curS);
+		//for (int j = 0; j < obstaclePos.size(); j++) {
+		//	for (int i = 0; i < sg.shapes.size(); i++) {
+		//		SetModel(obstaclePos[j] * vec3(crateScale, crateScale, crateScale), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
+		//		sg.textures[i]->bind(curS->getUniform("Texture0"));
+		//		sg.shapes[i]->draw(curS);
+		//	}
+		//}
+
+		for (int j = 0; j < 10; j += 2)
+		{
+			for (int k = 0; k < 10; k += 2) 
+			{
+				for (int i = 0; i < sg.shapes.size(); i++) {
+					
+					SetModel(vec3(j * 3, 0, k * 3) * vec3(crateScale, crateScale, crateScale), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
+					sg.textures[i]->bind(curS->getUniform("Texture0"));
+					sg.shapes[i]->draw(curS);
+				}
 			}
 		}
 	}
