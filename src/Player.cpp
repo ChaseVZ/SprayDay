@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <iostream>
+
 
 using namespace glm;
 
@@ -71,31 +73,44 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 
 	float speednerf = 0.0;
 
+	vec3 moveDir = normalize(vec3(lookAt.x, 0, lookAt.z));
+
 	if (!goCamera) {
 		if (w) 
-			tempw = (speeds[mvm_type] - speednerf) * lookAt;
+			tempw = (speeds[mvm_type] - speednerf) * moveDir;
 		if (!w)
 			tempw = vec3(0, 0, 0);
 		if (s)
-			temps = -((speeds[mvm_type] - speednerf) * lookAt);
+			temps = -((speeds[mvm_type] - speednerf) * moveDir);
 		if (!s)
 			temps = vec3(0, 0, 0);
 		if (a)
-			tempa = -((speeds[mvm_type] - speednerf) * normalize(glm::cross(lookAt, up)));
+			tempa = -((speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up)));
 		if (!a)
 			tempa = vec3(0, 0, 0);
 		if (d)
-			tempd = (speeds[mvm_type] - speednerf) * normalize(glm::cross(lookAt, up));
+			tempd = (speeds[mvm_type] - speednerf) * normalize(glm::cross(moveDir, up));
 		if (!d)
 			tempd = vec3(0, 0, 0);
 
 		// velocity = sum of WASD movements, but do not effect y direction
 		tempv = tempw + temps + tempa + tempd;
+		//tempv = normalize(tempv);
 		tempv.y = 0;
+		vec3 nortempv = abs(normalize(tempv));
+		if (tempv.x == 0 && tempv.y == 0 && tempv.z == 0){
+			nortempv = vec3(0);
+		}
+		tempv = tempv*nortempv;
 
 		// cap speed to movement speed type
 		vel.x = std::min(tempv.x, speeds[mvm_type]);
 		vel.z = std::min(tempv.z, speeds[mvm_type]);
+
+		// if (vel.x+vel.z > speeds[mvm_type]){
+		// 	vel.x = vel.x*(1/sqrt(2));
+		// 	vel.z = vel.z*(1/sqrt(2));
+		// }
 
 		// Only involve gravity when player is jumping
 		if (jumping) {
