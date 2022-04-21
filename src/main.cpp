@@ -40,10 +40,13 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
-int NUM_SKUNKS = 12;
+int NUM_SKUNKS = 0;
 int numFlying = 0;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
+float gameTime = 0;
+float spawnTimer = 0;
+float SPAWN_TIME = 5;
 class Application : public EventCallbacks
 {
 
@@ -641,6 +644,28 @@ public:
 			}
 		}
 	}
+	vec3 getRandStart() {
+		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((gm->getSize() / 2.0));
+	}
+	void addWolf() {
+		cout << "spawning wolf" << endl;
+		Enemy newWolf = {
+				2.0, // float boRad;
+				getRandStart(), // vec3 pos;
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+				false, // bool exploding;
+				0, // int explodeFrame;
+				5.0 // float scale;
+		};
+		enemies.push_back(newWolf);
+	}
+	void spawnEnemies(float frametime) {
+		spawnTimer += frametime;
+		if (spawnTimer > SPAWN_TIME) {
+			spawnTimer -= SPAWN_TIME;
+			addWolf();
+		}
+	}
 
 	vec3 makeCameraPos(vec3 vcamlookAt){
 		vec3 camPos = vcamlookAt;
@@ -709,6 +734,7 @@ public:
 			}
 
 			manageSpray(frametime);
+			spawnEnemies(frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
 				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
@@ -775,6 +801,7 @@ int main(int argc, char *argv[])
 
 		// reset lastTime so that we can calculate the deltaTime on the next frame
 		lastTime = nextLastTime;
+		gameTime += deltaTime;
 
 		// Render scene.
 		application->render(deltaTime);
