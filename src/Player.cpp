@@ -61,6 +61,7 @@ Player::Player()
 void Player::collision()
 {
 	pos = nextPos;
+	cout << pos.x << " " << pos.z << endl;
 }
 
 void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
@@ -134,6 +135,8 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 
 		nextPos = pos + vel;
 		pos = nextPos;
+
+		cout << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}

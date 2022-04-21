@@ -118,13 +118,11 @@ public:
 	// ground VAO
 	GLuint GroundVertexArrayID;
 
-	float playerScale = (1.0f / 100.0f);
-	float crosshairScale = (1.0f / 250.0f);
-
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
 	particleSys* winParticleSys;
+	GameManager* gm;
 
 	// Animation data
 	float sTheta = 0;
@@ -374,9 +372,7 @@ public:
 		}
 
 		// GM
-		//GameManager* gm = GameManager::GetInstance();
-		//gm->setSize(10);
-
+		gm = GameManager::GetInstance();
 	}
 
 	float randFloat() {
@@ -434,7 +430,7 @@ public:
 	/* =================== HELPER FUNCTIONS ================== */
 
 	void initGround() {
-		float g_groundSize = 80;
+		float g_groundSize = gm->getSize() / 2;
 		float g_groundY = -0.25;
 
 		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
@@ -546,7 +542,7 @@ public:
 		glDepthFunc(GL_LEQUAL);
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 
-		float skybox_scale = 250;
+		float skybox_scale = gm->getSize();
 		Model->scale(vec3(skybox_scale, skybox_scale, skybox_scale));
 		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 		//bind the cube map texture

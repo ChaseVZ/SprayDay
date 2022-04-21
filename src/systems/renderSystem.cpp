@@ -1,10 +1,11 @@
 #include "renderSystem.h"
+#include "../GameManager.h"
 
 using namespace glm;
 
 vec3 lightPos = vec3(0, 10, 0);
 
-// crate size = 2x2 (world size)
+// crate size = 2x2 (world size) * crateScale
 int crateScale = 2;
 
 vector<vec3> obstaclePos = 
@@ -49,6 +50,15 @@ void setModelRC(shared_ptr<Program> curS, RenderComponent* rc) {
 	mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(rc->scale));
 	mat4 ctm = Trans * ScaleS * rc->lookMat;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
+}
+
+void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
+{
+	for (int i = 0; i < sg.shapes.size(); i++) {
+		SetModel(pos, 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
+		sg.textures[i]->bind(curS->getUniform("Texture0"));
+		sg.shapes[i]->draw(curS);
+	}
 }
 
 
@@ -172,7 +182,7 @@ namespace RenderSystem {
 		tex->bind(curS->getUniform("Texture0"));
 		glUniform1f(curS->getUniform("alpha"), 1.0f);
 		Model->translate(vec3(0, -1, 0));
-		Model->scale(vec3(2, 1, 2));
+		Model->scale(vec3(1, 1, 1));
 
 		setModel(curS, Model);
 		glEnableVertexAttribArray(0);
@@ -213,16 +223,34 @@ namespace RenderSystem {
 		//	}
 		//}
 
-		for (int j = 0; j < 10; j += 2)
+		int offset = 3;
+		for (int j = 0; j < 10; j++)
 		{
-			for (int k = 0; k < 10; k += 2) 
+			for (int k = 0; k < 10; k++) 
 			{
-				for (int i = 0; i < sg.shapes.size(); i++) {
-					
-					SetModel(vec3(j * 3, 0, k * 3) * vec3(crateScale, crateScale, crateScale), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
-					sg.textures[i]->bind(curS->getUniform("Texture0"));
-					sg.shapes[i]->draw(curS);
-				}
+				//for (int i = 0; i < sg.shapes.size(); i++) {
+				//	SetModel(vec3(j * offset, 0, k * offset) * vec3(crateScale*2, crateScale*2, crateScale*2), 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
+				//	sg.textures[i]->bind(curS->getUniform("Texture0"));
+				//	sg.shapes[i]->draw(curS);
+				//}
+				//drawCrateAtVec(vec3(j * offset, 0, k * offset) * vec3(crateScale * 2, crateScale * 2, crateScale * 2), curS, sg);
+			}
+		}
+
+
+		offset = 10;
+		int s = GameManager::GetInstance()->getSize() / 2; // 100 / 2 = 50
+		int interval = s / offset; // 50 / 10 = 5
+
+		for (int j = -interval; j <= interval; j++)
+		{
+			for (int k = -interval; k <= interval; k++)
+			{
+				if (j == -interval || j == interval) { drawCrateAtVec(vec3(j * offset, 0, k * offset), curS, sg); }
+				else {
+					drawCrateAtVec(vec3(j * offset, 0, -s), curS, sg); 
+					drawCrateAtVec(vec3(j * offset, 0, s), curS, sg);
+				} 
 			}
 		}
 	}
