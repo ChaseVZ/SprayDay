@@ -74,6 +74,7 @@ public:
 	vector<Enemy> enemies;
 	vector<RenderComponent> trail;
 	ShapeGroup bear;
+	ShapeGroup wolf;
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
@@ -186,6 +187,7 @@ public:
 
 				// PolyMode
 				if (key == GLFW_KEY_Z && action == GLFW_PRESS) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+				if (key == GLFW_KEY_Z && action == GLFW_RELEASE) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 			}
 		}
 
@@ -407,6 +409,10 @@ public:
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures);
+		wolf = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/wolf.obj",
+			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
+			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
+			true, false, &numTextures);
 
 		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate.obj",
 			resourceDirectory + "/chase_resources/crate/",
@@ -614,7 +620,7 @@ public:
 		player.pos, // pos
 		mat4(1.0f), //lookMat;
 		1.0, //scale
-		0.4, //transparency
+		0.3, //transparency
 		};
 		trail.push_back(trailPart);
 	}
@@ -694,6 +700,7 @@ public:
 
 			drawGround(texProg, Projection, View);
 			drawBear(texProg, Projection, View);
+			RenderSystem::draw(wolf, texProg, Projection, View, vec3(10, 2, 0), vec3(8, 8, 8), ZERO_VEC, false, ZERO_VEC);
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg);
 
