@@ -5,10 +5,11 @@
 #include <iostream>
 
 using namespace glm;
+using namespace std;
 
 
-
-const int MAP_SIZE = 200; // world bounds = -MAP_SIZE/2 to +MAP_SIZE/2
+const int MAP_SIZE = 240; // world bounds = -MAP_SIZE/2 to +MAP_SIZE/2
+const int TILE_SIZE = 2; // crates take up a 1x1 * crate_size area in world space
 
 class GameManager
 {
@@ -17,20 +18,21 @@ private:
 	static GameManager* instance;
 
 	// data
-	int colMap[MAP_SIZE][MAP_SIZE] = {0};
-
+	int colMap[MAP_SIZE][MAP_SIZE] = {};
+	vec3 lightPos = vec3(0, 10, 0);
 
 	// private functions
-	void setColMap() {
+	void setupColMap()
+	{
 		for (int i = 0; i < MAP_SIZE; i++) {
 			for (int j = 0; j < MAP_SIZE; j++) {
-				std::cout << colMap[i][j];
+				colMap[i][j] = 0;
 			}
 		}
 	}
 
 	// private constructor
-	GameManager() { }
+	GameManager() { setupColMap(); }
 public:
 	static GameManager* GetInstance()
 	{
@@ -39,6 +41,11 @@ public:
 	}
 
 	int getSize() { return MAP_SIZE; }
+	int getTileSize() { return TILE_SIZE; }
+	vec3 getLightPos() { return lightPos; }
+
+	void addCollision(vec3 pos);
+	bool checkCollide(vec3 pos);
 };
 
 //GameManager* GameManager::instance = NULL;

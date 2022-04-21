@@ -34,7 +34,7 @@ private:
 	vec3 jumpSpeed = vec3(0, 0.098 * 2, 0);  // jumpspeed (time = 2s)
 	vec3 nextPos = vec3(0, 0, 0);
 	float lastTime = 0;
-	void collision();
+	void checkCollision();
 };
 
 
