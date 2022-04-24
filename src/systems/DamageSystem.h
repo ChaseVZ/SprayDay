@@ -1,3 +1,5 @@
+#pragma once 
+
 #include "../Enemy.h"
 #include "../DamageComponent.h"
 #include "../MatrixStack.h"

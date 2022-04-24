@@ -1,6 +1,9 @@
 /*
- * Final Project
- * CPE 471 Chase VanderZwan
+ * SprayDay
+ * CPE 476
+ * Chase VanderZwan
+ * Xander Wallace
+ * Alex Burke
  */
 
 #include <iostream>
@@ -43,8 +46,12 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
-int NUM_SKUNKS = 0;
-int numFlying = 0;
+// A simple type alias
+using Entity = std::uint32_t;
+
+// Used to define the size of arrays later on
+const Entity MAX_ENTITIES = 5000;
+
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
@@ -114,7 +121,6 @@ public:
 	"back.jpg"
 	};
 
-	unsigned int cubeMapTexture = 0;
 	int numTextures = 0;
 
 	/* ============== GROUND ============== */
@@ -259,8 +265,6 @@ public:
 	}
 
 
-
-
 	/* =================== INIT FUNCTIONS ================== */
 
 	void init(const std::string& resourceDirectory)
@@ -362,30 +366,10 @@ public:
 		cubeProg->addUniform("P");
 		cubeProg->addUniform("V");
 		cubeProg->addUniform("M");
+		cubeProg->addUniform("alpha");
+		cubeProg->addUniform("lightPos");
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
-
-		//SKUNK
-
-		for (int i = 0; i < NUM_SKUNKS; i++) {
-			Enemy e = {
-				2.0, // float boRad;
-				vec3(rand() % 100 - 50 , 0, rand() % 100 -50 ), // vec3 pos;
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
-				false, // bool exploding;
-				0, // int explodeFrame;
-				2.0 // float scale;
-			};
-
-			DamageComponent dc = {
-				20.0, // total hp
-				20.0, // current hp
-			};
-
-			compManager->damageComps.push_back(dc);
-			enemies.push_back(e); 
-			
-		}
 
 		// GM
 		gm = GameManager::GetInstance();
@@ -438,7 +422,7 @@ public:
 		vcam = VirtualCamera(player.pos_default, vec3(-91, -20, 70));
 
 		// SKYBOX
-		cubeMapTexture = createSky(resourceDirectory + "/skybox/", sky_faces);
+		createSky(resourceDirectory + "/skybox/", sky_faces);
 
 		//GROUND
 		initGround();
@@ -501,14 +485,6 @@ public:
 	void printVec(vec3 v) {
 		cout << v.x << " " << v.y << " " << v.z << endl;
 	}
-
-	void SetModelQuat(vec3 trans, quat rot, vec3 sc, shared_ptr<Program> curS) {
-		mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
-		mat4 ScaleS = glm::scale(glm::mat4(1.0f), sc);
-		mat4 ctm = Trans * (toMat4(rot)) * ScaleS;
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
-	}
-
 	unsigned int createSky(string dir, vector<string> faces) {
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
@@ -548,30 +524,16 @@ public:
 
 	/* =================== DRAW FUNCTIONS ================== */
 
-	void drawSkybox(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		auto Model = make_shared<MatrixStack>();
-		Model->loadIdentity();
-
-		curS->bind();
-
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glDepthFunc(GL_LEQUAL);
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
-		float skybox_scale = gm->getSize();
-		Model->scale(vec3(skybox_scale, skybox_scale, skybox_scale));
-		glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-		//bind the cube map texture
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
-
-		RenderSystem::draw(skybox, curS);
-
-		//set the depth test back to normal!
-		glDepthFunc(GL_LESS);
-
-		curS->unbind();
-	}
+	RenderComponent initSkyboxRC(){
+		RenderComponent skyRC = {
+		&cube,     //ShapeGroup * sg;
+		vec3(0.0), //vec3 pos;
+		mat4(1.0),     //mat4 lookMat;
+		gm->getSize(), //float scale;
+		1.0,           //float transparency;
+		};
+		return skyRC;
+	};
 
 	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
 	{
@@ -662,7 +624,7 @@ public:
 		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((gm->getSize() / 2.0));
 	}
 	void addWolf() {
-		cout << "spawning wolf" << endl;
+		//cout << "spawning wolf" << endl;
 		Enemy newWolf = {
 				2.0, // float boRad;
 				getRandStart(), // vec3 pos;
@@ -679,6 +641,32 @@ public:
 
 		compManager->damageComps.push_back(dc);
 		enemies.push_back(newWolf);
+
+		/*
+		entity = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(entity, Player{});
+		gCoordinator.AddComponent<Gravity>(
+			entity,
+			{ Vec3(0.0f, randGravity(generator), 0.0f) });
+		gCoordinator.AddComponent(
+			entity,
+			RigidBody{
+				.velocity = Vec3(0.0f, 0.0f, 0.0f),
+				.acceleration = Vec3(0.0f, 0.0f, 0.0f)
+			});
+		gCoordinator.AddComponent(
+			entity,
+			Transform{
+				.position = Vec3(randPosition(generator), randPosition(generator), randPosition(generator)),
+				.rotation = Vec3(randRotation(generator), randRotation(generator), randRotation(generator)),
+				.scale = Vec3(scale, scale, scale)
+			});
+		gCoordinator.AddComponent(
+			entity,
+			Renderable{
+				.color = Vec3(randColor(generator), randColor(generator), randColor(generator))
+			});
+			*/
 	}
 	void spawnEnemies(float frametime) {
 		spawnTimer += frametime;
@@ -728,7 +716,7 @@ public:
 
 		if (!gameDone) {
 
-			drawSkybox(cubeProg, Projection, View);
+			RenderSystem::draw(cubeProg, Projection, View, &initSkyboxRC());
 
 			texProg->bind();
 			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
@@ -743,7 +731,7 @@ public:
 			drawPlayerSkunk(texProg, Projection, View, playerPos, vcam.lookAt);
 
 			drawGround(texProg, Projection, View);
-			drawBear(texProg, Projection, View);
+			//drawBear(texProg, Projection, View);
 			
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);

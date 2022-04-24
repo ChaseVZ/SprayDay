@@ -1,8 +1,8 @@
 #include "DamageSystem.h"
 #include <iostream>
+const int SPRAY_HITBOX_FACTOR = 1; // increase for better performance 
 
 namespace DamageSystem {
-
 	void checkHp(vector<DamageComponent>* damageComps, vector<Enemy>* enemies) {
 		for (int i = 0; i < enemies->size(); i += 1){
 			if ((*damageComps)[i].currentHp < 0) {
@@ -13,7 +13,7 @@ namespace DamageSystem {
 	}
 
 	bool checkCollision(Enemy enemy, vector<RenderComponent>* trail) {
-		for (int j = 0; j < trail->size(); j += 2) {
+		for (int j = 0; j < trail->size(); j += SPRAY_HITBOX_FACTOR) {
 			vec3 trailPos = (*trail)[j].pos;
 			vec3 enemyPos = enemy.pos;
 			/*
@@ -32,11 +32,9 @@ namespace DamageSystem {
 	{
 		for (int i = 0; i < enemies->size(); i += 1){
 			if (checkCollision((*enemies)[i], trail)) {
-				
 				(*damageComps)[i].currentHp-= 5*frametime;
 			}
 		}
-
 		checkHp(damageComps, enemies);
 		
 	}

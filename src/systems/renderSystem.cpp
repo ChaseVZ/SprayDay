@@ -78,7 +78,6 @@ namespace RenderSystem {
 				(rc->sg)->shapes[i]->draw(curS);
 			}
 		}
-
 		else {
 			// textured shapes draw
 			for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
@@ -124,7 +123,7 @@ namespace RenderSystem {
 
 		curS->unbind();
 	}
-
+	
 	void draw(ShapeGroup sg, shared_ptr<Program> curS)
 	{
 		//glUniform1f(curS->getUniform("alpha"), 1.0f);
