@@ -40,7 +40,7 @@ void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, sha
 
 void setModelRC(shared_ptr<Program> curS, RenderComponent* rc) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), rc->pos);
-	mat4 ScaleS = glm::scale(glm::mat4(1.0f), vec3(rc->scale));
+	mat4 ScaleS = glm::scale(glm::mat4(1.0f), rc->scale);
 	mat4 ctm = Trans * ScaleS * rc->lookMat;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
@@ -60,8 +60,13 @@ void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
 
 namespace RenderSystem {
 
-	void draw(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
+	mat4 lookDirToMat(vec3 lookDir) {
+		return glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-lookDir.x, lookDir.y, lookDir.z)), vec3(0, 1, 0));
+	}
+
+	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
 	{
+		shared_ptr<Program> curS = rc->shader;
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));

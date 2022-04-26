@@ -2,6 +2,7 @@
 
 #include "Shape.h"
 #include "Texture.h"
+#include "Program.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,6 +18,7 @@ struct RenderComponent {
 	ShapeGroup* sg;
 	vec3 pos;
 	mat4 lookMat;
-	float scale;
+	vec3 scale;
 	float transparency;
+	shared_ptr<Program> shader;
 };

@@ -57,6 +57,7 @@ float timeSinceLastSpray = 0;
 float gameTime = 0;
 float spawnTimer = 3;
 float SPAWN_TIME = 4;
+
 class Application : public EventCallbacks
 {
 
@@ -66,6 +67,7 @@ public:
 
 	#define ZERO_VEC vec3(0,0,0)
 	#define ONES_VEC vec3(1,1,1)
+
 
 
 	/* ================ PROGRAMS ================= */
@@ -137,6 +139,8 @@ public:
 	particleSys* winParticleSys;
 	GameManager* gm;
 	CompManager* compManager;
+	RenderComponent skunkRC;
+	RenderComponent bearRC;
 
 	// Animation data
 	float sTheta = 0;
@@ -381,6 +385,42 @@ public:
 		return r;
 	}
 
+	RenderComponent initSkyboxRC() {
+		RenderComponent skyRC = {
+		&cube,     //ShapeGroup * sg;
+		vec3(0.0), //vec3 pos;
+		mat4(1.0),     //mat4 lookMat;
+		vec3(gm->getSize()), //vec3 scale;
+		1.0,           //float transparency;
+		cubeProg
+		};
+		return skyRC;
+	};
+
+	RenderComponent initSkunkRC() {
+		RenderComponent sknkRC = {
+		&skunk,     //ShapeGroup * sg;
+		vec3(0.0), //vec3 pos;
+		mat4(1.0),     //mat4 lookMat;
+		vec3(2.0), //vec3 scale;
+		1.0,           //float transparency;
+		texProg
+		};
+		return sknkRC;
+	};
+
+	RenderComponent initBearRC() {
+		RenderComponent bearRC = {
+		&bear,     //ShapeGroup * sg;
+		vec3(0.0), //vec3 pos;
+		mat4(1.0), //mat4 lookMat;
+		vec3(8.0), //vec3 scale;
+		1.0,           //float transparency;
+		texProg
+		};
+		return bearRC;
+	};
+
 	void initGeom(const std::string& resourceDirectory)
 	{
 		// Initialize Cube mesh.
@@ -426,6 +466,10 @@ public:
 
 		//GROUND
 		initGround();
+
+		//SKUNK
+		skunkRC = initSkunkRC();
+		bearRC = initBearRC();
 	}
 
 	/* =================== HELPER FUNCTIONS ================== */
@@ -524,32 +568,6 @@ public:
 
 	/* =================== DRAW FUNCTIONS ================== */
 
-	RenderComponent initSkyboxRC(){
-		RenderComponent skyRC = {
-		&cube,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0),     //mat4 lookMat;
-		gm->getSize(), //float scale;
-		1.0,           //float transparency;
-		};
-		return skyRC;
-	};
-
-	void drawSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, Enemy enemy, float scale)
-	{
-		RenderSystem::draw(skunk, curS, Projection, View, enemy.pos, vec3(scale, scale, scale), ZERO_VEC, true, vec3(enemy.vel.x, enemy.vel.y, enemy.vel.z));
-	}
-
-	void drawPlayerSkunk(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 pos, vec3 lookAt) 
-	{
-		RenderSystem::draw(skunk, curS, Projection, View, pos, vec3(2, 2, 2), ZERO_VEC, true, vec3(lookAt.x, pos.y, lookAt.z));
-	}
-
-	void drawBear(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		RenderSystem::draw(bear, curS, Projection, View, vec3(10,2,0), vec3(8,8,8), ZERO_VEC, false, ZERO_VEC);
-	}
-
 	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
 		RenderSystem::SetMaterial(curS, 5);
@@ -594,8 +612,9 @@ public:
 		&sphere, //ShapeGroup*
 		player.pos, // pos
 		mat4(1.0f), //lookMat;
-		1.0, //scale
-		0.4, //transparency
+		vec3(1.0), //scale
+		0.4,  //transparency
+		texProg
 		};
 		trail.push_back(trailPart);
 	}
@@ -605,7 +624,7 @@ public:
 		for (int i = 0; i < trail.size(); i++) {
 			trail[i].scale += 0.15*frametime;
 			trail[i].transparency -= 0.005*frametime;
-			if (trail[i].scale >= 3) {
+			if (trail[i].scale.x >= 3) {
 				trail.erase(trail.begin() + i);
 				i -= 1;
 			}
@@ -696,27 +715,21 @@ public:
 		// Clear framebuffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// check if done
-		/*
-		if (enemies.size() == 0)
-			gameDone = true;
-			*/
-
 		/* update all player attributes */
 		//if (gameBegin) 
-		vec3 playerPos = updatePlayer(frametime);
+		skunkRC.pos = updatePlayer(frametime);
+		skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC.pos.y, vcam.lookAt.z));
 		vec3 camera_offset = vec3(3, 3, 3);
 
 		// Create the matrix stacks playerPos-vcam.lookAt
 		vec3 cameraPos = makeCameraPos(vcam.lookAt);
-		mat4 View = lookAt(playerPos-cameraPos, playerPos, vec3(0, 1, 0));
+		mat4 View = lookAt(skunkRC.pos -cameraPos, skunkRC.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 
 		if (!gameDone) {
-
-			RenderSystem::draw(cubeProg, Projection, View, &initSkyboxRC());
+			
 
 			texProg->bind();
 			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
@@ -728,32 +741,30 @@ public:
 				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 			texProg->unbind();
 
-			drawPlayerSkunk(texProg, Projection, View, playerPos, vcam.lookAt);
+			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
 
+			RenderSystem::draw(Projection, View, &initSkyboxRC());
+			RenderSystem::draw(Projection, View, &bearRC);
+			RenderSystem::draw(Projection, View, &skunkRC);
 			drawGround(texProg, Projection, View);
 			//drawBear(texProg, Projection, View);
-			
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
-
-			
-			for (int i=0; i<enemies.size(); i++){
+			for (int i = 0; i < enemies.size(); i++) {
 				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 			}
+			
+
+			
+			
 
 			manageSpray(frametime);
 			spawnEnemies(frametime);
-			/*
-			if (trail.size() > 0) {
-				cout << "trailpos" << (trail[0]).pos.x << " " << (trail[0]).pos.z << endl;
-			}
-			*/
 			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
 				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
 
-				RenderSystem::draw(texProg, Projection, View, &(trail[i]));
+				RenderSystem::draw(Projection, View, &(trail[i]));
 			}
 			
 		}
