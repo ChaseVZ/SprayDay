@@ -60,7 +60,7 @@ Player::Player()
 void Player::checkCollision()
 {
 	GameManager* gm = GameManager::GetInstance();
-	if (gm->checkCollide(nextPos, 1)) {  }
+	if (gm->checkCollide(nextPos, 2)) {  }
 	else { pos = nextPos; }
 }
 
@@ -135,7 +135,7 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		checkCollision();
 		//pos = nextPos;
 
-		//cout << "player" << pos.x << " " << pos.z << endl;
+		cout << "player" << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
