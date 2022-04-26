@@ -225,8 +225,8 @@ namespace RenderSystem {
 			{
 				if (j == -interval || j == interval) { drawCrateAtVec(vec3(j * offset, 0, k * offset), curS, sg); }
 				else {
-					drawCrateAtVec(vec3(j * offset, 0, -s), curS, sg);
-					drawCrateAtVec(vec3(j * offset, 0, s), curS, sg);
+					drawCrateAtVec(vec3(j * offset, 0, -s + 1), curS, sg);
+					drawCrateAtVec(vec3(j * offset, 0, s - 1), curS, sg);
 				} 
 			}
 		}

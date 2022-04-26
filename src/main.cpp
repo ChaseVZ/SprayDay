@@ -160,7 +160,7 @@ public:
 	int third = 0;
 
 	/* ================ DEBUG ================= */
-	bool debugMode = 0;
+	bool debugMode = false;
 	bool gameBegin = false;
 	bool gameDone = false;
 
@@ -200,6 +200,9 @@ public:
 				// PolyMode
 				if (key == GLFW_KEY_Z && action == GLFW_PRESS) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 				if (key == GLFW_KEY_Z && action == GLFW_RELEASE) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+
+				// Debug
+				if (key == GLFW_KEY_C && action == GLFW_PRESS) { debugMode = !debugMode; cout << debugMode << endl; }
 			}
 		}
 
@@ -734,15 +737,20 @@ public:
 			//drawBear(texProg, Projection, View);
 			
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
+			if (!debugMode)
+				PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
 
 			
 			for (int i=0; i<enemies.size(); i++){
 				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 			}
 
-			manageSpray(frametime);
-			spawnEnemies(frametime);
+			
+			if (!debugMode) { 
+				manageSpray(frametime);
+				spawnEnemies(frametime); 
+			}
+
 			/*
 			if (trail.size() > 0) {
 				cout << "trailpos" << (trail[0]).pos.x << " " << (trail[0]).pos.z << endl;
