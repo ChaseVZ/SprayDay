@@ -733,18 +733,17 @@ public:
 
 		if (!gameDone) {
 			
-
 			texProg->bind();
 			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
 			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-			glDepthFunc(GL_LEQUAL);
 			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
 			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
 				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 			texProg->unbind();
 
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
+			if (!debugMode) {
+				PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
+			}
 
 			RenderSystem::draw(Projection, View, &initSkyboxRC());
 			RenderSystem::draw(Projection, View, &bearRC);
@@ -752,18 +751,10 @@ public:
 			drawGround(texProg, Projection, View);
 			//drawBear(texProg, Projection, View);
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			if (!debugMode)
-				PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
-
 			
 			for (int i=0; i<enemies.size(); i++){
 				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 			}
-			
-
-			
-			
-
 			
 			if (!debugMode) { 
 				manageSpray(frametime);
@@ -773,8 +764,6 @@ public:
 			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
 			
 			for (int i = 0; i < trail.size(); i++) {
-				//RenderSystem::draw(sphere, texProg, Projection, View, trail[i].pos, vec3(2, 2, 2), ZERO_VEC, false, ZERO_VEC);
-
 				RenderSystem::draw(Projection, View, &(trail[i]));
 			}
 			
