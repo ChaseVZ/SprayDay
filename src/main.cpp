@@ -141,6 +141,7 @@ public:
 	CompManager* compManager;
 	RenderComponent skunkRC;
 	RenderComponent bearRC;
+	RenderComponent skyboxRC;
 
 	// Animation data
 	float sTheta = 0;
@@ -473,6 +474,7 @@ public:
 		//SKUNK
 		skunkRC = initSkunkRC();
 		bearRC = initBearRC();
+		skyboxRC = initSkyboxRC();
 	}
 
 	/* =================== HELPER FUNCTIONS ================== */
@@ -746,7 +748,7 @@ public:
 
 			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
 
-			RenderSystem::draw(Projection, View, &initSkyboxRC());
+			RenderSystem::draw(Projection, View, &skyboxRC);
 			RenderSystem::draw(Projection, View, &bearRC);
 			RenderSystem::draw(Projection, View, &skunkRC);
 			drawGround(texProg, Projection, View);
