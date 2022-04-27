@@ -765,8 +765,7 @@ public:
 			
 			for (int i = 0; i < trail.size(); i++) {
 				RenderSystem::draw(Projection, View, &(trail[i]));
-			}
-			
+			}	
 		}
 
 		else
