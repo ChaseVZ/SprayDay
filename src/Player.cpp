@@ -94,8 +94,7 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 
 		// velocity = sum of WASD movements, but do not effect y direction
 		tempv = tempw + temps + tempa + tempd;
-		//tempv = normalize(tempv);
-		tempv.y = 0.0;
+
 		vec3 nortempv = abs(normalize(tempv));
 		if (tempv.x == 0.0 && tempv.y == 0.0 && tempv.z == 0.0){
 			nortempv = vec3(0.0);
@@ -108,14 +107,22 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		vel.x = std::min(tempv.x, speeds[mvm_type]);
 		vel.z = std::min(tempv.z, speeds[mvm_type]);
 
-		// if (vel.x+vel.z > speeds[mvm_type]){
-		// 	vel.x = vel.x*(1/sqrt(2));
-		// 	vel.z = vel.z*(1/sqrt(2));
-		// }
+		if (mvm_type == 1) { //walking
+			vel.x = 10.0f * vel.x;
+			vel.z = 10.0f * vel.z;
+		}
+		else {				 //running
+			vel.x = 20.0f * vel.x;
+			vel.z = 20.0f * vel.z;
+		}
+		//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
+		//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
 
 		// Only involve gravity when player is jumping
 		if (jumping) {
+			cout << "vel.y before: " << vel.y << "\n";
 			vel = vel + acc * lastTime;
+			cout << "vel.y after : " << vel.y << "\n";
 
 			// Only have jump speed affect velocity @ start of jump
 			if (lastTime == 0)
@@ -131,18 +138,15 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 			}
 			else
 				lastTime = lastTime + frametime;
+			cout << "vel.y: " << vel.y << "\n\n";
 		}
-		if (mvm_type == 1){ //walking
-			vel = 10.0f * vel;
-		}
-		else {				//running
-			vel = 20.0f * vel;
-		}
-		//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
-		//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
 
+	
 
 		nextPos = pos + vel*frametime;
+		// if (nextPos.y > localGround) {
+		// 	cout << "in the air!!" << "\n";
+		// }
 		checkCollision();
 		//pos = nextPos;
 
@@ -150,7 +154,7 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
-		if (!jumping && pos.y > localGround) { pos.y = localGround; }
+		if (!jumping && pos.y > localGround) { pos.y = localGround; cout << "in the air!!" << "\n";}
  	}
 }
 

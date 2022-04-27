@@ -192,7 +192,7 @@ public:
 				if (key == GLFW_KEY_A && action == GLFW_RELEASE) { player.a = false; }
 				if (key == GLFW_KEY_S && action == GLFW_RELEASE) { player.s = false; }
 				if (key == GLFW_KEY_D && action == GLFW_RELEASE) { player.d = false; }
-			    if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { player.jumping = false; }
+			    //if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { player.jumping = false; }
 
 				// Run / Walk
 				if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) { player.mvm_type = 0; }
