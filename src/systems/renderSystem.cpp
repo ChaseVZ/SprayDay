@@ -70,8 +70,6 @@ namespace RenderSystem {
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
-
 		glUniform1f(curS->getUniform("alpha"), rc->transparency);
 		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
@@ -90,7 +88,6 @@ namespace RenderSystem {
 				(rc->sg)->shapes[i]->draw(curS);
 			}
 		}
-		//rc->sg->textures[0]->bind(curS->getUniform("Texture0"));
 		curS->unbind();
 	}
 
@@ -129,25 +126,6 @@ namespace RenderSystem {
 		curS->unbind();
 	}
 	
-	void draw(ShapeGroup sg, shared_ptr<Program> curS)
-	{
-		//glUniform1f(curS->getUniform("alpha"), 1.0f);
-		// non-textured shapes draw
-		if (sg.textures.size() == 0)
-		{
-			for (int i = 0; i < sg.shapes.size(); i++) {
-				sg.shapes[i]->draw(curS);
-			}
-		}
-
-		else {
-			// textured shapes draw
-			for (int i = 0; i < sg.shapes.size(); i++) {
-				sg.textures[i]->bind(curS->getUniform("Texture0"));
-				sg.shapes[i]->draw(curS);
-			}
-		}
-	}
 
 	void drawParticles(shared_ptr<Program> curS, shared_ptr<MatrixStack> P, mat4 View, vec3 pos, particleSys* partSys, shared_ptr<Texture> tex)
 	{
@@ -175,7 +153,7 @@ namespace RenderSystem {
 	void drawGround(shared_ptr<MatrixStack> Model, shared_ptr<Program> curS, shared_ptr<Texture> tex,
 		GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen) {
 		curS->bind();
-
+		glDepthFunc(GL_LEQUAL);
 		Model->loadIdentity();
 		Model->pushMatrix();
 		glBindVertexArray(GroundVertexArrayID);
