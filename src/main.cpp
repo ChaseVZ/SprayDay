@@ -186,13 +186,13 @@ public:
 				if (key == GLFW_KEY_A && action == GLFW_PRESS) { player.a = true; }
 				if (key == GLFW_KEY_D && action == GLFW_PRESS) { player.d = true; }
 				if (key == GLFW_KEY_S && action == GLFW_PRESS) { player.s = true; }
-				if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.jumping = true; }
+				if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.jumping = true; cout << "jump!";}
 
 				if (key == GLFW_KEY_W && action == GLFW_RELEASE) { player.w = false; }
 				if (key == GLFW_KEY_A && action == GLFW_RELEASE) { player.a = false; }
 				if (key == GLFW_KEY_S && action == GLFW_RELEASE) { player.s = false; }
 				if (key == GLFW_KEY_D && action == GLFW_RELEASE) { player.d = false; }
-				//if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { player.jumping = false; }
+			    if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { player.jumping = false; }
 
 				// Run / Walk
 				if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) { player.mvm_type = 0; }
@@ -758,9 +758,9 @@ public:
 				PathingSystem::updateEnemies(Projection, View, frametime, &enemies,  player, texProg, compManager);
 
 			
-			for (int i=0; i<enemies.size(); i++){
-				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-			}
+			// for (int i=0; i<enemies.size(); i++){
+			// 	RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
+			// }
 			
 
 			

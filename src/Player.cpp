@@ -100,7 +100,9 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		if (tempv.x == 0.0 && tempv.y == 0.0 && tempv.z == 0.0){
 			nortempv = vec3(0.0);
 		}
-		tempv = tempv*nortempv;
+		else {
+			tempv = nortempv*normalize(tempv);
+		}
 
 		// cap speed to movement speed type
 		vel.x = std::min(tempv.x, speeds[mvm_type]);
@@ -130,12 +132,21 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 			else
 				lastTime = lastTime + frametime;
 		}
+		if (mvm_type == 1){ //walking
+			vel = 10.0f * vel;
+		}
+		else {				//running
+			vel = 20.0f * vel;
+		}
+		//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
+		//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
+
 
 		nextPos = pos + vel*frametime;
 		checkCollision();
 		//pos = nextPos;
 
-		cout << "player" << pos.x << " " << pos.z << endl;
+		// << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
