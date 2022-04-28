@@ -124,6 +124,15 @@ public:
 	"back.jpg"
 	};
 
+	vector<std::string> cartoon_sky_faces{
+	"CloudyCrown_Midday_Right.jpg",
+	"CloudyCrown_Midday_Left.jpg",
+	"CloudyCrown_Midday_Up.jpg",
+	"CloudyCrown_Midday_Down.jpg",
+	"CloudyCrown_Midday_Front.jpg",
+	"CloudyCrown_Midday_Back.jpg"
+	};
+
 	int numTextures = 0;
 
 	/* ============== GROUND ============== */
@@ -347,7 +356,7 @@ public:
 		winParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
-		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass.jpg");
+		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass4.jpg");
 		grassTexture->init();
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -517,6 +526,7 @@ public:
 
 		// SKYBOX
 		createSky(resourceDirectory + "/skybox/", sky_faces);
+		//createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
 
 		//GROUND
 		initGround();
