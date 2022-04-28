@@ -94,7 +94,6 @@ public:
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
-	ShapeGroup skybox;
 	ShapeGroup roundWon;
 	ShapeGroup crate;
 
@@ -442,9 +441,6 @@ public:
 			sprayTexture,
 			false, &numTextures);
 
-		// Initialize Skybox mesh.x
-		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
-
 		bear = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
@@ -570,20 +566,6 @@ public:
 
 
 	/* =================== DRAW FUNCTIONS ================== */
-
-	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		RenderSystem::SetMaterial(curS, 5);
-		RenderSystem::draw(cube, curS, Projection, View, vec3(-41, -19, 67), ONES_VEC, ZERO_VEC, false, ZERO_VEC);
-
-		// draw words
-		RenderSystem::SetMaterial(curS, 3);
-		RenderSystem::draw(roundWon, curS, Projection, View, vec3(-41, -17.8, 65), ONES_VEC, vec3(0, 0, 90), false, ZERO_VEC);
-
-		RenderSystem::drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys, particleTexture);
-		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
-	}
-
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
 		curS->bind();
 		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
@@ -730,48 +712,41 @@ public:
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
+			
+		/*
+		texProg->bind();
+		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
+			GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
+		texProg->unbind();
+		*/
 
-		if (!gameDone) {
-			
-			texProg->bind();
-			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
-			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
-				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
-			texProg->unbind();
-
-			if (!debugMode) {
-				PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
-			}
-
-			RenderSystem::draw(Projection, View, &initSkyboxRC());
-			RenderSystem::draw(Projection, View, &bearRC);
-			RenderSystem::draw(Projection, View, &skunkRC);
-			drawGround(texProg, Projection, View);
-			//drawBear(texProg, Projection, View);
-			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			
-			for (int i=0; i<enemies.size(); i++){
-				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-			}
-			
-			if (!debugMode) { 
-				manageSpray(frametime);
-				spawnEnemies(frametime); 
-			}
-
-			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
-			
-			for (int i = 0; i < trail.size(); i++) {
-				RenderSystem::draw(Projection, View, &(trail[i]));
-			}
-			
+		if (!debugMode) {
+			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
 		}
 
-		else
-			drawEnd(prog, Projection, View);
+		drawGround(texProg, Projection, View);
+		RenderSystem::draw(Projection, View, &initSkyboxRC());
+		RenderSystem::draw(Projection, View, &bearRC);
+		RenderSystem::draw(Projection, View, &skunkRC);
+		RenderSystem::drawObstacles(crate, texProg, Projection, View);
+			
+		for (int i=0; i<enemies.size(); i++){
+			RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
+		}
+			
+		if (!debugMode) { 
+			manageSpray(frametime);
+			spawnEnemies(frametime); 
+		}
 
+		DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
+			
+		for (int i = 0; i < trail.size(); i++) {
+			RenderSystem::draw(Projection, View, &(trail[i]));
+		}
 		
 		//animation update example
 		sTheta = sin(glfwGetTime());
