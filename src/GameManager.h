@@ -31,6 +31,8 @@ private:
 		}
 	}
 
+	bool isCollision(int i, int j);
+
 	// private constructor
 	GameManager() { setupColMap(); }
 public:
