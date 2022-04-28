@@ -18,8 +18,10 @@ int worldToMap(float val)
 }
 
 
-void GameManager::addCollision(vec3 pos)
+void GameManager::addCollision(vec3 pos, Collision c)
 {
+	if (c != OBSTACLE) { return; } // only do obstacle collisions for now
+
 	int i = worldToMap(pos.x);
 	int j = worldToMap(pos.z);
 
