@@ -11,6 +11,20 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "../EcsCore/System.h"
+
+
+class RenderSys : public System
+{
+public:
+	void init();
+	void update(shared_ptr<MatrixStack> Projection, mat4 View);
+private:
+	Entity mCamera;
+	GLuint mVao{};
+	GLuint mVboVertices{};
+	GLuint mVboNormals{};
+};
 
 namespace RenderSystem {
 	mat4 lookDirToMat(vec3 lookDir);

@@ -32,6 +32,7 @@
 #include "systems/DamageSystem.h"
 #include "CompManager.h"
 #include "CollisionEnum.h"
+#include "EcsCore/Coordinator.h"
 
 // Skybox
 #include "stb_image.h"
@@ -47,11 +48,12 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
+Coordinator gCoordinator;
+
+std::shared_ptr<RenderSys> renderSys;
+
 // A simple type alias
 using Entity = std::uint32_t;
-
-// Used to define the size of arrays later on
-const Entity MAX_ENTITIES = 5000;
 
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
@@ -148,8 +150,7 @@ public:
 	particleSys* winParticleSys;
 	GameManager* gm;
 	CompManager* compManager;
-	RenderComponent skunkRC;
-	RenderComponent bearRC;
+	Entity skunkEnt;
 	vector<RenderComponent> obstacles;
 
 	// Animation data
@@ -411,31 +412,37 @@ public:
 		return skyRC;
 	};
 
-	RenderComponent initSkunkRC() {
-		RenderComponent sknkRC = {
-		&skunk,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0),     //mat4 lookMat;
-		vec3(2.0), //vec3 scale;
-		1.0,           //float transparency;
-		texProg,
-		PLAYER
-		};
-		return sknkRC;
-	};
 
-	RenderComponent initBearRC() {
-		RenderComponent bearRC = {
-		&bear,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0), //mat4 lookMat;
-		vec3(8.0), //vec3 scale;
-		1.0,           //float transparency;
-		texProg,
-		ENEMY
-		};
-		return bearRC;
-	};
+	void initSkunk() {
+		skunkEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skunkEnt,
+			RenderComponent{
+			&skunk,			//ShapeGroup * sg;
+			vec3(0.0),		//vec3 pos;
+			mat4(1.0),     //mat4 lookMat;
+			vec3(2.0),		//vec3 scale;
+			1.0,           //float transparency;
+			texProg,
+			PLAYER
+			});
+	}
+
+	void initBear() {
+		Entity entity;
+		entity = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			entity,
+			RenderComponent{
+				&bear,     //ShapeGroup * sg;
+				vec3(0.0), //vec3 pos;
+				mat4(1.0), //mat4 lookMat;
+				vec3(8.0), //vec3 scale;
+				1.0,           //float transparency;
+				texProg,
+				ENEMY
+			});
+	}
 
 	RenderComponent initCrateRC(vec3 pos) {
 		int crateScale = GameManager::GetInstance()->getTileSize();
@@ -528,8 +535,8 @@ public:
 		initGround();
 
 		// RenderComponents
-		skunkRC = initSkunkRC();
-		bearRC = initBearRC();
+		initSkunk();
+		initBear();
 
 		// STATIC RenderComponents
 		initObstaclesRCs();
@@ -771,13 +778,14 @@ public:
 
 		/* update all player attributes */
 		//if (gameBegin) 
-		skunkRC.pos = updatePlayer(frametime);
-		skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC.pos.y, vcam.lookAt.z));
+		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
+		skunkRC2.pos = updatePlayer(frametime);
+		skunkRC2.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC2.pos.y, vcam.lookAt.z));
 		vec3 camera_offset = vec3(3, 3, 3);
 
 		// Create the matrix stacks playerPos-vcam.lookAt
 		vec3 cameraPos = makeCameraPos(vcam.lookAt);
-		mat4 View = lookAt(skunkRC.pos -cameraPos, skunkRC.pos, vec3(0, 1, 0));
+		mat4 View = lookAt(skunkRC2.pos -cameraPos, skunkRC2.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
@@ -792,42 +800,19 @@ public:
 		texProg->unbind();
 		*/
 
-			if (!debugMode) {
-				PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
-			}
-
-			RenderSystem::draw(Projection, View, &initSkyboxRC());
-			RenderSystem::draw(Projection, View, &bearRC);
-			RenderSystem::draw(Projection, View, &skunkRC);
-			drawGround(texProg, Projection, View);
-			//drawBear(texProg, Projection, View);
-
-			for each (RenderComponent rc in obstacles) {
-				RenderSystem::draw(Projection, View, &rc);
-			}
-			//RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			
-			for (int i=0; i<enemies.size(); i++){
-				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-			}
-			
-			if (!debugMode) { 
-				manageSpray(frametime);
-				spawnEnemies(frametime); 
-			}
-
-			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
-			
-			for (int i = 0; i < trail.size(); i++) {
-				RenderSystem::draw(Projection, View, &(trail[i]));
-			}	
+		if (!debugMode) {
+			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
 		}
-
-		drawGround(texProg, Projection, View);
+		renderSys->update(Projection, View);
 		RenderSystem::draw(Projection, View, &initSkyboxRC());
-		RenderSystem::draw(Projection, View, &bearRC);
-		RenderSystem::draw(Projection, View, &skunkRC);
-		RenderSystem::drawObstacles(crate, texProg, Projection, View);
+		//RenderSystem::draw(Projection, View, &bearRC);
+		//RenderSystem::draw(Projection, View, &skunkRC);
+		drawGround(texProg, Projection, View);
+
+		for each (RenderComponent rc in obstacles) {
+			RenderSystem::draw(Projection, View, &rc);
+		}
+		//RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			
 		for (int i=0; i<enemies.size(); i++){
 			RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
@@ -842,29 +827,41 @@ public:
 			
 		for (int i = 0; i < trail.size(); i++) {
 			RenderSystem::draw(Projection, View, &(trail[i]));
-		}
-		
-		//animation update example
-		sTheta = sin(glfwGetTime());
-		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
-		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
-
-		// Pop matrix stacks.
-		Projection->popMatrix();
+		}	
 	}
+
+	
 };
+
+void initCoordinator() {
+	gCoordinator.Init();
+	gCoordinator.RegisterComponent<RenderComponent>();
+}
+
+void initSystems() {
+	renderSys = gCoordinator.RegisterSystem<RenderSys>();
+	{
+		Signature signature;
+		signature.set(gCoordinator.GetComponentType<RenderComponent>());
+		gCoordinator.SetSystemSignature<RenderSys>(signature);
+	}
+	renderSys->init();
+}
 
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
 	std::string resourceDir = "../resources";
-
 	if (argc >= 2)
 	{
 		resourceDir = argv[1];
 	}
 
 	Application *application = new Application();
+
+	initCoordinator();
+	initSystems();
+	
 
 	// Your main will always include a similar set up to establish your window
 	// and GL context, etc.

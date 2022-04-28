@@ -1,8 +1,27 @@
 #include "renderSystem.h"
 #include "../GameManager.h"
+#include "../EcsCore/Coordinator.h"
 
 using namespace glm;
 
+extern Coordinator gCoordinator;
+
+
+void RenderSys::init()
+{
+
+}
+
+
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
+{
+	for (auto const& entity : mEntities)
+	{
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		RenderSystem::draw(Projection, View, &rc);
+	}
+
+}
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
