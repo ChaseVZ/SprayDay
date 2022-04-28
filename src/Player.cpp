@@ -6,7 +6,7 @@
 #include <list>
 #include <iostream>
 
-
+using namespace std;
 using namespace glm;
 
 /* HELPER INFO */
@@ -103,8 +103,8 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		tempv = tempv*nortempv;
 
 		// cap speed to movement speed type
-		vel.x = std::min(tempv.x, speeds[mvm_type]);
-		vel.z = std::min(tempv.z, speeds[mvm_type]);
+		vel.x = min(tempv.x, speeds[mvm_type]);
+		vel.z = min(tempv.z, speeds[mvm_type]);
 
 		// if (vel.x+vel.z > speeds[mvm_type]){
 		// 	vel.x = vel.x*(1/sqrt(2));

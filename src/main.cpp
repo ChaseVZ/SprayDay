@@ -31,6 +31,7 @@
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
 #include "CompManager.h"
+#include "CollisionEnum.h"
 
 // Skybox
 #include "stb_image.h"
@@ -122,6 +123,15 @@ public:
 	"back.jpg"
 	};
 
+	vector<std::string> cartoon_sky_faces{
+	"CloudyCrown_Midday_Right.jpg",
+	"CloudyCrown_Midday_Left.jpg",
+	"CloudyCrown_Midday_Up.jpg",
+	"CloudyCrown_Midday_Down.jpg",
+	"CloudyCrown_Midday_Front.jpg",
+	"CloudyCrown_Midday_Back.jpg"
+	};
+
 	int numTextures = 0;
 
 	/* ============== GROUND ============== */
@@ -140,6 +150,7 @@ public:
 	CompManager* compManager;
 	RenderComponent skunkRC;
 	RenderComponent bearRC;
+	vector<RenderComponent> obstacles;
 
 	// Animation data
 	float sTheta = 0;
@@ -344,7 +355,7 @@ public:
 		winParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
-		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass.jpg");
+		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass4.jpg");
 		grassTexture->init();
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -394,7 +405,8 @@ public:
 		mat4(1.0),     //mat4 lookMat;
 		vec3(gm->getSize()), //vec3 scale;
 		1.0,           //float transparency;
-		cubeProg
+		cubeProg,
+		OTHER
 		};
 		return skyRC;
 	};
@@ -406,7 +418,8 @@ public:
 		mat4(1.0),     //mat4 lookMat;
 		vec3(2.0), //vec3 scale;
 		1.0,           //float transparency;
-		texProg
+		texProg,
+		PLAYER
 		};
 		return sknkRC;
 	};
@@ -418,9 +431,56 @@ public:
 		mat4(1.0), //mat4 lookMat;
 		vec3(8.0), //vec3 scale;
 		1.0,           //float transparency;
-		texProg
+		texProg,
+		ENEMY
 		};
 		return bearRC;
+	};
+
+	RenderComponent initCrateRC(vec3 pos) {
+		int crateScale = GameManager::GetInstance()->getTileSize();
+
+		RenderComponent cratePart = {
+		&crate,     //ShapeGroup * sg;
+		pos,		//vec3 pos;
+		mat4(1.0), //mat4 lookMat;
+		vec3(crateScale), //vec3 scale;
+		1.0,           //float transparency;
+		texProg,
+		OBSTACLE
+		};
+
+		return cratePart;
+	};
+
+	void initObstaclesRCs() {
+
+		// random
+		obstacles.push_back(initCrateRC(vec3(12, 0, 0)));
+		obstacles.push_back(initCrateRC(vec3(4, 0, 4)));
+		obstacles.push_back(initCrateRC(vec3(20, 0, 12)));
+		obstacles.push_back(initCrateRC(vec3(60, 0, 20)));
+		obstacles.push_back(initCrateRC(vec3(0, 0, 40)));
+		obstacles.push_back(initCrateRC(vec3(10, 0, 20)));
+
+
+		// Grid around map
+		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
+		int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
+		int interval = s / offset ; // 80 / 20 = 4
+
+		for (int j = -interval; j <= interval; j++)
+		{
+			for (int k = -interval; k < interval; k++)
+			{
+				if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
+				else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
+				else {
+					obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
+					obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
+				}
+			}
+		}
 	};
 
 	void initGeom(const std::string& resourceDirectory)
@@ -462,13 +522,21 @@ public:
 
 		// SKYBOX
 		createSky(resourceDirectory + "/skybox/", sky_faces);
+		//createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
 
 		//GROUND
 		initGround();
 
-		//SKUNK
+		// RenderComponents
 		skunkRC = initSkunkRC();
 		bearRC = initBearRC();
+
+		// STATIC RenderComponents
+		initObstaclesRCs();
+
+		for each (RenderComponent rc in obstacles) {
+			GameManager::GetInstance()->addCollision(rc.pos, rc.c);
+		}
 	}
 
 	/* =================== HELPER FUNCTIONS ================== */
@@ -599,7 +667,8 @@ public:
 		mat4(1.0f), //lookMat;
 		vec3(1.0), //scale
 		0.4,  //transparency
-		texProg
+		texProg,
+		SPRAY
 		};
 		trail.push_back(trailPart);
 	}
@@ -723,8 +792,35 @@ public:
 		texProg->unbind();
 		*/
 
-		if (!debugMode) {
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
+			if (!debugMode) {
+				PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
+			}
+
+			RenderSystem::draw(Projection, View, &initSkyboxRC());
+			RenderSystem::draw(Projection, View, &bearRC);
+			RenderSystem::draw(Projection, View, &skunkRC);
+			drawGround(texProg, Projection, View);
+			//drawBear(texProg, Projection, View);
+
+			for each (RenderComponent rc in obstacles) {
+				RenderSystem::draw(Projection, View, &rc);
+			}
+			//RenderSystem::drawObstacles(crate, texProg, Projection, View);
+			
+			for (int i=0; i<enemies.size(); i++){
+				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
+			}
+			
+			if (!debugMode) { 
+				manageSpray(frametime);
+				spawnEnemies(frametime); 
+			}
+
+			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
+			
+			for (int i = 0; i < trail.size(); i++) {
+				RenderSystem::draw(Projection, View, &(trail[i]));
+			}	
 		}
 
 		drawGround(texProg, Projection, View);

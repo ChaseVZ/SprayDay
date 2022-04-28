@@ -1,6 +1,7 @@
 #ifndef GM_H
 #define GM_H
 
+#include "ShapeGroup.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
@@ -10,6 +11,7 @@ using namespace std;
 
 const int MAP_SIZE = 160; // world bounds = -MAP_SIZE/2 to +MAP_SIZE/2
 const int TILE_SIZE = 2; // crates take up a 1x1 * crate_size area in world space
+
 
 class GameManager
 {
@@ -32,6 +34,7 @@ private:
 	}
 
 	bool isCollision(int i, int j);
+	void verifyCollisionAddition(int i, int j, Collision c);
 
 	// private constructor
 	GameManager() { setupColMap(); }
@@ -46,8 +49,11 @@ public:
 	int getTileSize() { return TILE_SIZE; }
 	vec3 getLightPos() { return lightPos; }
 
-	void addCollision(vec3 pos);
+	void addCollision(vec3 pos, Collision c); // where c is of type Collision
 	bool checkCollide(vec3 pos, float radius);
+
+
+
 };
 
 //GameManager* GameManager::instance = NULL;

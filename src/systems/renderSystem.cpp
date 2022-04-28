@@ -3,17 +3,6 @@
 
 using namespace glm;
 
-vector<vec3> obstaclePos = 
-{
-	vec3(12,0,0),
-	vec3(4,0,4),
-	vec3(20,0,12),
-	vec3(60,0,20),
-	vec3(0,0,4),
-	vec3(0,0,40),
-	vec3(10,0,20)
-};
-
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
@@ -54,7 +43,7 @@ void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
 		sg.shapes[i]->draw(curS);
 	}
 
-	GameManager::GetInstance()->addCollision(pos);
+	GameManager::GetInstance()->addCollision(pos, OTHER);
 }
 
 
@@ -193,10 +182,7 @@ namespace RenderSystem {
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
-		for (int j = 0; j < obstaclePos.size(); j++) {
-			drawCrateAtVec(obstaclePos[j], curS, sg);
-		}
+		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
 		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
