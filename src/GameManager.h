@@ -34,6 +34,7 @@ private:
 	}
 
 	bool isCollision(int i, int j);
+	void verifyCollisionAddition(int i, int j, Collision c);
 
 	// private constructor
 	GameManager() { setupColMap(); }

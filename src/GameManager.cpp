@@ -17,7 +17,12 @@ int worldToMap(float val)
 	return res;
 }
 
+void GameManager::verifyCollisionAddition(int i, int j, Collision c)
+{
+	if (i >= 0 && j >= 0 && i < MAP_SIZE && j < MAP_SIZE) { colMap[i][j] = c; }
+}
 
+// LOGIC IS FOR CRATES, TODO: make uniform for all types
 void GameManager::addCollision(vec3 pos, Collision c)
 {
 	if (c != OBSTACLE) { return; } // only do obstacle collisions for now
@@ -25,7 +30,7 @@ void GameManager::addCollision(vec3 pos, Collision c)
 	int i = worldToMap(pos.x);
 	int j = worldToMap(pos.z);
 
-	if (i < 0 || j < 0) { return; }
+	if (i < 0 || j < 0) { return; } // error checks
 
 	//cout << i << " " << j << " for" << pos.x << " " << pos.z << endl;
 	//cout << i+1 << " " << j << " for" << pos.x << " " << pos.z << endl;
@@ -33,20 +38,17 @@ void GameManager::addCollision(vec3 pos, Collision c)
 	//cout << i + 1 << " " << j + 1 << " for" << pos.x << " " << pos.z << endl << endl;
 
 	if (i != 0 && j != 0) {
-		colMap[i - 1][j - 1] = 1;
-
-		colMap[i + 0][j - 1] = 1;
-		colMap[i + 1][j - 1] = 1;
-
-		colMap[i - 1][j + 0] = 1;
-		colMap[i - 1][j + 1] = 1;
+		verifyCollisionAddition(i - 1, j - 1, c);
+		verifyCollisionAddition(i - 0, j - 1, c);
+		verifyCollisionAddition(i + 1, j - 1, c);
+		verifyCollisionAddition(i - 1, j + 0, c);
+		verifyCollisionAddition(i - 1, j + 1, c);
 	}
 
-	colMap[i + 1][j + 0] = 1;
-	colMap[i + 0][j + 1] = 1;
-
-	colMap[i + 0][j + 0] = 1;
-	colMap[i + 1][j + 1] = 1;
+	verifyCollisionAddition(i + 1, j + 0, c);
+	verifyCollisionAddition(i + 0, j + 1, c);
+	verifyCollisionAddition(i + 0, j + 0, c);
+	verifyCollisionAddition(i + 1, j + 1, c);
 }
 
 

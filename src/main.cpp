@@ -452,21 +452,21 @@ public:
 		obstacles.push_back(initCrateRC(vec3(4, 0, 4)));
 		obstacles.push_back(initCrateRC(vec3(20, 0, 12)));
 		obstacles.push_back(initCrateRC(vec3(60, 0, 20)));
-		obstacles.push_back(initCrateRC(vec3(0, 0, 4)));
 		obstacles.push_back(initCrateRC(vec3(0, 0, 40)));
 		obstacles.push_back(initCrateRC(vec3(10, 0, 20)));
 
 
 		// Grid around map
 		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
-		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
-		int interval = s / offset; // 120 / 20 = 6
+		int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
+		int interval = s / offset ; // 80 / 20 = 4
 
-		for (int j = -interval; j < interval; j++)
+		for (int j = -interval; j <= interval; j++)
 		{
 			for (int k = -interval; k < interval; k++)
 			{
-				if (j == -interval || j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
+				if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
+				else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
 				else {
 					obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
 					obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
