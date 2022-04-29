@@ -9,12 +9,13 @@ extern Coordinator gCoordinator;
 
 void RenderSys::init()
 {
-
 }
 
 
 void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
 {
+	
+	
 	for (auto const& entity : mEntities)
 	{
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
@@ -75,6 +76,7 @@ namespace RenderSystem {
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
 	{
 		shared_ptr<Program> curS = rc->shader;
+		glCullFace(rc->cullDir);
 		curS->bind();
 		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));

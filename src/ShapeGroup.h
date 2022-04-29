@@ -23,5 +23,6 @@ struct RenderComponent {
 	vec3 scale;
 	float transparency;
 	shared_ptr<Program> shader;
+	int cullDir;
 	Collision c;
 };

@@ -293,10 +293,13 @@ public:
 		glClearColor(.72f, .84f, 1.06f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);  // disable and draw UI to have UI drawn on top
+		
 		// particle lab stuff
 		CHECKED_GL_CALL(glEnable(GL_BLEND));
 		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		CHECKED_GL_CALL(glPointSize(24.0f));
+
+		glEnable(GL_CULL_FACE);
 
 		// Initialize the GLSL program that we will use for local shading
 		prog = make_shared<Program>();
@@ -407,6 +410,7 @@ public:
 		vec3(gm->getSize()), //vec3 scale;
 		1.0,           //float transparency;
 		cubeProg,
+		GL_FRONT,
 		OTHER
 		};
 		return skyRC;
@@ -424,6 +428,7 @@ public:
 			vec3(2.0),		//vec3 scale;
 			1.0,           //float transparency;
 			texProg,
+			GL_BACK,
 			PLAYER
 			});
 	}
@@ -440,6 +445,7 @@ public:
 				vec3(8.0), //vec3 scale;
 				1.0,           //float transparency;
 				texProg,
+				GL_BACK,
 				ENEMY
 			});
 	}
@@ -454,6 +460,7 @@ public:
 		vec3(crateScale), //vec3 scale;
 		1.0,           //float transparency;
 		texProg,
+		GL_BACK,
 		OBSTACLE
 		};
 
@@ -536,7 +543,7 @@ public:
 
 		// RenderComponents
 		initSkunk();
-		initBear();
+		//initBear();
 
 		// STATIC RenderComponents
 		initObstaclesRCs();
@@ -647,10 +654,12 @@ public:
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glDepthFunc(GL_LEQUAL);
 		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glCullFace(GL_BACK);
 
 		RenderSystem::drawGround(make_shared<MatrixStack>(), curS, grassTexture,
 			GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
 		curS->unbind();
+		
 	}
 
 	vec3 updatePlayer(float frametime)	{
@@ -675,6 +684,7 @@ public:
 		vec3(1.0), //scale
 		0.4,  //transparency
 		texProg,
+		GL_BACK,
 		SPRAY
 		};
 		trail.push_back(trailPart);
@@ -805,8 +815,6 @@ public:
 		}
 		renderSys->update(Projection, View);
 		RenderSystem::draw(Projection, View, &initSkyboxRC());
-		//RenderSystem::draw(Projection, View, &bearRC);
-		//RenderSystem::draw(Projection, View, &skunkRC);
 		drawGround(texProg, Projection, View);
 
 		for each (RenderComponent rc in obstacles) {
