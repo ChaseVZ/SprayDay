@@ -2,6 +2,8 @@
 #include <iostream>
 const int SPRAY_HITBOX_FACTOR = 1; // increase for better performance 
 
+extern Coordinator gCoordinator;
+
 namespace DamageSystem {
 	void checkHp(vector<DamageComponent>* damageComps, vector<Enemy>* enemies) {
 		for (int i = 0; i < enemies->size(); i += 1){
@@ -12,9 +14,10 @@ namespace DamageSystem {
 		}
 	}
 
-	bool checkCollision(Enemy enemy, vector<RenderComponent>* trail) {
+	bool checkCollision(Enemy enemy, vector<Entity>* trail) {
 		for (int j = 0; j < trail->size(); j += SPRAY_HITBOX_FACTOR) {
-			vec3 trailPos = (*trail)[j].pos;
+			RenderComponent sprayRC = gCoordinator.GetComponent<RenderComponent>((*trail)[j]);
+			vec3 trailPos = sprayRC.pos;
 			vec3 enemyPos = enemy.pos;
 			/*
 			cout << "enemy pos:" << enemy.pos.x << " " << enemy.pos.z << endl;
@@ -28,7 +31,7 @@ namespace DamageSystem {
 		}
 		return false;
 	}
-	void run(vector<DamageComponent>* damageComps, vector<Enemy>* enemies, vector<RenderComponent>* trail, float frametime)
+	void update(vector<DamageComponent>* damageComps, vector<Enemy>* enemies, vector<Entity>* trail, float frametime)
 	{
 		for (int i = 0; i < enemies->size(); i += 1){
 			if (checkCollision((*enemies)[i], trail)) {

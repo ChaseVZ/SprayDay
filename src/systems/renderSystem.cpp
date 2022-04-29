@@ -6,23 +6,80 @@ using namespace glm;
 
 extern Coordinator gCoordinator;
 
+/* ============== GROUND ============== */
 
-void RenderSys::init()
+	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
+GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
+int g_GiboLen;
+// ground VAO
+GLuint GroundVertexArrayID;
+
+void initGround(float grndSize) {
+	float g_groundSize = grndSize / 2.0;
+	float g_groundY = -0.25;
+
+	// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
+	float GrndPos[] = {
+		-g_groundSize, g_groundY, -g_groundSize,
+		-g_groundSize, g_groundY,  g_groundSize,
+		g_groundSize, g_groundY,  g_groundSize,
+		g_groundSize, g_groundY, -g_groundSize
+	};
+
+	float GrndNorm[] = {
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0
+	};
+
+	GLfloat num_tex = g_groundSize / 10;
+	static GLfloat GrndTex[] = {
+		0, 0, // back
+		0, num_tex,
+		num_tex, num_tex,
+		num_tex, 0 };
+
+	unsigned short idx[] = { 0, 1, 2, 0, 2, 3 };
+	//generate the ground VAO
+	glGenVertexArrays(1, &GroundVertexArrayID);
+	glBindVertexArray(GroundVertexArrayID);
+
+	g_GiboLen = 6;
+	glGenBuffers(1, &GrndBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &GrndNorBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &GrndTexBuffObj);
+	glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &GIndxBuffObj);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+}
+
+void RenderSys::init(float grndSize)
 {
+	initGround(grndSize);
 }
 
 
 void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
 {
-	
-	
 	for (auto const& entity : mEntities)
 	{
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		RenderSystem::draw(Projection, View, &rc);
 	}
-
 }
+
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
@@ -160,14 +217,21 @@ namespace RenderSystem {
 	}
 
 	//code to draw the ground plane
-	void drawGround(shared_ptr<MatrixStack> Model, shared_ptr<Program> curS, shared_ptr<Texture> tex,
-		GLuint GroundVertexArrayID, GLuint GrndBuffObj, GLuint GrndNorBuffObj, GLuint GrndTexBuffObj, GLuint GIndxBuffObj, int g_GiboLen) {
+
+	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, 
+		shared_ptr<Program> texProg, shared_ptr<Texture> grassTexture) {
 		curS->bind();
+		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glDepthFunc(GL_LEQUAL);
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glCullFace(GL_BACK);
+
+		shared_ptr<MatrixStack> Model = make_shared<MatrixStack>();
 		Model->loadIdentity();
 		Model->pushMatrix();
 		glBindVertexArray(GroundVertexArrayID);
-		tex->bind(curS->getUniform("Texture0"));
+		grassTexture->bind(curS->getUniform("Texture0"));
 		glUniform1f(curS->getUniform("alpha"), 1.0f);
 		Model->translate(vec3(0, -1, 0));
 		Model->scale(vec3(1, 1, 1));
@@ -193,8 +257,11 @@ namespace RenderSystem {
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
 		Model->popMatrix();
+
 		curS->unbind();
 	}
+
+	
 
 	void drawObstacles(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
 	{
@@ -223,7 +290,7 @@ namespace RenderSystem {
 
 		//cout << endl << "next" << endl;
 	}
-
+	/*
 	void SetMaterial(shared_ptr<Program> curS, int i) {
 		switch (i) {
 		case 0: // Pearl
@@ -270,4 +337,5 @@ namespace RenderSystem {
 			break;
 		}
 	}
+	*/
 }

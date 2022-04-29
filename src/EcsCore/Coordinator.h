@@ -1,4 +1,6 @@
 //Taken from Austin Morlan's ECS guide 
+#ifndef COORDINATOR_H
+#define COORDINATOR_H
 
 #include "ComponentManager.h"
 #include "EntityManager.h"
@@ -96,3 +98,5 @@ private:
 	std::unique_ptr<EntityManager> mEntityManager;
 	std::unique_ptr<SystemManager> mSystemManager;
 };
+
+#endif
