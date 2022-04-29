@@ -17,7 +17,8 @@ namespace DamageSystem {
 	bool checkCollision(Enemy enemy, vector<Entity>* trail) {
 		for (int j = 0; j < trail->size(); j += SPRAY_HITBOX_FACTOR) {
 			RenderComponent sprayRC = gCoordinator.GetComponent<RenderComponent>((*trail)[j]);
-			vec3 trailPos = sprayRC.pos;
+			Transform sprayTR = gCoordinator.GetComponent<Transform>((*trail)[j]);
+			vec3 trailPos = sprayTR.pos;
 			vec3 enemyPos = enemy.pos;
 			/*
 			cout << "enemy pos:" << enemy.pos.x << " " << enemy.pos.z << endl;

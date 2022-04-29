@@ -6,6 +6,6 @@ using namespace glm;
 
 struct Transform {
 	vec3 pos;
-	vec3 rotation;
+	vec3 lookDir;
 	vec3 scale;
 };

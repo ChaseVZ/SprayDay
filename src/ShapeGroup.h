@@ -18,9 +18,6 @@ struct ShapeGroup {
 
 struct RenderComponent {
 	ShapeGroup* sg;
-	vec3 pos;
-	mat4 lookMat;
-	vec3 scale;
 	float transparency;
 	shared_ptr<Program> shader;
 	int cullDir;

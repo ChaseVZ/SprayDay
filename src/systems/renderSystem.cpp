@@ -65,21 +65,6 @@ void initGround(float grndSize) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
 }
 
-void RenderSys::init(float grndSize)
-{
-	initGround(grndSize);
-}
-
-
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
-{
-	for (auto const& entity : mEntities)
-	{
-		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
-		RenderSystem::draw(Projection, View, &rc);
-	}
-}
-
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), trans);
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), rotX, vec3(1, 0, 0));
@@ -104,10 +89,13 @@ void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, sha
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
-void setModelRC(shared_ptr<Program> curS, RenderComponent* rc) {
-	mat4 Trans = glm::translate(glm::mat4(1.0f), rc->pos);
-	mat4 ScaleS = glm::scale(glm::mat4(1.0f), rc->scale);
-	mat4 ctm = Trans * ScaleS * rc->lookMat;
+mat4 lookDirToMat(vec3 lookDir) {
+	return glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-lookDir.x, lookDir.y, lookDir.z)), vec3(0, 1, 0));
+}
+void setModelRC(shared_ptr<Program> curS, Transform* tr) {
+	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos);
+	mat4 ScaleS = glm::scale(glm::mat4(1.0f), tr->scale);
+	mat4 ctm = Trans * ScaleS * lookDirToMat(tr->lookDir);
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
 
@@ -126,11 +114,7 @@ void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
 
 namespace RenderSystem {
 
-	mat4 lookDirToMat(vec3 lookDir) {
-		return glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-lookDir.x, lookDir.y, lookDir.z)), vec3(0, 1, 0));
-	}
-
-	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc)
+	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr)
 	{
 		shared_ptr<Program> curS = rc->shader;
 		glCullFace(rc->cullDir);
@@ -140,7 +124,7 @@ namespace RenderSystem {
 		glUniform1f(curS->getUniform("alpha"), rc->transparency);
 		vec3 lightPos = GameManager::GetInstance()->getLightPos();
 		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-		setModelRC(curS, rc);
+		setModelRC(curS, tr);
 		// non-textured shapes draw
 		if ((rc->sg)->textures.size() == 0)
 		{
@@ -290,52 +274,32 @@ namespace RenderSystem {
 
 		//cout << endl << "next" << endl;
 	}
-	/*
-	void SetMaterial(shared_ptr<Program> curS, int i) {
-		switch (i) {
-		case 0: // Pearl
-			glUniform3f(curS->getUniform("MatAmb"), 0.25f, 0.20725f, 0.20725f);
-			glUniform3f(curS->getUniform("MatDif"), 1.0f, 0.829f, 0.829f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.296648f, 0.296648f, 0.296648f);
-			glUniform1f(curS->getUniform("MatShine"), 11.264f);
-			break;
-		case 1: // Turqoise
-			glUniform3f(curS->getUniform("MatAmb"), 0.1f * 2, 0.18725f * 2, 0.1745f * 2);
-			glUniform3f(curS->getUniform("MatDif"), 0.396f, 0.74151f, 0.69102f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.297254f, 0.30829f, 0.306678f);
-			glUniform1f(curS->getUniform("MatShine"), 12.8f);
-			break;
-		case 2: // Blue
-			glUniform3f(curS->getUniform("MatAmb"), 0.004, 0.05, 0.09);
-			glUniform3f(curS->getUniform("MatDif"), 0.04, 0.5, 0.9);
-			glUniform3f(curS->getUniform("MatSpec"), 0.02, 0.25, 0.45);
-			glUniform1f(curS->getUniform("MatShine"), 27.9);
-			break;
-		case 3: // Ruby
-			glUniform3f(curS->getUniform("MatAmb"), 0.1745f * 2, 0.01175f * 2, 0.01175f * 2);
-			glUniform3f(curS->getUniform("MatDif"), 0.61424f, 0.04136f, 0.04136f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.727811f, 0.626959f, 0.626959f);
-			glUniform1f(curS->getUniform("MatShine"), 76.8f);
-			break;
-		case 4: // Bronze
-			glUniform3f(curS->getUniform("MatAmb"), 0.2125f * 2, 0.1275f * 2, 0.054f * 2);
-			glUniform3f(curS->getUniform("MatDif"), 0.714f, 0.4284f, 0.18144f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.393548f, 0.271906f, 0.166721f);
-			glUniform1f(curS->getUniform("MatShine"), 25.6f);
-			break;
-		case 5: // Obsidian
-			glUniform3f(curS->getUniform("MatAmb"), 0.05375f, 0.05f, 0.06625f);
-			glUniform3f(curS->getUniform("MatDif"), 0.18275f, 0.17f, 0.22525f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.332741f, 0.328634f, 0.346435f);
-			glUniform1f(curS->getUniform("MatShine"), 38.4f);
-			break;
-		case 6: // Yellow
-			glUniform3f(curS->getUniform("MatAmb"), 0.05f, 0.05f, 0.0f);
-			glUniform3f(curS->getUniform("MatDif"), 0.5f, 0.5f, 0.4f);
-			glUniform3f(curS->getUniform("MatSpec"), 0.7f, 0.7f, 0.04f);
-			glUniform1f(curS->getUniform("MatShine"), 10.0f);
-			break;
+}
+
+void RenderSys::init(float grndSize)
+{
+	initGround(grndSize);
+}
+
+
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
+{
+	
+	vector<Entity> transparentEnts;
+	for (auto const& entity : mEntities){
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		if (rc.transparency < 1.0) {
+			transparentEnts.push_back(entity);
+		}
+		else {
+			RenderSystem::draw(Projection, View, &rc, &tr);
 		}
 	}
-	*/
+	// draw all transparent entities second
+	for (Entity entity : transparentEnts) {
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		RenderSystem::draw(Projection, View, &rc ,&tr);
+	}
 }

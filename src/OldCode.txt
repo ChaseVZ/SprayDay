@@ -1,0 +1,47 @@
+	void SetMaterial(shared_ptr<Program> curS, int i) {
+		switch (i) {
+		case 0: // Pearl
+			glUniform3f(curS->getUniform("MatAmb"), 0.25f, 0.20725f, 0.20725f);
+			glUniform3f(curS->getUniform("MatDif"), 1.0f, 0.829f, 0.829f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.296648f, 0.296648f, 0.296648f);
+			glUniform1f(curS->getUniform("MatShine"), 11.264f);
+			break;
+		case 1: // Turqoise
+			glUniform3f(curS->getUniform("MatAmb"), 0.1f * 2, 0.18725f * 2, 0.1745f * 2);
+			glUniform3f(curS->getUniform("MatDif"), 0.396f, 0.74151f, 0.69102f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.297254f, 0.30829f, 0.306678f);
+			glUniform1f(curS->getUniform("MatShine"), 12.8f);
+			break;
+		case 2: // Blue
+			glUniform3f(curS->getUniform("MatAmb"), 0.004, 0.05, 0.09);
+			glUniform3f(curS->getUniform("MatDif"), 0.04, 0.5, 0.9);
+			glUniform3f(curS->getUniform("MatSpec"), 0.02, 0.25, 0.45);
+			glUniform1f(curS->getUniform("MatShine"), 27.9);
+			break;
+		case 3: // Ruby
+			glUniform3f(curS->getUniform("MatAmb"), 0.1745f * 2, 0.01175f * 2, 0.01175f * 2);
+			glUniform3f(curS->getUniform("MatDif"), 0.61424f, 0.04136f, 0.04136f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.727811f, 0.626959f, 0.626959f);
+			glUniform1f(curS->getUniform("MatShine"), 76.8f);
+			break;
+		case 4: // Bronze
+			glUniform3f(curS->getUniform("MatAmb"), 0.2125f * 2, 0.1275f * 2, 0.054f * 2);
+			glUniform3f(curS->getUniform("MatDif"), 0.714f, 0.4284f, 0.18144f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.393548f, 0.271906f, 0.166721f);
+			glUniform1f(curS->getUniform("MatShine"), 25.6f);
+			break;
+		case 5: // Obsidian
+			glUniform3f(curS->getUniform("MatAmb"), 0.05375f, 0.05f, 0.06625f);
+			glUniform3f(curS->getUniform("MatDif"), 0.18275f, 0.17f, 0.22525f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.332741f, 0.328634f, 0.346435f);
+			glUniform1f(curS->getUniform("MatShine"), 38.4f);
+			break;
+		case 6: // Yellow
+			glUniform3f(curS->getUniform("MatAmb"), 0.05f, 0.05f, 0.0f);
+			glUniform3f(curS->getUniform("MatDif"), 0.5f, 0.5f, 0.4f);
+			glUniform3f(curS->getUniform("MatSpec"), 0.7f, 0.7f, 0.04f);
+			glUniform1f(curS->getUniform("MatShine"), 10.0f);
+			break;
+		}
+	}
+

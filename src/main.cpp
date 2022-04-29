@@ -403,9 +403,6 @@ public:
 			skyEnt,
 			RenderComponent{
 			&cube,     //ShapeGroup * sg;
-			vec3(0.0), //vec3 pos;
-			mat4(1.0),     //mat4 lookMat;
-			vec3(gm->getSize()), //vec3 scale;
 			1.0,           //float transparency;
 			cubeProg,
 			GL_FRONT,
@@ -416,8 +413,8 @@ public:
 			skyEnt,
 			Transform{
 			vec3(0.0),				 //vec3 pos;
-			vec3(1.0, 0.0, 0.0),     // vec3 rotation
-			vec3(gm->getSize()),	 //vec3 scale;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(gm->getSize()*1.5),	 //vec3 scale;
 			});
 	};
 
@@ -427,9 +424,6 @@ public:
 			skunkEnt,
 			RenderComponent{
 			&skunk,			//ShapeGroup * sg;
-			vec3(0.0),		//vec3 pos;
-			mat4(1.0),     //mat4 lookMat;
-			vec3(2.0),		//vec3 scale;
 			1.0,           //float transparency;
 			texProg,
 			GL_BACK,
@@ -438,7 +432,7 @@ public:
 		gCoordinator.AddComponent(
 			skunkEnt,
 			Transform{
-			vec3(0.0),		//vec3 pos;
+			vec3(0.0, 0.0, 0.0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0),     // vec3 rotation
 			vec3(2.0),		//vec3 scale;
 			});
@@ -451,9 +445,6 @@ public:
 			bearEnt,
 			RenderComponent{
 				&bear,     //ShapeGroup * sg;
-				vec3(0.0), //vec3 pos;
-				mat4(1.0), //mat4 lookMat;
-				vec3(8.0), //vec3 scale;
 				1.0,           //float transparency;
 				texProg,
 				GL_BACK,
@@ -476,9 +467,6 @@ public:
 			crateEnt,
 			RenderComponent{
 				&crate,     //ShapeGroup * sg;
-				pos,		//vec3 pos;
-				mat4(1.0), //mat4 lookMat;
-				vec3(crateScale), //vec3 scale;
 				1.0,           //float transparency;
 				texProg,
 				GL_BACK,
@@ -579,7 +567,8 @@ public:
 		//TODO: ECS-ify this into a collision system
 		for each (Entity crateEnt in obstacles) {
 			RenderComponent rc = gCoordinator.GetComponent<RenderComponent>(crateEnt);
-			GameManager::GetInstance()->addCollision(rc.pos, rc.c);
+			Transform tr = gCoordinator.GetComponent<Transform>(crateEnt);
+			GameManager::GetInstance()->addCollision(tr.pos, rc.c);
 		}
 	}
 
@@ -647,9 +636,6 @@ public:
 			sprayEnt,
 			RenderComponent{
 				&sphere, //ShapeGroup*
-				player.pos, // pos
-				mat4(1.0f), //lookMat;
-				vec3(1.0), //scale
 				0.4,  //transparency
 				texProg,
 				GL_BACK,
@@ -669,9 +655,10 @@ public:
 		timeSinceLastSpray += frametime;
 		for (int i = 0; i < trail.size(); i++) {
 			RenderComponent* sprayRC = &(gCoordinator.GetComponent<RenderComponent>(trail[i]));
-			sprayRC->scale += 0.15*frametime;
+			Transform* sprayTR = &(gCoordinator.GetComponent<Transform>(trail[i]));
+			sprayTR->scale += 0.15*frametime;
 			sprayRC->transparency -= 0.005*frametime;
-			if (sprayRC->scale.x >= 3) {
+			if (sprayTR->scale.x >= 3) {
 				gCoordinator.DestroyEntity(trail[i]);
 				trail.erase(trail.begin() + i);
 				i -= 1;
@@ -725,7 +712,6 @@ public:
 		return 20.0f*camPos;
 	}
 
-
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -740,13 +726,14 @@ public:
 		/* update all player attributes */
 		//if (gameBegin) 
 		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
-		skunkRC2.pos = updatePlayer(frametime);
-		skunkRC2.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC2.pos.y, vcam.lookAt.z));
+		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
+		skunkTR.pos = updatePlayer(frametime);
+		skunkTR.lookDir = vec3(vcam.lookAt.x, 0.0, vcam.lookAt.z);
 		vec3 camera_offset = vec3(3, 3, 3);
 
 		// Create the matrix stacks playerPos-vcam.lookAt
 		vec3 cameraPos = makeCameraPos(vcam.lookAt);
-		mat4 View = lookAt(skunkRC2.pos -cameraPos, skunkRC2.pos, vec3(0, 1, 0));
+		mat4 View = lookAt(skunkTR.pos -cameraPos, skunkTR.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
@@ -760,9 +747,6 @@ public:
 			RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
 		}
 		renderSys->update(Projection, View);
-		
-			
-		
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
@@ -770,13 +754,7 @@ public:
 		}
 
 		DamageSystem::update(&(compManager->damageComps), &enemies, &trail, frametime);
-		/*
-		for (int i = 0; i < trail.size(); i++) {
-			RenderSystem::draw(Projection, View, &(trail[i]));
-		}
-		*/
 	}
-
 
 	void initSystems() {
 		renderSys = gCoordinator.RegisterSystem<RenderSys>();
