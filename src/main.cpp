@@ -34,6 +34,7 @@
 #include "CollisionEnum.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
+#include <fstream>
 
 // Skybox
 #include "stb_image.h"
@@ -69,10 +70,15 @@ class Application : public EventCallbacks
 
 public:
 
-	WindowManager * windowManager = nullptr;
+	WindowManager* windowManager = nullptr;
 
-	#define ZERO_VEC vec3(0,0,0)
-	#define ONES_VEC vec3(1,1,1)
+#define ZERO_VEC vec3(0,0,0)
+#define ONES_VEC vec3(1,1,1)
+#define CRATE '*'
+#define RAMP '^'
+#define CUBE '#'
+#define NONE '.'
+#define NEWLINE '\n'
 
 
 
@@ -104,7 +110,7 @@ public:
 	ShapeGroup crate;
 
 	/* ================ TEXTURES ================= */
-	
+
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
 	shared_ptr<Texture> sprayTexture;
@@ -139,7 +145,7 @@ public:
 
 	int numTextures = 0;
 
-	
+
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
@@ -271,7 +277,7 @@ public:
 			if (!gameDone)
 				vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 		}
-	}  
+	}
 
 	void resizeCallback(GLFWwindow* window, int width, int height)
 	{
@@ -464,6 +470,9 @@ public:
 	Entity initCrateRC(vec3 pos) {
 		Entity crateEnt = gCoordinator.CreateEntity();
 		int crateScale = GameManager::GetInstance()->getTileSize();
+
+		cout << "creating crate @: ";
+		printVec(pos);
 		
 		gCoordinator.AddComponent(
 			crateEnt,
@@ -521,35 +530,55 @@ public:
 			});
 	}
 
-	void initObstaclesRCs() {
+	//void initObstaclesRCs() {
+	//	// Grid around map
+	//	int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
+	//	int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
+	//	int interval = s / offset ; // 80 / 20 = 4
 
-		// random
-		obstacles.push_back(initCrateRC(vec3(12, 0, 0)));
-		obstacles.push_back(initCrateRC(vec3(4, 0, 4)));
-		obstacles.push_back(initCrateRC(vec3(20, 0, 12)));
-		obstacles.push_back(initCrateRC(vec3(60, 0, 20)));
-		obstacles.push_back(initCrateRC(vec3(0, 0, 40)));
-		obstacles.push_back(initCrateRC(vec3(10, 0, 20)));
+	//	for (int j = -interval; j <= interval; j++)
+	//	{
+	//		for (int k = -interval; k < interval; k++)
+	//		{
+	//			if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
+	//			else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
+	//			else {
+	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
+	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
+	//			}
+	//		}
+	//	}
+	//};
 
+	int readMap() {
+		string filename("Map.txt");
+		vector<char> bytes;
 
-		// Grid around map
-		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
-		int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
-		int interval = s / offset ; // 80 / 20 = 4
-
-		for (int j = -interval; j <= interval; j++)
-		{
-			for (int k = -interval; k < interval; k++)
-			{
-				if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
-				else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
-				else {
-					obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
-					obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
-				}
-			}
+		FILE* input_file = fopen(filename.c_str(), "r");
+		if (input_file == nullptr) {
+			return EXIT_FAILURE;
 		}
-	};
+
+		unsigned char character = 0;
+		int i = 0;
+		int j = 40;
+		int height = 0;
+		int s = gm->getSize() / 2.0;
+		while (!feof(input_file)) {
+			character = getc(input_file);
+			if (character == CRATE) { obstacles.push_back(initCrateRC(vec3((i) * 4 - s, height, (j) * 4 - s))); cout << i << " " << j << endl; }
+			else if (character == RAMP) {}
+			else if (character == CUBE) {}
+			else if (character == NONE) {}
+			else if (character == NEWLINE) { i = -1; j--; }
+			else { cout << "error reading map value: " << character << "@: " << i << endl; }
+			i++;
+		}
+		cout << endl;
+		fclose(input_file);
+
+		return EXIT_SUCCESS;
+	}
 
 	void initGeom(const std::string& resourceDirectory)
 	{
@@ -601,7 +630,8 @@ public:
 		//initBear();
 
 		// STATIC RenderComponents
-		initObstaclesRCs();
+		//initObstaclesRCs();
+		readMap();
 
 		//TODO: ECS-ify this into a collision system
 		for each (Entity crateEnt in obstacles) {

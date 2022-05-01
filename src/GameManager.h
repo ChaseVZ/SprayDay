@@ -20,7 +20,7 @@ private:
 	static GameManager* instance;
 
 	// data
-	int colMap[MAP_SIZE][MAP_SIZE] = {};
+	int colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
 	vec3 lightPos = vec3(0, 10, 0);
 
 	// private functions

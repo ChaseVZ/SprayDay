@@ -10,8 +10,8 @@ int worldToMap(float val)
 	int res = static_cast<int> (val) + (s / 2);
 
 	// Error checks
-	if (res < 0) { cout << "ERROR: Negative collision index addition" << endl; return -1; }
-	if (res >= s) { cout << "ERROR: collision addition index out of bounds" << endl; return -1; }
+	if (res < 0) { cout << "ERROR: Negative collision index: " << val << endl; return -1; }
+	if (res > s) { cout << "ERROR: Overload collision index: " << val << endl; return -1; }
 	if (s % 2 == 1) { cout << "ERROR: Map size is not even!!" << endl; }
 
 	return res;
@@ -31,11 +31,6 @@ void GameManager::addCollision(vec3 pos, Collision c)
 	int j = worldToMap(pos.z);
 
 	if (i < 0 || j < 0) { return; } // error checks
-
-	//cout << i << " " << j << " for" << pos.x << " " << pos.z << endl;
-	//cout << i+1 << " " << j << " for" << pos.x << " " << pos.z << endl;
-	//cout << i << " " << j+1 << " for" << pos.x << " " << pos.z << endl;
-	//cout << i + 1 << " " << j + 1 << " for" << pos.x << " " << pos.z << endl << endl;
 
 	if (i != 0 && j != 0) {
 		verifyCollisionAddition(i - 1, j - 1, c);
