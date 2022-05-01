@@ -4,23 +4,16 @@
 #include "../Program.h"
 #include "../GameManager.h"
 #include "../MatrixStack.h"
+
+
+
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 using namespace glm;
 
-namespace PathingSystem {
-
-    // Enemy Enemy(vec3 position, vec3 velocity, float boundingRadius) {
-    //     pos = position;
-    //     vel = velocity;
-    //     boRad = boundingRadius;
-    //     exploding = false;
-    //     explodeFrame = 0;
-    //     scale = 1.0;
-    // };
-
+extern Coordinator gCoordinator;
 
     vec3 faceAway(vec3 p1, vec3 p2) {
 		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
@@ -30,12 +23,17 @@ namespace PathingSystem {
 		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
 	}
 
-
-    bool checkCollisions(int sID, vector<Enemy>* enemies) {
-		for (int i = 0; i < enemies->size(); i++) {
-			if (i != sID && !(*enemies)[sID].exploding ) {
-				if (length(vec3((*enemies)[sID].pos - (*enemies)[i].pos)) < (*enemies)[sID].boRad*2) {
-					(*enemies)[sID].vel = faceAway((*enemies)[sID].pos, (*enemies)[i].pos);
+    bool PathingSys::checkCollisions(Entity currentEnemy) {
+		set<Entity>::iterator itr;
+		Transform& currentTr = gCoordinator.GetComponent<Transform>(currentEnemy);
+		Enemy& currentEneComp = gCoordinator.GetComponent<Enemy>(currentEnemy);
+		for (itr = mEntities.begin(); itr != mEntities.end(); itr++){
+			Entity otherEnemy = *itr;
+			if (otherEnemy != currentEnemy) {
+				Transform& otherTr = gCoordinator.GetComponent<Transform>(otherEnemy);
+				Enemy& otherEneComp = gCoordinator.GetComponent<Enemy>(otherEnemy);
+				if (length(vec3(currentTr.pos - otherTr.pos)) < currentEneComp.boRad*2) {
+					currentEneComp.vel = faceAway(currentTr.pos, otherTr.pos);
 					//enemies[sID].vel = vec3(0, 0.8, 0);
 					return true;
 				}
@@ -64,71 +62,29 @@ namespace PathingSystem {
         return false;
     }
 
-	/*
-    void explode(Enemy* e) {
-        e->exploding = true;
-    }
-	*/
-
-    void move(Player p, float dt, Enemy* e) {
-        if (!collide(e->pos + e->vel*dt, p, e))
+    void move(Player p, float dt, Enemy* e, Transform* tr) {
+        if (!collide(tr->pos + e->vel*dt, p, e))
         {
-            e->pos += e->vel*dt;
-			vec3 lookDir = normalize(p.pos - e->pos);
+            tr->pos += e->vel*dt;
+			vec3 lookDir = normalize(p.pos - tr->pos);
+			tr->lookDir = lookDir;
 			float mag = glm::length(e->vel);
 			e->vel = lookDir * mag;
         }
     }
 
-    void updateEnemies(shared_ptr<MatrixStack> Projection, mat4 View, float frametime, vector<Enemy>* enemies,
-		Player player, shared_ptr<Program> texProg, CompManager* compManager) {
-		vector<int> toRemove;
-		bool delta = false;
+void PathingSys::update(float frametime, Player player) {
 
-		for (int i = 0; i < enemies->size(); i++) {
-			checkCollisions(i, enemies);
-		}
-		
-		for (int i = 0; i < enemies->size(); i++) {
-			
-			move(player, frametime*50, &(*enemies)[i]);
-			if ((*enemies)[i].exploding)
-			{
-				/*
-				enemies->erase(enemies->begin() + i);
-				compManager->damageComps->erase(compManager->damageComps->begin() + i);
-				i -= 1;
-				*/
-
-				/*
-				if ((*enemies)[i].explodeFrame == 0) {
-					//numFlying += 1;
-					(*enemies)[i].vel = calcScareVel((*enemies)[i].pos, player.pos);
-					//cout << "caught one! " << enemies.size()-numFlying << " grounded skunks remaining" <<endl;
-				}
-				(*enemies)[i].explodeFrame += 1;
-				if ((*enemies)[i].scale < 0.1) {
-					toRemove.push_back(i); 
-					//numFlying -= 1;
-				}
-				else { //drawSkunk(texProg, Projection, View, enemies[i], enemies[i]->scale - 0.0005); 
-                    (*enemies)[i].scale -= 0.0005; 
-                }
-				*/
-			}
-			// else {
-			// 	drawSkunk(texProg, Projection, View, enemies[i], 1);
-			// }
-			
-		}
-
-		for (int i : toRemove)
-		{
-			delta = true;
-			enemies->erase(enemies->begin() + i);
-		}
-
-		//if (delta) { cout << enemies.size() << " skunks remaining!" << endl; }
+	for (Entity const& entity : mEntities) {
+		this->checkCollisions(entity);
 	}
+	for (Entity const& entity : mEntities) {
+		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
+		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
+		move(player, frametime*50, &entityEnemyComp, &entityTransComp);
+	}
+}
+
+void PathingSys::init() {
 }
 

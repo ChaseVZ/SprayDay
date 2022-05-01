@@ -286,7 +286,7 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
 {
 	
 	vector<Entity> transparentEnts;
-	for (auto const& entity : mEntities){
+	for (Entity const& entity : mEntities) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
 		if (rc.transparency < 1.0) {

@@ -14,7 +14,9 @@
 using namespace glm;
 using namespace std;
 
-
-namespace DamageSystem{
-    void update(vector<DamageComponent>* damageComps, vector<Enemy>* enemies, vector<Entity>* trail, float frametime);
-}
+class DamageSys : public System
+{
+public:
+	void init();
+	void update(vector<Entity>* trail, float frameTime);
+};

@@ -52,6 +52,8 @@ using namespace chrono;
 Coordinator gCoordinator;
 
 std::shared_ptr<RenderSys> renderSys;
+std::shared_ptr<DamageSys> damageSys;
+std::shared_ptr<PathingSys> pathingSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -90,7 +92,7 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	vector<Enemy> enemies;
+	//vector<Enemy> enemies;
 	//vector<DamageComponent> damageComps;
 	vector<Entity> trail;
 	ShapeGroup bear;
@@ -482,6 +484,43 @@ public:
 		return crateEnt;
 	};
 
+	void initWolf() {
+		Entity wolfEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			wolfEnt,
+			Transform{
+				getRandStart(),
+				vec3(1.0, 0.0, 0.0),
+				vec3(5.0),
+			});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			Enemy {
+				2.0, // float boRad;
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+				false, // bool exploding;
+				0, // int explodeFrame;
+			});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			DamageComponent{
+				20.0, // total hp
+				20.0, // current hp
+		});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			RenderComponent{
+				&wolf,
+				1.0,
+				texProg,
+				GL_BACK,
+				ENEMY,
+			});
+	}
+
 	void initObstaclesRCs() {
 
 		// random
@@ -677,30 +716,12 @@ public:
 	vec3 getRandStart() {
 		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((gm->getSize() / 2.0));
 	}
-	void addWolf() {
-		//cout << "spawning wolf" << endl;
-		Enemy newWolf = {
-				2.0, // float boRad;
-				getRandStart(), // vec3 pos;
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
-				false, // bool exploding;
-				0, // int explodeFrame;
-				5.0 // float scale;
-		};
-
-		DamageComponent dc = {
-				20.0, // total hp
-				20.0, // current hp
-		};
-
-		compManager->damageComps.push_back(dc);
-		enemies.push_back(newWolf);
-	}
+	
 	void spawnEnemies(float frametime) {
 		spawnTimer += frametime;
 		if (spawnTimer > SPAWN_TIME) {
 			spawnTimer -= SPAWN_TIME;
-			addWolf();
+			initWolf();
 		}
 	}
 
@@ -739,21 +760,17 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 
 		if (!debugMode) {
-			PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
+			pathingSys->update(frametime, player);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
-		for (int i = 0; i < enemies.size(); i++) {
-			RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-		}
 		renderSys->update(Projection, View);
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
 			spawnEnemies(frametime); 
 		}
-
-		DamageSystem::update(&(compManager->damageComps), &enemies, &trail, frametime);
+		damageSys->update(&trail, frametime);
 	}
 
 	void initSystems() {
@@ -765,6 +782,25 @@ public:
 			gCoordinator.SetSystemSignature<RenderSys>(signature);
 		}
 		renderSys->init(gm->getSize());
+
+		damageSys = gCoordinator.RegisterSystem<DamageSys>();
+		Signature signature;
+		signature.set(gCoordinator.GetComponentType<Transform>());
+		signature.set(gCoordinator.GetComponentType<DamageComponent>());
+		signature.set(gCoordinator.GetComponentType<Enemy>());
+		gCoordinator.SetSystemSignature<DamageSys>(signature);
+
+		damageSys->init();
+
+		pathingSys = gCoordinator.RegisterSystem<PathingSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<Transform>());
+			signature.set(gCoordinator.GetComponentType<Enemy>());
+			gCoordinator.SetSystemSignature<PathingSys>(signature);
+		}
+		pathingSys->init();
+		
 	}
 };
 
@@ -772,9 +808,10 @@ void initCoordinator() {
 	gCoordinator.Init();
 	gCoordinator.RegisterComponent<Transform>();
 	gCoordinator.RegisterComponent<RenderComponent>();
+	gCoordinator.RegisterComponent<DamageComponent>();
+	gCoordinator.RegisterComponent<Enemy>();
+
 }
-
-
 
 int main(int argc, char *argv[])
 {

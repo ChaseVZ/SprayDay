@@ -7,11 +7,9 @@ using namespace glm;
 
 struct Enemy {
 	float boRad;
-	vec3 pos;
 	vec3 vel;
 	bool exploding;
 	int explodeFrame;
-	float scale;
 };
 
 #endif
