@@ -6,7 +6,7 @@
 #include <list>
 #include <iostream>
 
-
+using namespace std;
 using namespace glm;
 
 /* HELPER INFO */
@@ -154,6 +154,7 @@ vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovi
 		//pos = nextPos;
 
 		// << pos.x << " " << pos.z << endl;
+		//cout << "player" << pos.x << " " << pos.z << endl;
 
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}

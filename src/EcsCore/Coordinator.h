@@ -1,4 +1,6 @@
 //Taken from Austin Morlan's ECS guide 
+#ifndef COORDINATOR_H
+#define COORDINATOR_H
 
 #include "ComponentManager.h"
 #include "EntityManager.h"
@@ -90,9 +92,9 @@ public:
 	{
 		mSystemManager->SetSignature<T>(signature);
 	}
-
-private:
 	std::unique_ptr<ComponentManager> mComponentManager;
 	std::unique_ptr<EntityManager> mEntityManager;
 	std::unique_ptr<SystemManager> mSystemManager;
 };
+
+#endif

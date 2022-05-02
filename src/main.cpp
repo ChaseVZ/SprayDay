@@ -31,6 +31,10 @@
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
 #include "CompManager.h"
+#include "CollisionEnum.h"
+#include "EcsCore/Coordinator.h"
+#include "Components/Transform.h"
+#include <fstream>
 
 // Skybox
 #include "stb_image.h"
@@ -46,11 +50,14 @@ using namespace std;
 using namespace glm;
 using namespace chrono;
 
+Coordinator gCoordinator;
+
+std::shared_ptr<RenderSys> renderSys;
+std::shared_ptr<DamageSys> damageSys;
+std::shared_ptr<PathingSys> pathingSys;
+
 // A simple type alias
 using Entity = std::uint32_t;
-
-// Used to define the size of arrays later on
-const Entity MAX_ENTITIES = 5000;
 
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
@@ -63,10 +70,15 @@ class Application : public EventCallbacks
 
 public:
 
-	WindowManager * windowManager = nullptr;
+	WindowManager* windowManager = nullptr;
 
-	#define ZERO_VEC vec3(0,0,0)
-	#define ONES_VEC vec3(1,1,1)
+#define ZERO_VEC vec3(0,0,0)
+#define ONES_VEC vec3(1,1,1)
+#define CRATE '*'
+#define RAMP '^'
+#define CUBE '#'
+#define NONE '.'
+#define NEWLINE '\n'
 
 
 
@@ -86,20 +98,19 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	vector<Enemy> enemies;
+	//vector<Enemy> enemies;
 	//vector<DamageComponent> damageComps;
-	vector<RenderComponent> trail;
+	vector<Entity> trail;
 	ShapeGroup bear;
 	ShapeGroup wolf;
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
-	ShapeGroup skybox;
 	ShapeGroup roundWon;
 	ShapeGroup crate;
 
 	/* ================ TEXTURES ================= */
-	
+
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
 	shared_ptr<Texture> sprayTexture;
@@ -123,15 +134,17 @@ public:
 	"back.jpg"
 	};
 
+	vector<std::string> cartoon_sky_faces{
+	"CloudyCrown_Midday_Right.jpg",
+	"CloudyCrown_Midday_Left.jpg",
+	"CloudyCrown_Midday_Up.jpg",
+	"CloudyCrown_Midday_Down.jpg",
+	"CloudyCrown_Midday_Front.jpg",
+	"CloudyCrown_Midday_Back.jpg"
+	};
+
 	int numTextures = 0;
 
-	/* ============== GROUND ============== */
-
-	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
-	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
-	int g_GiboLen;
-	// ground VAO
-	GLuint GroundVertexArrayID;
 
 	/* ================ GLOBAL ================= */
 	Player player;
@@ -139,9 +152,9 @@ public:
 	particleSys* winParticleSys;
 	GameManager* gm;
 	CompManager* compManager;
-	RenderComponent skunkRC;
-	RenderComponent bearRC;
-	RenderComponent skyboxRC;
+
+	Entity skunkEnt;
+	vector<Entity> obstacles;
 
 	// Animation data
 	float sTheta = 0;
@@ -265,7 +278,7 @@ public:
 			if (!gameDone)
 				vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 		}
-	}  
+	}
 
 	void resizeCallback(GLFWwindow* window, int width, int height)
 	{
@@ -283,10 +296,14 @@ public:
 		glClearColor(.72f, .84f, 1.06f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);  // disable and draw UI to have UI drawn on top
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
 		// particle lab stuff
 		CHECKED_GL_CALL(glEnable(GL_BLEND));
 		CHECKED_GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		CHECKED_GL_CALL(glPointSize(24.0f));
+
+		glEnable(GL_CULL_FACE);
 
 		// Initialize the GLSL program that we will use for local shading
 		prog = make_shared<Program>();
@@ -346,7 +363,7 @@ public:
 		winParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
-		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass.jpg");
+		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass4.jpg");
 		grassTexture->init();
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -389,41 +406,180 @@ public:
 		return r;
 	}
 
-	RenderComponent initSkyboxRC() {
-		RenderComponent skyRC = {
-		&cube,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0),     //mat4 lookMat;
-		vec3(gm->getSize()), //vec3 scale;
-		1.0,           //float transparency;
-		cubeProg
-		};
-		return skyRC;
+	void initSkybox() {
+		Entity skyEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt,
+			RenderComponent{
+			&cube,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			OTHER
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt,
+			Transform{
+			vec3(0.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(gm->getSize()*1.5),	 //vec3 scale;
+			});
 	};
 
-	RenderComponent initSkunkRC() {
-		RenderComponent sknkRC = {
-		&skunk,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0),     //mat4 lookMat;
-		vec3(2.0), //vec3 scale;
-		1.0,           //float transparency;
-		texProg
-		};
-		return sknkRC;
+	void initSkunk() {
+		skunkEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skunkEnt,
+			RenderComponent{
+			&skunk,			//ShapeGroup * sg;
+			1.0,           //float transparency;
+			texProg,
+			GL_BACK,
+			PLAYER
+			});
+		gCoordinator.AddComponent(
+			skunkEnt,
+			Transform{
+			vec3(0.0, 0.0, 0.0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0),     // vec3 rotation
+			vec3(2.0),		//vec3 scale;
+			});
+	}
+
+	void initBear() {
+		Entity bearEnt;
+		bearEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			bearEnt,
+			RenderComponent{
+				&bear,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				texProg,
+				GL_BACK,
+				ENEMY
+			});
+		gCoordinator.AddComponent(
+			bearEnt,
+			Transform{
+			vec3(0.0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(2.0),		//vec3 scale;
+			});
+	}
+
+	Entity initCrateRC(vec3 pos) {
+		Entity crateEnt = gCoordinator.CreateEntity();
+		int crateScale = GameManager::GetInstance()->getTileSize();
+
+		cout << "creating crate @: ";
+		printVec(pos);
+		
+		gCoordinator.AddComponent(
+			crateEnt,
+			RenderComponent{
+				&crate,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				texProg,
+				GL_BACK,
+				OBSTACLE
+			});
+		gCoordinator.AddComponent(
+			crateEnt,
+			Transform{
+			pos,		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(crateScale),		//vec3 scale;
+			});
+		return crateEnt;
 	};
 
-	RenderComponent initBearRC() {
-		RenderComponent bearRC = {
-		&bear,     //ShapeGroup * sg;
-		vec3(0.0), //vec3 pos;
-		mat4(1.0), //mat4 lookMat;
-		vec3(8.0), //vec3 scale;
-		1.0,           //float transparency;
-		texProg
-		};
-		return bearRC;
-	};
+	void initWolf() {
+		Entity wolfEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			wolfEnt,
+			Transform{
+				getRandStart(),
+				vec3(1.0, 0.0, 0.0),
+				vec3(5.0),
+			});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			Enemy {
+				2.0, // float boRad;
+				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+				false, // bool exploding;
+				0, // int explodeFrame;
+			});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			DamageComponent{
+				20.0, // total hp
+				20.0, // current hp
+		});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			RenderComponent{
+				&wolf,
+				1.0,
+				texProg,
+				GL_BACK,
+				ENEMY,
+			});
+	}
+
+	//void initObstaclesRCs() {
+	//	// Grid around map
+	//	int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
+	//	int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
+	//	int interval = s / offset ; // 80 / 20 = 4
+
+	//	for (int j = -interval; j <= interval; j++)
+	//	{
+	//		for (int k = -interval; k < interval; k++)
+	//		{
+	//			if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
+	//			else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
+	//			else {
+	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
+	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
+	//			}
+	//		}
+	//	}
+	//};
+
+	int readMap() {
+		string filename("Map.txt");
+		vector<char> bytes;
+
+		FILE* input_file = fopen(filename.c_str(), "r");
+		if (input_file == nullptr) {
+			return EXIT_FAILURE;
+		}
+
+		unsigned char character = 0;
+		int i = 0;
+		int j = 40;
+		int height = 0;
+		int s = gm->getSize() / 2.0;
+		while (!feof(input_file)) {
+			character = getc(input_file);
+			if (character == CRATE) { obstacles.push_back(initCrateRC(vec3((i) * 4 - s, height, (j) * 4 - s))); cout << i << " " << j << endl; }
+			else if (character == RAMP) {}
+			else if (character == CUBE) {}
+			else if (character == NONE) {}
+			else if (character == NEWLINE) { i = -1; j--; }
+			else { cout << "error reading map value: " << character << "@: " << i << endl; }
+			i++;
+		}
+		cout << endl;
+		fclose(input_file);
+
+		return EXIT_SUCCESS;
+	}
 
 	void initGeom(const std::string& resourceDirectory)
 	{
@@ -442,9 +598,6 @@ public:
 		sphere = initShapes::load(resourceDirectory + "/sphere.obj",
 			sprayTexture,
 			false, &numTextures);
-
-		// Initialize Skybox mesh.x
-		skybox = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
 
 		bear = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
@@ -467,69 +620,29 @@ public:
 
 		// SKYBOX
 		createSky(resourceDirectory + "/skybox/", sky_faces);
+		//createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
 
 		//GROUND
-		initGround();
+		//initGround();
 
-		//SKUNK
-		skunkRC = initSkunkRC();
-		bearRC = initBearRC();
-		skyboxRC = initSkyboxRC();
+		// RenderComponents
+		initSkunk();
+		initSkybox();
+		//initBear();
+
+		// STATIC RenderComponents
+		//initObstaclesRCs();
+		readMap();
+
+		//TODO: ECS-ify this into a collision system
+		for each (Entity crateEnt in obstacles) {
+			RenderComponent rc = gCoordinator.GetComponent<RenderComponent>(crateEnt);
+			Transform tr = gCoordinator.GetComponent<Transform>(crateEnt);
+			GameManager::GetInstance()->addCollision(tr.pos, rc.c);
+		}
 	}
 
 	/* =================== HELPER FUNCTIONS ================== */
-
-	void initGround() {
-		float g_groundSize = gm->getSize() / 2;
-		float g_groundY = -0.25;
-
-		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
-		float GrndPos[] = {
-			-g_groundSize, g_groundY, -g_groundSize,
-			-g_groundSize, g_groundY,  g_groundSize,
-			g_groundSize, g_groundY,  g_groundSize,
-			g_groundSize, g_groundY, -g_groundSize
-		};
-
-		float GrndNorm[] = {
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0,
-			0, 1, 0
-		};
-
-		GLfloat num_tex = g_groundSize / 10;
-		static GLfloat GrndTex[] = {
-			0, 0, // back
-			0, num_tex,
-			num_tex, num_tex,
-			num_tex, 0 };
-
-		unsigned short idx[] = { 0, 1, 2, 0, 2, 3 };
-
-		//generate the ground VAO
-		glGenVertexArrays(1, &GroundVertexArrayID);
-		glBindVertexArray(GroundVertexArrayID);
-
-		g_GiboLen = 6;
-		glGenBuffers(1, &GrndBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndPos), GrndPos, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GrndNorBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndNorBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndNorm), GrndNorm, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GrndTexBuffObj);
-		glBindBuffer(GL_ARRAY_BUFFER, GrndTexBuffObj);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GrndTex), GrndTex, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &GIndxBuffObj);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
-	}
 
 	void printVec(vec3 v) {
 		cout << v.x << " " << v.y << " " << v.z << endl;
@@ -573,31 +686,6 @@ public:
 
 	/* =================== DRAW FUNCTIONS ================== */
 
-	void drawEnd(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		RenderSystem::SetMaterial(curS, 5);
-		RenderSystem::draw(cube, curS, Projection, View, vec3(-41, -19, 67), ONES_VEC, ZERO_VEC, false, ZERO_VEC);
-
-		// draw words
-		RenderSystem::SetMaterial(curS, 3);
-		RenderSystem::draw(roundWon, curS, Projection, View, vec3(-41, -17.8, 65), ONES_VEC, vec3(0, 0, 90), false, ZERO_VEC);
-
-		RenderSystem::drawParticles(partProg, Projection, View, vec3(-43, -17, 67), winParticleSys, particleTexture);
-		RenderSystem::drawParticles(partProg, Projection, View, vec3(-39, -17, 67), winParticleSys, particleTexture);
-	}
-
-	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View) {
-		curS->bind();
-		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
-		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glDepthFunc(GL_LEQUAL);
-		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-
-		RenderSystem::drawGround(make_shared<MatrixStack>(), curS, grassTexture,
-			GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
-		curS->unbind();
-	}
-
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
 		vec3 move = player.pos;
 		bool forward;
@@ -618,23 +706,35 @@ public:
 	}
 
 	void generateSpray() {
-		RenderComponent trailPart = {
-		&sphere, //ShapeGroup*
-		player.pos, // pos
-		mat4(1.0f), //lookMat;
-		vec3(1.0), //scale
-		0.4,  //transparency
-		texProg
-		};
-		trail.push_back(trailPart);
+		Entity sprayEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			sprayEnt,
+			RenderComponent{
+				&sphere, //ShapeGroup*
+				0.4,  //transparency
+				texProg,
+				GL_BACK,
+				SPRAY
+			});
+		gCoordinator.AddComponent(
+			sprayEnt,
+			Transform{
+			player.pos,		//vec3 pos;
+			vec3(1.0, 0.0, 0.0),     // vec3 rotation
+			vec3(1.0),		//vec3 scale;
+			});
+		trail.push_back(sprayEnt);
 	}
 
 	void manageSpray(float frametime) {
 		timeSinceLastSpray += frametime;
 		for (int i = 0; i < trail.size(); i++) {
-			trail[i].scale += 0.15*frametime;
-			trail[i].transparency -= 0.005*frametime;
-			if (trail[i].scale.x >= 3) {
+			RenderComponent* sprayRC = &(gCoordinator.GetComponent<RenderComponent>(trail[i]));
+			Transform* sprayTR = &(gCoordinator.GetComponent<Transform>(trail[i]));
+			sprayTR->scale += 0.15*frametime;
+			sprayRC->transparency -= 0.005*frametime;
+			if (sprayTR->scale.x >= 3) {
+				gCoordinator.DestroyEntity(trail[i]);
 				trail.erase(trail.begin() + i);
 				i -= 1;
 			}
@@ -652,56 +752,12 @@ public:
 	vec3 getRandStart() {
 		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((gm->getSize() / 2.0));
 	}
-	void addWolf() {
-		//cout << "spawning wolf" << endl;
-		Enemy newWolf = {
-				2.0, // float boRad;
-				getRandStart(), // vec3 pos;
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
-				false, // bool exploding;
-				0, // int explodeFrame;
-				5.0 // float scale;
-		};
-
-		DamageComponent dc = {
-				20.0, // total hp
-				20.0, // current hp
-		};
-
-		compManager->damageComps.push_back(dc);
-		enemies.push_back(newWolf);
-
-		/*
-		entity = gCoordinator.CreateEntity();
-		gCoordinator.AddComponent(entity, Player{});
-		gCoordinator.AddComponent<Gravity>(
-			entity,
-			{ Vec3(0.0f, randGravity(generator), 0.0f) });
-		gCoordinator.AddComponent(
-			entity,
-			RigidBody{
-				.velocity = Vec3(0.0f, 0.0f, 0.0f),
-				.acceleration = Vec3(0.0f, 0.0f, 0.0f)
-			});
-		gCoordinator.AddComponent(
-			entity,
-			Transform{
-				.position = Vec3(randPosition(generator), randPosition(generator), randPosition(generator)),
-				.rotation = Vec3(randRotation(generator), randRotation(generator), randRotation(generator)),
-				.scale = Vec3(scale, scale, scale)
-			});
-		gCoordinator.AddComponent(
-			entity,
-			Renderable{
-				.color = Vec3(randColor(generator), randColor(generator), randColor(generator))
-			});
-			*/
-	}
+	
 	void spawnEnemies(float frametime) {
 		spawnTimer += frametime;
 		if (spawnTimer > SPAWN_TIME) {
 			spawnTimer -= SPAWN_TIME;
-			addWolf();
+			initWolf();
 		}
 	}
 
@@ -737,7 +793,6 @@ public:
 		return 20.0f*camPos;
 	}
 
-
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -750,12 +805,19 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/* update all player attributes */
+
+		//if (gameBegin)
 		vec3 moveDir = vec3(0, 0, 0);
-		bool isMovingForward = false;
-		skunkRC.pos = updatePlayer(frametime, &moveDir, &isMovingForward); //correct here?
-		
+		bool isMovingForward = false; 
+		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
+		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
+		skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
+		skunkTR.lookDir = vec3(vcam.lookAt.x, 0.0, vcam.lookAt.z);
+		vec3 camera_offset = vec3(3, 3, 3);
+
+		// Create the matrix stacks playerPos-vcam.lookAt
 		vec3 cameraPos = makeCameraPos(vcam.lookAt, isMovingForward);
-		mat4 View = lookAt(skunkRC.pos -cameraPos, skunkRC.pos, vec3(0, 1, 0));
+		mat4 View = lookAt(skunkTR.pos -cameraPos, skunkTR.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 
 		if (moveDir == vec3(0)){
@@ -774,104 +836,105 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 
-		if (!gameDone) {
-			
-			texProg->bind();
-			//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
-			glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-			glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-			RenderSystem::drawGround(make_shared<MatrixStack>(), texProg, grassTexture,
-				GroundVertexArrayID, GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj, g_GiboLen);
-			texProg->unbind();
-
-			if (!debugMode) {
-				PathingSystem::updateEnemies(Projection, View, frametime, &enemies, player, texProg, compManager);
-			}
-
-			RenderSystem::draw(Projection, View, &skyboxRC);
-			RenderSystem::draw(Projection, View, &bearRC);
-			RenderSystem::draw(Projection, View, &skunkRC);
-			drawGround(texProg, Projection, View);
-			//drawBear(texProg, Projection, View);
-			RenderSystem::drawObstacles(crate, texProg, Projection, View);
-			
-			for (int i=0; i<enemies.size(); i++){
-				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-			}
-
 			//--debug lookat--
 			//cout << moveDir.x << " " << moveDir.z << "\n";
 
-			vec3 skunkLookAt = skunkRC.pos + 10.0f*moveDir + vec3(0,1,0);
-			vec3 skunkLookAt2 = skunkRC.pos + 20.0f*moveDir + vec3(0,1,0);
-			vec3 skunkLookAt3 = skunkRC.pos + 30.0f*moveDir + vec3(0,1,0);
-			vec3 skunkLookAt4 = skunkRC.pos + 40.0f*moveDir + vec3(0,1,0);
-			vec3 skunkLookAt5 = skunkRC.pos + 50.0f*moveDir + vec3(0,1,0);
-			skunkLookAt.y = 1;
-			skunkLookAt2.y = 1;
-			skunkLookAt3.y = 1;
-			skunkLookAt4.y = 1;
-			skunkLookAt5.y = 1;
+			// vec3 skunkLookAt = skunkRC.pos + 10.0f*moveDir + vec3(0,1,0);
+			// vec3 skunkLookAt2 = skunkRC.pos + 20.0f*moveDir + vec3(0,1,0);
+			// vec3 skunkLookAt3 = skunkRC.pos + 30.0f*moveDir + vec3(0,1,0);
+			// vec3 skunkLookAt4 = skunkRC.pos + 40.0f*moveDir + vec3(0,1,0);
+			// vec3 skunkLookAt5 = skunkRC.pos + 50.0f*moveDir + vec3(0,1,0);
+			// skunkLookAt.y = 1;
+			// skunkLookAt2.y = 1;
+			// skunkLookAt3.y = 1;
+			// skunkLookAt4.y = 1;
+			// skunkLookAt5.y = 1;
 			
-			vec3 camLookAt = skunkRC.pos + 10.0f*vcam.lookAt + vec3(0,1,0);
-			vec3 camLookAt2 = skunkRC.pos + 20.0f*vcam.lookAt + vec3(0,1,0);
-			vec3 camLookAt3 = skunkRC.pos + 30.0f*vcam.lookAt + vec3(0,1,0);
-			vec3 camLookAt4 = skunkRC.pos + 40.0f*vcam.lookAt + vec3(0,1,0);
-			vec3 camLookAt5 = skunkRC.pos + 50.0f*vcam.lookAt + vec3(0,1,0);
-			camLookAt.y = 1;
-			camLookAt2.y = 1;
-			camLookAt3.y = 1;
-			camLookAt4.y = 1;
-			camLookAt5.y = 1;
-			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// vec3 camLookAt = skunkRC.pos + 10.0f*vcam.lookAt + vec3(0,1,0);
+			// vec3 camLookAt2 = skunkRC.pos + 20.0f*vcam.lookAt + vec3(0,1,0);
+			// vec3 camLookAt3 = skunkRC.pos + 30.0f*vcam.lookAt + vec3(0,1,0);
+			// vec3 camLookAt4 = skunkRC.pos + 40.0f*vcam.lookAt + vec3(0,1,0);
+			// vec3 camLookAt5 = skunkRC.pos + 50.0f*vcam.lookAt + vec3(0,1,0);
+			// camLookAt.y = 1;
+			// camLookAt2.y = 1;
+			// camLookAt3.y = 1;
+			// camLookAt4.y = 1;
+			// camLookAt5.y = 1;
+			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
 
-			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
 
 
 
 
 			//--end debug lookat--
 			
-			if (!debugMode) { 
-				manageSpray(frametime);
-				spawnEnemies(frametime); 
-			}
-
-			DamageSystem::run(&(compManager->damageComps), &enemies, &trail, frametime);
-			
-			for (int i = 0; i < trail.size(); i++) {
-				RenderSystem::draw(Projection, View, &(trail[i]));
-			}
-			
+		if (!debugMode) {
+			pathingSys->update(frametime, player);
 		}
 
-		else
-			drawEnd(prog, Projection, View);
+		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
+		renderSys->update(Projection, View);
+			
+		if (!debugMode) { 
+			manageSpray(frametime);
+			spawnEnemies(frametime); 
+		}
+		damageSys->update(&trail, frametime);
+	}
 
+	void initSystems() {
+		renderSys = gCoordinator.RegisterSystem<RenderSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<Transform>());
+			signature.set(gCoordinator.GetComponentType<RenderComponent>());
+			gCoordinator.SetSystemSignature<RenderSys>(signature);
+		}
+		renderSys->init(gm->getSize());
+
+		damageSys = gCoordinator.RegisterSystem<DamageSys>();
+		Signature signature;
+		signature.set(gCoordinator.GetComponentType<Transform>());
+		signature.set(gCoordinator.GetComponentType<DamageComponent>());
+		signature.set(gCoordinator.GetComponentType<Enemy>());
+		gCoordinator.SetSystemSignature<DamageSys>(signature);
+
+		damageSys->init();
+
+		pathingSys = gCoordinator.RegisterSystem<PathingSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<Transform>());
+			signature.set(gCoordinator.GetComponentType<Enemy>());
+			gCoordinator.SetSystemSignature<PathingSys>(signature);
+		}
+		pathingSys->init();
 		
-		//animation update example
-		sTheta = sin(glfwGetTime());
-		eTheta = std::max(0.0f, (float)sin(glfwGetTime()));
-		hTheta = std::max(0.0f, (float)cos(glfwGetTime()));
-
-		// Pop matrix stacks.
-		Projection->popMatrix();
 	}
 };
+
+void initCoordinator() {
+	gCoordinator.Init();
+	gCoordinator.RegisterComponent<Transform>();
+	gCoordinator.RegisterComponent<RenderComponent>();
+	gCoordinator.RegisterComponent<DamageComponent>();
+	gCoordinator.RegisterComponent<Enemy>();
+
+}
 
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
 	std::string resourceDir = "../resources";
-
 	if (argc >= 2)
 	{
 		resourceDir = argv[1];
@@ -889,6 +952,9 @@ int main(int argc, char *argv[])
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
+
+	initCoordinator();
+	application->initSystems();
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
