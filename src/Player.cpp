@@ -75,15 +75,15 @@ vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovi
 	vec3 lookAtXZ = normalize(vec3(lookAt.x, 0, lookAt.z));
 
 	if (!goCamera) {
-		if (w && !s && !a && !d) { //skunk is moving forward
-			*isMovingForward = true;
-			oldMoveDir = lookAtXZ;
-		}
-		else {                     //moving at angle, lock move dir
-			*isMovingForward = false;
-			lookAtXZ = oldMoveDir; 
+		// if (w && !s && !a && !d) { //skunk is moving forward
+		// 	*isMovingForward = true;
+		// 	oldMoveDir = lookAtXZ;
+		// }
+		// else {                     //moving at angle, lock move dir
+		// 	*isMovingForward = false;
+		// 	lookAtXZ = oldMoveDir; 
 
-		}
+		// }
 
 		if (w) 
 			tempw = speeds[mvm_type] * lookAtXZ;
