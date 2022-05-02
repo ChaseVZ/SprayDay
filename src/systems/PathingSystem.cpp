@@ -66,10 +66,9 @@ extern Coordinator gCoordinator;
         if (!collide(tr->pos + e->vel*dt, p, e))
         {
             tr->pos += e->vel*dt;
-			vec3 lookDir = normalize(p.pos - tr->pos);
-			tr->lookDir = lookDir;
+			tr->lookDir = normalize(p.pos - tr->pos);
 			float mag = glm::length(e->vel);
-			e->vel = lookDir * mag;
+			e->vel = tr->lookDir * mag;
         }
     }
 

@@ -1,4 +1,4 @@
-#pragma once
+
 #ifndef CHASE_PLAYER
 #define CHASE_PLAYER
 

@@ -758,7 +758,6 @@ public:
 		if (spawnTimer > SPAWN_TIME) {
 			spawnTimer -= SPAWN_TIME;
 			initWolf();
-			cout << "wolf spwaning!\n";
 		}
 	}
 
@@ -813,7 +812,9 @@ public:
 		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
 		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
 		skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
-		skunkTR.lookDir = vec3(vcam.lookAt.x, 0.0, vcam.lookAt.z);
+		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
+			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
+		}
 		vec3 camera_offset = vec3(3, 3, 3);
 
 		// Create the matrix stacks playerPos-vcam.lookAt
@@ -821,15 +822,6 @@ public:
 		mat4 View = lookAt(skunkTR.pos -cameraPos, skunkTR.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
 
-		if (moveDir == vec3(0)){
-			skunkTR.lookDir = vec3(vcam.lookAt.x, skunkTR.pos.y, vcam.lookAt.z);
-			//moveDir = vcam.lookAt;
-		}
-		else {
-			skunkTR.lookDir = vec3(moveDir.x, skunkTR.pos.y, moveDir.z);
-			//vcam.lookAt.x = moveDir.x;
-			//vcam.lookAt.z = moveDir.z;
-		}
 
 		// Create the matrix stacks playerPos-vcam.lookAt
 		

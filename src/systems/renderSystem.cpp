@@ -90,7 +90,7 @@ void SetModelLookAt(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, sha
 }
 
 mat4 lookDirToMat(vec3 lookDir) {
-	return glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-lookDir.x, lookDir.y, lookDir.z)), vec3(0, 1, 0));
+	return glm::lookAt(vec3(0.0), glm::normalize(vec3(-lookDir.x, lookDir.y, lookDir.z)), vec3(0, 1, 0));
 }
 void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos);
@@ -142,43 +142,6 @@ namespace RenderSystem {
 		curS->unbind();
 		
 	}
-
-	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir)
-	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform1f(curS->getUniform("alpha"), 1.0f);
-		vec3 lightPos = GameManager::GetInstance()->getLightPos();
-		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
-		if (!useLookAt) { SetModel(trans, rot.z, rot.y, rot.x, sc, curS); }
-		else {
-			mat4 _look = glm::lookAt(vec3(0, 0, 0), glm::normalize(vec3(-dir.x, dir.y, dir.z)), vec3(0, 1, 0));
-			SetModelLookAt(trans, rot.z, rot.y, rot.x, sc, curS, _look);
-		}
-
-		// non-textured shapes draw
-		if (sg.textures.size() == 0)
-		{
-			//glUniform1f(curS->getUniform("alpha"), 1.0f); // only 'prog' uses alpha
-			for (int i = 0; i < sg.shapes.size(); i++) {
-				sg.shapes[i]->draw(curS);
-			}
-		}
-
-		else {
-			// textured shapes draw
-			for (int i = 0; i < sg.shapes.size(); i++) {
-				sg.textures[i]->bind(curS->getUniform("Texture0"));
-				sg.shapes[i]->draw(curS);
-			}
-		}
-
-		curS->unbind();
-	}
-	
-
 	void drawParticles(shared_ptr<Program> curS, shared_ptr<MatrixStack> P, mat4 View, vec3 pos, particleSys* partSys, shared_ptr<Texture> tex)
 	{
 		curS->bind();

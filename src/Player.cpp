@@ -74,94 +74,81 @@ vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovi
 
 	vec3 lookAtXZ = normalize(vec3(lookAt.x, 0, lookAt.z));
 
-	if (!goCamera) {
-		// if (w && !s && !a && !d) { //skunk is moving forward
-		// 	*isMovingForward = true;
-		// 	oldMoveDir = lookAtXZ;
-		// }
-		// else {                     //moving at angle, lock move dir
-		// 	*isMovingForward = false;
-		// 	lookAtXZ = oldMoveDir; 
+	if (w) 
+		tempw = speeds[mvm_type] * lookAtXZ;
+	else
+		tempw = vec3(0.0);
+	if (s)
+		temps = -(speeds[mvm_type] * lookAtXZ);
+	else
+		temps = vec3(0.0);
+	if (a)
+		tempa = -(speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up)));
+	else
+		tempa = vec3(0.0);
+	if (d)
+		tempd = speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up));
+	else
+		tempd = vec3(0.0);
 
-		// }
+	// velocity = sum of WASD movements, but do not affect y direction
+	tempv = tempw + temps + tempa + tempd;
 
-		if (w) 
-			tempw = speeds[mvm_type] * lookAtXZ;
-		if (!w)
-			tempw = vec3(0.0);
-		if (s)
-			temps = -(speeds[mvm_type] * lookAtXZ);
-		if (!s)
-			temps = vec3(0.0);
-		if (a)
-			tempa = -(speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up)));
-		if (!a)
-			tempa = vec3(0.0);
-		if (d)
-			tempd = speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up));
-		if (!d)
-			tempd = vec3(0.0);
-
-		// velocity = sum of WASD movements, but do not affect y direction
-		tempv = tempw + temps + tempa + tempd;
-
-		vec3 nortempv = (normalize(tempv));
-		if (tempv == vec3(0.0)){ //not moving
-			nortempv = vec3(0.0);
-		}
+	vec3 nortempv = (normalize(tempv));
+	if (tempv == vec3(0.0)){ //not moving
+		nortempv = vec3(0.0);
+	}
 		
-		vel.x = nortempv.x;
-		vel.z = nortempv.z;
+	vel.x = nortempv.x;
+	vel.z = nortempv.z;
 
-		if (mvm_type == 1) { //walking
-			vel.x = 10.0f * vel.x;
-			vel.z = 10.0f * vel.z;
+	if (mvm_type == 1) { //walking
+		vel.x = 10.0f * vel.x;
+		vel.z = 10.0f * vel.z;
+	}
+	else {				 //running
+		vel.x = 20.0f * vel.x;
+		vel.z = 20.0f * vel.z;
+	}
+	//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
+	//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
+
+	// Only involve gravity when player is jumping
+	if (jumping) {
+		vel = vel + acc * lastTime;
+
+		// Only have jump speed affect velocity @ start of jump
+		if (lastTime == 0)
+			vel += jumpSpeed;
+
+		// Stop gravity once player has reached localGround (located in collisions())
+		// Otherwise, player is still in the air so keep calculating time 
+		if (pos.y <= localGround && lastTime != 0) {
+			pos.y = localGround;
+			vel.y = 0;
+			lastTime = 0;
+			jumping = false;
 		}
-		else {				 //running
-			vel.x = 20.0f * vel.x;
-			vel.z = 20.0f * vel.z;
-		}
-		//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
-		//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
-
-		// Only involve gravity when player is jumping
-		if (jumping) {
-			vel = vel + acc * lastTime;
-
-			// Only have jump speed affect velocity @ start of jump
-			if (lastTime == 0)
-				vel += jumpSpeed;
-
-			// Stop gravity once player has reached localGround (located in collisions())
-			// Otherwise, player is still in the air so keep calculating time 
-			if (pos.y <= localGround && lastTime != 0) {
-				pos.y = localGround;
-				vel.y = 0;
-				lastTime = 0;
-				jumping = false;
-			}
-			else
-				lastTime = lastTime + frametime;
-		}
-
+		else
+			lastTime = lastTime + frametime;
+	}
 	
 
-		nextPos = pos + vel*frametime;
-		// if (nextPos.y > localGround) {
-		// 	cout << "in the air!!" << "\n";
-		// }
-		checkCollision();
-		//pos = nextPos;
+	nextPos = pos + vel*frametime;
+	// if (nextPos.y > localGround) {
+	// 	cout << "in the air!!" << "\n";
+	// }
+	checkCollision();
+	//pos = nextPos;
 
-		// << pos.x << " " << pos.z << endl;
-		//cout << "player" << pos.x << " " << pos.z << endl;
+	// << pos.x << " " << pos.z << endl;
+	//cout << "player" << pos.x << " " << pos.z << endl;
 
-		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
-		if (pos.y < localGround) {pos.y = localGround;}
-		if (!jumping && pos.y > localGround) { pos.y = localGround; cout << "in the air!!" << "\n";}
+	// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
+	if (pos.y < localGround) {pos.y = localGround;}
+	if (!jumping && pos.y > localGround) { pos.y = localGround;}
 
-		return vel;
- 	}
+	return vel;
 }
 
 
