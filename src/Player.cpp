@@ -64,7 +64,7 @@ void Player::checkCollision()
 	else { pos = nextPos; }
 }
 
-void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
+vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward)
 {
 	vec3 tempw;
 	vec3 temps;
@@ -72,40 +72,46 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 	vec3 tempd;
 	vec3 tempv;
 
-	vec3 moveDir = normalize(vec3(lookAt.x, 0, lookAt.z));
+	vec3 lookAtXZ = normalize(vec3(lookAt.x, 0, lookAt.z));
 
 	if (!goCamera) {
+		if (w && !s && !a && !d) { //skunk is moving forward
+			*isMovingForward = true;
+			oldMoveDir = lookAtXZ;
+		}
+		else {                     //moving at angle, lock move dir
+			*isMovingForward = false;
+			lookAtXZ = oldMoveDir; 
+
+		}
+
 		if (w) 
-			tempw = speeds[mvm_type] * moveDir;
+			tempw = speeds[mvm_type] * lookAtXZ;
 		if (!w)
 			tempw = vec3(0.0);
 		if (s)
-			temps = -(speeds[mvm_type] * moveDir);
+			temps = -(speeds[mvm_type] * lookAtXZ);
 		if (!s)
 			temps = vec3(0.0);
 		if (a)
-			tempa = -(speeds[mvm_type] * normalize(glm::cross(moveDir, up)));
+			tempa = -(speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up)));
 		if (!a)
 			tempa = vec3(0.0);
 		if (d)
-			tempd = speeds[mvm_type] * normalize(glm::cross(moveDir, up));
+			tempd = speeds[mvm_type] * normalize(glm::cross(lookAtXZ, up));
 		if (!d)
 			tempd = vec3(0.0);
 
-		// velocity = sum of WASD movements, but do not effect y direction
+		// velocity = sum of WASD movements, but do not affect y direction
 		tempv = tempw + temps + tempa + tempd;
 
-		vec3 nortempv = abs(normalize(tempv));
-		if (tempv.x == 0.0 && tempv.y == 0.0 && tempv.z == 0.0){
+		vec3 nortempv = (normalize(tempv));
+		if (tempv == vec3(0.0)){ //not moving
 			nortempv = vec3(0.0);
 		}
-		else {
-			tempv = nortempv*normalize(tempv);
-		}
-
-		// cap speed to movement speed type
-		vel.x = std::min(tempv.x, speeds[mvm_type]);
-		vel.z = std::min(tempv.z, speeds[mvm_type]);
+		
+		vel.x = nortempv.x;
+		vel.z = nortempv.z;
 
 		if (mvm_type == 1) { //walking
 			vel.x = 10.0f * vel.x;
@@ -120,9 +126,7 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 
 		// Only involve gravity when player is jumping
 		if (jumping) {
-			cout << "vel.y before: " << vel.y << "\n";
 			vel = vel + acc * lastTime;
-			cout << "vel.y after : " << vel.y << "\n";
 
 			// Only have jump speed affect velocity @ start of jump
 			if (lastTime == 0)
@@ -138,7 +142,6 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 			}
 			else
 				lastTime = lastTime + frametime;
-			cout << "vel.y: " << vel.y << "\n\n";
 		}
 
 	
@@ -155,6 +158,8 @@ void Player::updatePos(vec3 lookAt, bool goCamera, float frametime)
 		// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 		if (pos.y < localGround) {pos.y = localGround;}
 		if (!jumping && pos.y > localGround) { pos.y = localGround; cout << "in the air!!" << "\n";}
+
+		return vel;
  	}
 }
 

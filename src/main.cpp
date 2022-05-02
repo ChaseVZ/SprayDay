@@ -165,7 +165,7 @@ public:
 	int third = 0;
 
 	/* ================ DEBUG ================= */
-	bool debugMode = false;
+	bool debugMode = true;
 	bool gameBegin = false;
 	bool gameDone = false;
 
@@ -186,7 +186,7 @@ public:
 				if (key == GLFW_KEY_A && action == GLFW_PRESS) { player.a = true; }
 				if (key == GLFW_KEY_D && action == GLFW_PRESS) { player.d = true; }
 				if (key == GLFW_KEY_S && action == GLFW_PRESS) { player.s = true; }
-				if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.jumping = true; cout << "jump!";}
+				if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.jumping = true;}
 
 				if (key == GLFW_KEY_W && action == GLFW_RELEASE) { player.w = false; }
 				if (key == GLFW_KEY_A && action == GLFW_RELEASE) { player.a = false; }
@@ -598,17 +598,22 @@ public:
 		curS->unbind();
 	}
 
-	vec3 updatePlayer(float frametime)	{
+	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
+		vec3 move = player.pos;
+		bool forward;
 		if (gameDone) {
 			vcam.updatePos(player.win_loc);
 			vcam.lookAt = vec3(0, 0, -1);
 		}
 		else {
 			// player
-			player.updatePos(vcam.lookAt, vcam.goCamera, frametime);
+			move = player.updatePos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
+			
 			// camera
 			vcam.updatePos(player.pos);
 		}
+		
+		*moveDir = move;
 		return player.pos;
 	}
 
@@ -700,11 +705,35 @@ public:
 		}
 	}
 
-	vec3 makeCameraPos(vec3 vcamlookAt){
-		vec3 camPos = vcamlookAt;
+	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
+		vec3 camPos = moveDir;
+		camPos.y = vcam.lookAt.y;
+		// if (movingForward) {      //skunk is moving forward (only w)
+		// 	camPos = vec3(moveDir.x, vcam.lookAt.y, moveDir.z);
+		// 	vcam.oldLookAt.x = camPos.x;
+		// 	vcam.oldLookAt.y = camPos.y;
+		// 	vcam.oldLookAt.z = camPos.z;
+		// }
+		// if (moveDir == vec3(0)) { //skunk is not moving
+		// 	cout << "Not moving!\n";
+		// 	vcam.oldLookAt = camPos;
+		// 	moveDir = camPos;
+		// }
+		// else {                    //skunk is going another dir (w+?)
+		// 	//camPos = vec3(vcam.oldLookAt.x, vcam.lookAt.y, vcam.oldLookAt.z);
+		// 	// vcam.lookAt.x = vcam.oldLookAt.x;
+		// 	// vcam.lookAt.y = vcam.oldLookAt.y;
+		// 	// vcam.lookAt.z = vcam.oldLookAt.z;
+			
+		// 	//cout << "oldLookAt: " << vcam.oldLookAt.x << " " << vcam.oldLookAt.z << "\n";
+		// }
 		if (camPos.y > 0){
 			camPos.y=0;
 		}
+		camPos = normalize(camPos);
+		cout << "camPos: ";
+		printVec(camPos);
+		cout << "CamDist: " << sqrt(camPos.x*camPos.x+camPos.y*camPos.y+camPos.z*camPos.z) << "\n";
 		return 20.0f*camPos;
 	}
 
@@ -721,15 +750,27 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/* update all player attributes */
-		//if (gameBegin) 
-		skunkRC.pos = updatePlayer(frametime);
-		skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC.pos.y, vcam.lookAt.z));
-		vec3 camera_offset = vec3(3, 3, 3);
-
-		// Create the matrix stacks playerPos-vcam.lookAt
-		vec3 cameraPos = makeCameraPos(vcam.lookAt);
+		vec3 moveDir = vec3(0, 0, 0);
+		bool isMovingForward = false;
+		skunkRC.pos = updatePlayer(frametime, &moveDir, &isMovingForward); //correct here?
+		
+		vec3 cameraPos = makeCameraPos(vcam.lookAt, isMovingForward);
 		mat4 View = lookAt(skunkRC.pos -cameraPos, skunkRC.pos, vec3(0, 1, 0));
 		auto Projection = make_shared<MatrixStack>();
+
+		if (moveDir == vec3(0)){
+			skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC.pos.y, vcam.lookAt.z));
+			//moveDir = vcam.lookAt;
+		}
+		else {
+			skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(moveDir.x, skunkRC.pos.y, moveDir.z));
+			//vcam.lookAt.x = moveDir.x;
+			//vcam.lookAt.z = moveDir.z;
+		}
+
+		// Create the matrix stacks playerPos-vcam.lookAt
+		
+		
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 
@@ -754,9 +795,50 @@ public:
 			//drawBear(texProg, Projection, View);
 			RenderSystem::drawObstacles(crate, texProg, Projection, View);
 			
-			// for (int i=0; i<enemies.size(); i++){
-			// 	RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
-			// }
+			for (int i=0; i<enemies.size(); i++){
+				RenderSystem::draw(wolf, texProg, Projection, View, enemies[i].pos, vec3(enemies[i].scale), ZERO_VEC, true, vec3(enemies[i].vel));
+			}
+
+			//--debug lookat--
+			//cout << moveDir.x << " " << moveDir.z << "\n";
+
+			vec3 skunkLookAt = skunkRC.pos + 10.0f*moveDir + vec3(0,1,0);
+			vec3 skunkLookAt2 = skunkRC.pos + 20.0f*moveDir + vec3(0,1,0);
+			vec3 skunkLookAt3 = skunkRC.pos + 30.0f*moveDir + vec3(0,1,0);
+			vec3 skunkLookAt4 = skunkRC.pos + 40.0f*moveDir + vec3(0,1,0);
+			vec3 skunkLookAt5 = skunkRC.pos + 50.0f*moveDir + vec3(0,1,0);
+			skunkLookAt.y = 1;
+			skunkLookAt2.y = 1;
+			skunkLookAt3.y = 1;
+			skunkLookAt4.y = 1;
+			skunkLookAt5.y = 1;
+			
+			vec3 camLookAt = skunkRC.pos + 10.0f*vcam.lookAt + vec3(0,1,0);
+			vec3 camLookAt2 = skunkRC.pos + 20.0f*vcam.lookAt + vec3(0,1,0);
+			vec3 camLookAt3 = skunkRC.pos + 30.0f*vcam.lookAt + vec3(0,1,0);
+			vec3 camLookAt4 = skunkRC.pos + 40.0f*vcam.lookAt + vec3(0,1,0);
+			vec3 camLookAt5 = skunkRC.pos + 50.0f*vcam.lookAt + vec3(0,1,0);
+			camLookAt.y = 1;
+			camLookAt2.y = 1;
+			camLookAt3.y = 1;
+			camLookAt4.y = 1;
+			camLookAt5.y = 1;
+			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+
+			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+			RenderSystem::draw(wolf, texProg, Projection, View, camLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
+
+
+
+
+			//--end debug lookat--
 			
 			if (!debugMode) { 
 				manageSpray(frametime);

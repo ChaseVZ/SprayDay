@@ -16,7 +16,7 @@ using namespace glm;
 class Player {
 public:
 	Player();  // constructor
-	void updatePos(vec3 lookAt, bool goCamera, float frametime);
+	vec3 updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward);
 	void playerResetPos() { pos = pos_default; }
 	vec3 pos;
 	bool w, a, s, d, jumping;
@@ -35,6 +35,7 @@ private:
 	vec3 nextPos = vec3(0, 0, 0);
 	float lastTime = 0;
 	void checkCollision();
+	vec3 oldMoveDir;
 };
 
 

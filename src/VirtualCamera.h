@@ -19,6 +19,7 @@ public:
 	VirtualCamera();
 	vec3 pos;
 	vec3 lookAt;
+	vec3 oldLookAt = lookAt_default;
 	void updateUsingCameraPath(float frametime);
 	void updatePos(vec3 playerPos) { 
 		pos = playerPos + camera_offset; 

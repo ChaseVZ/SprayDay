@@ -89,6 +89,7 @@ namespace RenderSystem {
 			}
 		}
 		curS->unbind();
+		
 	}
 
 	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir)
