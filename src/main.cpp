@@ -178,7 +178,7 @@ public:
 	int third = 0;
 
 	/* ================ DEBUG ================= */
-	bool debugMode = true;
+	bool debugMode = false;
 	bool gameBegin = false;
 	bool gameDone = false;
 
@@ -635,7 +635,7 @@ public:
 		readMap();
 
 		//TODO: ECS-ify this into a collision system
-		for each (Entity crateEnt in obstacles) {
+		for (Entity crateEnt : obstacles) {
 			RenderComponent rc = gCoordinator.GetComponent<RenderComponent>(crateEnt);
 			Transform tr = gCoordinator.GetComponent<Transform>(crateEnt);
 			GameManager::GetInstance()->addCollision(tr.pos, rc.c);
@@ -758,6 +758,7 @@ public:
 		if (spawnTimer > SPAWN_TIME) {
 			spawnTimer -= SPAWN_TIME;
 			initWolf();
+			cout << "wolf spwaning!\n";
 		}
 	}
 
@@ -787,9 +788,9 @@ public:
 			camPos.y=0;
 		}
 		camPos = normalize(camPos);
-		cout << "camPos: ";
-		printVec(camPos);
-		cout << "CamDist: " << sqrt(camPos.x*camPos.x+camPos.y*camPos.y+camPos.z*camPos.z) << "\n";
+		//cout << "camPos: ";
+		//printVec(camPos);
+		//cout << "CamDist: " << sqrt(camPos.x*camPos.x+camPos.y*camPos.y+camPos.z*camPos.z) << "\n";
 		return 20.0f*camPos;
 	}
 
@@ -821,11 +822,11 @@ public:
 		auto Projection = make_shared<MatrixStack>();
 
 		if (moveDir == vec3(0)){
-			skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(vcam.lookAt.x, skunkRC.pos.y, vcam.lookAt.z));
+			skunkTR.lookDir = vec3(vcam.lookAt.x, skunkTR.pos.y, vcam.lookAt.z);
 			//moveDir = vcam.lookAt;
 		}
 		else {
-			skunkRC.lookMat = RenderSystem::lookDirToMat(vec3(moveDir.x, skunkRC.pos.y, moveDir.z));
+			skunkTR.lookDir = vec3(moveDir.x, skunkTR.pos.y, moveDir.z);
 			//vcam.lookAt.x = moveDir.x;
 			//vcam.lookAt.z = moveDir.z;
 		}
