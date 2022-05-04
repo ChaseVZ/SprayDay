@@ -549,7 +549,7 @@ public:
 		int s = MAP_SIZE / 2.0;
 		while (!feof(input_file)) {
 			character = getc(input_file);
-			if (character == _CRATE) { obstacles.push_back(initCrate(vec3((i) * 4 - s, height, (j) * 4 - s))); cout << i << " " << j << endl; }
+			if (character == _CRATE) { obstacles.push_back(initCrate(vec3((i) * 4 - s, height, (j) * 4 - s))); }
 			else if (character == _RAMP) {}
 			else if (character == _CUBE) {}
 			else if (character == _NONE) {}
