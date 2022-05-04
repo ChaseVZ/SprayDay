@@ -534,7 +534,7 @@ public:
 #pragma endregion
 
 	int readMap() {
-		string filename("Map.txt");
+		string filename("../StaticObjMap.txt");
 		vector<char> bytes;
 
 		FILE* input_file = fopen(filename.c_str(), "r");
