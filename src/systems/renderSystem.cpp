@@ -99,77 +99,71 @@ void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
 
-void drawCrateAtVec(vec3 pos, shared_ptr<Program> curS, ShapeGroup sg)
+void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr)
 {
-	for (int i = 0; i < sg.shapes.size(); i++) {
-		int crateScale = GameManager::GetInstance()->getTileSize();
-		SetModel(pos, 0, 0, 0, vec3(crateScale, crateScale, crateScale), curS);
-		sg.textures[i]->bind(curS->getUniform("Texture0"));
-		sg.shapes[i]->draw(curS);
+	shared_ptr<Program> curS = rc->shader;
+	glCullFace(rc->cullDir);
+	curS->bind();
+	glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+	glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+	glUniform1f(curS->getUniform("alpha"), rc->transparency);
+	//vec3 lightPos = GameManager::GetInstance()->getLightPos();
+	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	setModelRC(curS, tr);
+	// non-textured shapes draw
+	if ((rc->sg)->textures.size() == 0)
+	{
+		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
+			(rc->sg)->shapes[i]->draw(curS);
+		}
 	}
-
-	GameManager::GetInstance()->addCollision(pos, OTHER);
+	else {
+		// textured shapes draw
+		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
+			(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
+			(rc->sg)->shapes[i]->draw(curS);
+		}
+	}
+	curS->unbind();
+		
 }
 
 
-namespace RenderSystem {
+void RenderSys::init(float grndSize)
+{
+	initGround(grndSize);
+}
 
-	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr)
-	{
-		shared_ptr<Program> curS = rc->shader;
-		glCullFace(rc->cullDir);
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		glUniform1f(curS->getUniform("alpha"), rc->transparency);
-		vec3 lightPos = GameManager::GetInstance()->getLightPos();
-		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-		setModelRC(curS, tr);
-		// non-textured shapes draw
-		if ((rc->sg)->textures.size() == 0)
-		{
-			for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
-				(rc->sg)->shapes[i]->draw(curS);
-			}
+
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
+{
+	vector<Entity> transparentEnts;
+	for (Entity const& entity : mEntities) {
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		if (rc.transparency < 1.0) {
+			transparentEnts.push_back(entity);
 		}
 		else {
-			// textured shapes draw
-			for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
-				(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
-				(rc->sg)->shapes[i]->draw(curS);
-			}
+			draw(Projection, View, &rc, &tr);
 		}
-		curS->unbind();
-		
 	}
-	void drawParticles(shared_ptr<Program> curS, shared_ptr<MatrixStack> P, mat4 View, vec3 pos, particleSys* partSys, shared_ptr<Texture> tex)
-	{
-		curS->bind();
-
-		partSys->setCamera(View);
-		partSys->setStart(pos);
-
-		auto M = make_shared<MatrixStack>();
-		M->pushMatrix();
-		M->loadIdentity();
-
-		tex->bind(curS->getUniform("alphaTexture"));
-		CHECKED_GL_CALL(glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())));
-		CHECKED_GL_CALL(glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View)));
-		CHECKED_GL_CALL(glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
-
-		partSys->drawMe(curS);
-		partSys->update();
-
-		curS->unbind();
+	// draw all transparent entities second
+	for (Entity entity : transparentEnts) {
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		draw(Projection, View, &rc ,&tr);
 	}
+}
 
+namespace RenderSystem {
 	//code to draw the ground plane
 
-	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, 
+	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
 		shared_ptr<Program> texProg, shared_ptr<Texture> grassTexture) {
 		curS->bind();
 		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
+		//glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glDepthFunc(GL_LEQUAL);
 		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
@@ -207,63 +201,5 @@ namespace RenderSystem {
 		Model->popMatrix();
 
 		curS->unbind();
-	}
-
-	
-
-	void drawObstacles(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View)
-	{
-		curS->bind();
-		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-		vec3 lightPos = GameManager::GetInstance()->getLightPos();
-		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-		glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
-		int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
-		int s = GameManager::GetInstance()->getSize() / 2; // 240 / 2 = 120
-		int interval = s / offset; // 120 / 20 = 6
-
-		for (int j = -interval; j < interval; j++)
-		{
-			for (int k = -interval; k < interval; k++)
-			{
-				if (j == -interval || j == interval) { drawCrateAtVec(vec3(j * offset, 0, k * offset), curS, sg); }
-				else {
-					drawCrateAtVec(vec3(j * offset, 0, -s + 1), curS, sg);
-					drawCrateAtVec(vec3(j * offset, 0, s - 1), curS, sg);
-				} 
-			}
-		}
-
-		//cout << endl << "next" << endl;
-	}
-}
-
-void RenderSys::init(float grndSize)
-{
-	initGround(grndSize);
-}
-
-
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
-{
-	
-	vector<Entity> transparentEnts;
-	for (Entity const& entity : mEntities) {
-		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
-		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
-		if (rc.transparency < 1.0) {
-			transparentEnts.push_back(entity);
-		}
-		else {
-			RenderSystem::draw(Projection, View, &rc, &tr);
-		}
-	}
-	// draw all transparent entities second
-	for (Entity entity : transparentEnts) {
-		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
-		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
-		RenderSystem::draw(Projection, View, &rc ,&tr);
 	}
 }

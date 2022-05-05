@@ -5,7 +5,7 @@
 #include "Program.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "CollisionEnum.h"
+#include "Components/Collision.h"
 
 using namespace std;
 using namespace glm;
@@ -21,5 +21,5 @@ struct RenderComponent {
 	float transparency;
 	shared_ptr<Program> shader;
 	int cullDir;
-	Collision c;
+	//CollisionT c;
 };
