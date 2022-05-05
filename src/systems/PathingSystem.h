@@ -15,7 +15,7 @@ using namespace glm;
 /*
 //Enemy Enemy(vec3 position, vec3 velocity, float boundingRadius);
 void move(Player p, float dt, Enemy* e, Transform* tr);
-bool collide(vec3 nextPos, Player p, Enemy* e);
+bool collideWithPlayerOrBoundry(vec3 nextPos, Player p, Enemy* e);
 // void explode(Enemy* e);
 bool checkCollisions(Entity currentEnemy, set<Entity> enemies);
 vec3 faceAway(vec3 p1, vec3 p2);

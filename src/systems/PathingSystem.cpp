@@ -19,9 +19,9 @@ extern Coordinator gCoordinator;
 		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
 	}
 
-    vec3 calcScareVel(vec3 ePos, vec3 pPos) {
-		return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
-	}
+    // vec3 calcScareVel(vec3 ePos, vec3 pPos) {
+	// 	return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
+	// }
 
     bool PathingSys::checkCollisions(Entity currentEnemy) {
 		set<Entity>::iterator itr;
@@ -42,7 +42,7 @@ extern Coordinator gCoordinator;
 		return false;
 	}
 
-    bool collide(vec3 nextPos, Player p, Enemy* e) {
+    bool collideWithPlayerOrBoundry(vec3 nextPos, Player p, Enemy* e) {
         if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
         {
             e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
@@ -63,9 +63,13 @@ extern Coordinator gCoordinator;
     }
 
     void move(Player p, float dt, Enemy* e, Transform* tr) {
-        if (!collide(tr->pos + e->vel*dt, p, e))
+        if (!collideWithPlayerOrBoundry(tr->pos + e->vel*dt, p, e))
         {
-            tr->pos += e->vel*dt;
+            //TODO: add in Astar pathing
+			//use GameManager::checkCollide(nextPos, radiusOfWolf) on all possible positions to check if collision
+			
+			
+			tr->pos += e->vel*dt;
 			tr->lookDir = normalize(p.pos - tr->pos);
 			float mag = glm::length(e->vel);
 			e->vel = tr->lookDir * mag;
