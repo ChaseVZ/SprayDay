@@ -30,10 +30,10 @@
 #include "systems/PathingSystem.h"
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
-#include "CompManager.h"
 #include "CollisionEnum.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
+#include "Components/AnimationComponent.h"
 #include <fstream>
 
 // Skybox
@@ -64,6 +64,9 @@ float timeSinceLastSpray = 0;
 float gameTime = 0;
 float spawnTimer = 3;
 float SPAWN_TIME = 4;
+
+float POISON_TICK_TIME = 0.5;
+float WOLF_BASE_HP = 4.0; // seconds of spraying until death
 
 class Application : public EventCallbacks
 {
@@ -98,8 +101,6 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	//vector<Enemy> enemies;
-	//vector<DamageComponent> damageComps;
 	vector<Entity> trail;
 	ShapeGroup bear;
 	ShapeGroup wolf;
@@ -151,7 +152,6 @@ public:
 	VirtualCamera vcam;
 	particleSys* winParticleSys;
 	GameManager* gm;
-	CompManager* compManager;
 
 	Entity skunkEnt;
 	vector<Entity> obstacles;
@@ -398,7 +398,6 @@ public:
 
 		// GM
 		gm = GameManager::GetInstance();
-		compManager = CompManager::GetInstance();
 	}
 
 	float randFloat() {
@@ -516,9 +515,16 @@ public:
 		gCoordinator.AddComponent(
 			wolfEnt,
 			DamageComponent{
-				20.0, // total hp
-				20.0, // current hp
+				WOLF_BASE_HP, // total hp
+				WOLF_BASE_HP, // current hp
+				POISON_TICK_TIME // poision timer
 		});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			AnimationComponent{
+				0 // poision damage frame
+			});
 
 		gCoordinator.AddComponent(
 			wolfEnt,
@@ -880,8 +886,8 @@ public:
 		if (!debugMode) { 
 			manageSpray(frametime);
 			spawnEnemies(frametime); 
+			damageSys->update(&trail, frametime);
 		}
-		damageSys->update(&trail, frametime);
 	}
 
 	void initSystems() {
@@ -898,10 +904,11 @@ public:
 		Signature signature;
 		signature.set(gCoordinator.GetComponentType<Transform>());
 		signature.set(gCoordinator.GetComponentType<DamageComponent>());
+		signature.set(gCoordinator.GetComponentType<AnimationComponent>());
 		signature.set(gCoordinator.GetComponentType<Enemy>());
 		gCoordinator.SetSystemSignature<DamageSys>(signature);
 
-		damageSys->init();
+		damageSys->init(POISON_TICK_TIME);
 
 		pathingSys = gCoordinator.RegisterSystem<PathingSys>();
 		{
@@ -920,7 +927,9 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<Transform>();
 	gCoordinator.RegisterComponent<RenderComponent>();
 	gCoordinator.RegisterComponent<DamageComponent>();
+	gCoordinator.RegisterComponent<AnimationComponent>();
 	gCoordinator.RegisterComponent<Enemy>();
+	
 
 }
 

@@ -8,6 +8,7 @@ using namespace glm;
 struct DamageComponent {
 	float maxHp;
 	float currentHp;
+	float poisonTimer;
 };
 
 #endif
