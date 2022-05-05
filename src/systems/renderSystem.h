@@ -25,15 +25,13 @@ private:
 	GLuint mVao{};
 	GLuint mVboVertices{};
 	GLuint mVboNormals{};
+	vec3 lightPos = vec3(0, 10, 0);
+
+	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr);
 };
 
 namespace RenderSystem {
-	//mat4 lookDirToMat(vec3 lookDir);
-	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr);
-	void draw(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, vec3 trans, vec3 sc, vec3 rot, bool useLookAt, vec3 dir);
-	void drawParticles(shared_ptr<Program> curS, shared_ptr<MatrixStack> P, mat4 View, vec3 pos, particleSys* partSys, shared_ptr<Texture> tex);
-
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
 		shared_ptr<Program> texProg, shared_ptr<Texture> grassTexture);
-	void drawObstacles(ShapeGroup sg, shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View);
+
 }

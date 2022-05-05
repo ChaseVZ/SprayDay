@@ -30,11 +30,12 @@
 #include "systems/PathingSystem.h"
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
-#include "CollisionEnum.h"
+#include "Components/Collision.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include "Components/AnimationComponent.h"
 #include <fstream>
+#include "systems/CollisionSystem.h"
 
 // Skybox
 #include "stb_image.h"
@@ -55,6 +56,7 @@ Coordinator gCoordinator;
 std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
 std::shared_ptr<PathingSys> pathingSys;
+std::shared_ptr<CollisionSys> collisionSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -77,11 +79,11 @@ public:
 
 #define ZERO_VEC vec3(0,0,0)
 #define ONES_VEC vec3(1,1,1)
-#define CRATE '*'
-#define RAMP '^'
-#define CUBE '#'
-#define NONE '.'
-#define NEWLINE '\n'
+#define _CRATE '*'
+#define _RAMP '^'
+#define _CUBE '#'
+#define _NONE '.'
+#define _NEWLINE '\n'
 
 
 
@@ -136,12 +138,12 @@ public:
 	};
 
 	vector<std::string> cartoon_sky_faces{
-	"CloudyCrown_Midday_Right.jpg",
-	"CloudyCrown_Midday_Left.jpg",
-	"CloudyCrown_Midday_Up.jpg",
-	"CloudyCrown_Midday_Down.jpg",
-	"CloudyCrown_Midday_Front.jpg",
-	"CloudyCrown_Midday_Back.jpg"
+	"CloudyCrown_Midday_Right.png",
+	"CloudyCrown_Midday_Left.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"CloudyCrown_Midday_Front.png",
+	"CloudyCrown_Midday_Back.png"
 	};
 
 	int numTextures = 0;
@@ -151,7 +153,6 @@ public:
 	Player player;
 	VirtualCamera vcam;
 	particleSys* winParticleSys;
-	GameManager* gm;
 
 	Entity skunkEnt;
 	vector<Entity> obstacles;
@@ -396,8 +397,6 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 
-		// GM
-		gm = GameManager::GetInstance();
 	}
 
 	float randFloat() {
@@ -405,6 +404,7 @@ public:
 		return r;
 	}
 
+	#pragma region InitEntities
 	void initSkybox() {
 		Entity skyEnt = gCoordinator.CreateEntity();
 		gCoordinator.AddComponent(
@@ -414,7 +414,7 @@ public:
 			1.0,           //float transparency;
 			cubeProg,
 			GL_FRONT,
-			OTHER
+			//NONE
 		});
 
 		gCoordinator.AddComponent(
@@ -422,7 +422,7 @@ public:
 			Transform{
 			vec3(0.0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
-			vec3(gm->getSize()*1.5),	 //vec3 scale;
+			vec3(MAP_SIZE * 1.5),	 //vec3 scale;
 			});
 	};
 
@@ -435,7 +435,6 @@ public:
 			1.0,           //float transparency;
 			texProg,
 			GL_BACK,
-			PLAYER
 			});
 		gCoordinator.AddComponent(
 			skunkEnt,
@@ -456,7 +455,6 @@ public:
 				1.0,           //float transparency;
 				texProg,
 				GL_BACK,
-				ENEMY
 			});
 		gCoordinator.AddComponent(
 			bearEnt,
@@ -467,12 +465,9 @@ public:
 			});
 	}
 
-	Entity initCrateRC(vec3 pos) {
+	Entity initCrate(vec3 pos) {
 		Entity crateEnt = gCoordinator.CreateEntity();
-		int crateScale = GameManager::GetInstance()->getTileSize();
-
-		cout << "creating crate @: ";
-		printVec(pos);
+		int crateScale = TILE_SIZE; 
 		
 		gCoordinator.AddComponent(
 			crateEnt,
@@ -481,7 +476,6 @@ public:
 				1.0,           //float transparency;
 				texProg,
 				GL_BACK,
-				OBSTACLE
 			});
 		gCoordinator.AddComponent(
 			crateEnt,
@@ -489,6 +483,14 @@ public:
 			pos,		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(crateScale),		//vec3 scale;
+			});
+
+		gCoordinator.AddComponent(
+			crateEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				CRATE
 			});
 		return crateEnt;
 	};
@@ -533,32 +535,12 @@ public:
 				1.0,
 				texProg,
 				GL_BACK,
-				ENEMY,
 			});
 	}
-
-	//void initObstaclesRCs() {
-	//	// Grid around map
-	//	int offset = 10 * GameManager::GetInstance()->getTileSize(); // 10 * 2 = 20
-	//	int s = GameManager::GetInstance()->getSize() / 2; // 160 / 2 = 80
-	//	int interval = s / offset ; // 80 / 20 = 4
-
-	//	for (int j = -interval; j <= interval; j++)
-	//	{
-	//		for (int k = -interval; k < interval; k++)
-	//		{
-	//			if (j == -interval) { obstacles.push_back(initCrateRC(vec3(j * offset, 0, k * offset))); }
-	//			else if (j == interval) { obstacles.push_back(initCrateRC(vec3(j * offset - 1, 0, k * offset))); }
-	//			else {
-	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, -s + 1)));
-	//				obstacles.push_back(initCrateRC(vec3(j * offset, 0, s - 1)));
-	//			}
-	//		}
-	//	}
-	//};
+#pragma endregion
 
 	int readMap() {
-		string filename("Map.txt");
+		string filename("../StaticObjMap.txt");
 		vector<char> bytes;
 
 		FILE* input_file = fopen(filename.c_str(), "r");
@@ -570,20 +552,18 @@ public:
 		int i = 0;
 		int j = 40;
 		int height = 0;
-		int s = gm->getSize() / 2.0;
+		int s = MAP_SIZE / 2.0;
 		while (!feof(input_file)) {
 			character = getc(input_file);
-			if (character == CRATE) { obstacles.push_back(initCrateRC(vec3((i) * 4 - s, height, (j) * 4 - s))); cout << i << " " << j << endl; }
-			else if (character == RAMP) {}
-			else if (character == CUBE) {}
-			else if (character == NONE) {}
-			else if (character == NEWLINE) { i = -1; j--; }
+			if (character == _CRATE) { obstacles.push_back(initCrate(vec3((i) * 4 - s, height, (j) * 4 - s))); }
+			else if (character == _RAMP) {}
+			else if (character == _CUBE) {}
+			else if (character == _NONE) {}
+			else if (character == _NEWLINE) { i = -1; j--; }
 			else { cout << "error reading map value: " << character << "@: " << i << endl; }
 			i++;
 		}
-		cout << endl;
 		fclose(input_file);
-
 		return EXIT_SUCCESS;
 	}
 
@@ -625,11 +605,8 @@ public:
 		vcam = VirtualCamera(player.pos_default, vec3(-91, -20, 70));
 
 		// SKYBOX
-		createSky(resourceDirectory + "/skybox/", sky_faces);
-		//createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
-
-		//GROUND
-		//initGround();
+		//createSky(resourceDirectory + "/skybox/", sky_faces);
+		createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
 
 		// RenderComponents
 		initSkunk();
@@ -637,15 +614,7 @@ public:
 		//initBear();
 
 		// STATIC RenderComponents
-		//initObstaclesRCs();
 		readMap();
-
-		//TODO: ECS-ify this into a collision system
-		for (Entity crateEnt : obstacles) {
-			RenderComponent rc = gCoordinator.GetComponent<RenderComponent>(crateEnt);
-			Transform tr = gCoordinator.GetComponent<Transform>(crateEnt);
-			GameManager::GetInstance()->addCollision(tr.pos, rc.c);
-		}
 	}
 
 	/* =================== HELPER FUNCTIONS ================== */
@@ -663,8 +632,18 @@ public:
 			unsigned char* data =
 				stbi_load((dir + faces[i]).c_str(), &width, &height, &nrChannels, 0);
 			if (data) {
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-					0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				//cout << width << " " << height << " " << nrChannels << endl;
+				if (nrChannels == 4) {
+					glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+						0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+				}
+				else if (nrChannels == 3) {
+					glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+						0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				}
+				else {
+					cout << "error with nrChannels: " << nrChannels << endl;
+				}
 			}
 			else {
 				cout << "failed to load: " << (dir + faces[i]).c_str() << endl;
@@ -700,13 +679,19 @@ public:
 			vcam.lookAt = vec3(0, 0, -1);
 		}
 		else {
-			// player
-			move = player.updatePos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
+			// calculate where the player is going next (regardless of collisions)
+			move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
+			
+			// only move player if there was no collision
+			if (!collisionSys->checkCollisions(player.nextPos)) {
+				player.updatePos();
+			}
 			
 			// camera
 			vcam.updatePos(player.pos);
 		}
 		
+		// ALEX's CODE
 		*moveDir = move;
 		return player.pos;
 	}
@@ -720,7 +705,7 @@ public:
 				0.4,  //transparency
 				texProg,
 				GL_BACK,
-				SPRAY
+				//SPRAY
 			});
 		gCoordinator.AddComponent(
 			sprayEnt,
@@ -756,7 +741,7 @@ public:
 		}
 	}
 	vec3 getRandStart() {
-		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((gm->getSize() / 2.0));
+		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
 	}
 	
 	void spawnEnemies(float frametime) {
@@ -815,9 +800,13 @@ public:
 		//if (gameBegin)
 		vec3 moveDir = vec3(0, 0, 0);
 		bool isMovingForward = false; 
+
 		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
 		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
+
 		skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
+		//vec3 newMoveDir = updatePlayer(frametime, &moveDir, &isMovingForward);
+
 		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
 			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
 		}
@@ -898,7 +887,7 @@ public:
 			signature.set(gCoordinator.GetComponentType<RenderComponent>());
 			gCoordinator.SetSystemSignature<RenderSys>(signature);
 		}
-		renderSys->init(gm->getSize());
+		renderSys->init(MAP_SIZE);
 
 		damageSys = gCoordinator.RegisterSystem<DamageSys>();
 		Signature signature;
@@ -918,6 +907,15 @@ public:
 			gCoordinator.SetSystemSignature<PathingSys>(signature);
 		}
 		pathingSys->init();
+
+		collisionSys = gCoordinator.RegisterSystem<CollisionSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<CollisionComponent>());
+			signature.set(gCoordinator.GetComponentType<Transform>());
+			gCoordinator.SetSystemSignature<CollisionSys>(signature);
+		}
+		//collisionSys->init();
 		
 	}
 };
@@ -929,8 +927,7 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<DamageComponent>();
 	gCoordinator.RegisterComponent<AnimationComponent>();
 	gCoordinator.RegisterComponent<Enemy>();
-	
-
+	gCoordinator.RegisterComponent<CollisionComponent>();
 }
 
 int main(int argc, char *argv[])
@@ -956,10 +953,11 @@ int main(int argc, char *argv[])
 	// may need to initialize or set up different data and state
 
 	initCoordinator();
-	application->initSystems();
 
+	application->initSystems();
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
+	collisionSys->init();
 
 	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.

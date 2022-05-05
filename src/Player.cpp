@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Player.h"
 #include "GameManager.h"
+#include "systems/CollisionSystem.h"
 #include <map>
 #include <vector>
 #include <list>
@@ -59,12 +60,13 @@ Player::Player()
 // returns the index of the shape that they player is in (for debugging purposes)
 void Player::checkCollision()
 {
-	GameManager* gm = GameManager::GetInstance();
-	if (gm->checkCollide(nextPos, 2)) {  }
-	else { pos = nextPos; }
+	//GameManager* gm = GameManager::GetInstance();
+	//if (gm->checkCollide(nextPos, 2)) {  }
+	//CollisionSys::checkCollisions(nextPos);
+	//else { pos = nextPos; }
 }
 
-vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward)
+vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward)
 {
 	vec3 tempw;
 	vec3 temps;
@@ -135,20 +137,19 @@ vec3 Player::updatePos(vec3 lookAt, bool goCamera, float frametime, bool *isMovi
 	
 
 	nextPos = pos + vel*frametime;
-	// if (nextPos.y > localGround) {
-	// 	cout << "in the air!!" << "\n";
-	// }
-	checkCollision();
-	//pos = nextPos;
 
-	// << pos.x << " " << pos.z << endl;
-	//cout << "player" << pos.x << " " << pos.z << endl;
+	//checkCollision();
+	//pos = nextPos;
 
 	// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 	if (pos.y < localGround) {pos.y = localGround;}
 	if (!jumping && pos.y > localGround) { pos.y = localGround;}
 
 	return vel;
+}
+
+void Player::updatePos() {
+	pos = nextPos;
 }
 
 
