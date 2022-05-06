@@ -68,7 +68,7 @@ float spawnTimer = 3;
 float SPAWN_TIME = 4;
 
 float POISON_TICK_TIME = 0.5;
-float WOLF_BASE_HP = 4.0; // seconds of spraying until death
+float WOLF_BASE_HP = 4.0; // seconds of spraying until death (if divisible by tick time)
 
 class Application : public EventCallbacks
 {
@@ -517,14 +517,15 @@ public:
 		gCoordinator.AddComponent(
 			wolfEnt,
 			DamageComponent{
-				WOLF_BASE_HP, // total hp
-				WOLF_BASE_HP, // current hp
-				POISON_TICK_TIME // poision timer
+				WOLF_BASE_HP+ POISON_TICK_TIME, // total hp, tick time is added because of tick calculations
+				WOLF_BASE_HP+ POISON_TICK_TIME, // current hp
+				0.0 // poison timer
 		});
 
 		gCoordinator.AddComponent(
 			wolfEnt,
 			AnimationComponent{
+				false,
 				0 // poision damage frame
 			});
 
