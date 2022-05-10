@@ -84,7 +84,10 @@ public:
 #define ZERO_VEC vec3(0,0,0)
 #define ONES_VEC vec3(1,1,1)
 #define _CRATE '*'
-#define _RAMP '^'
+#define _RAMP_UP '^'
+#define _RAMP_DOWN 'v'
+#define _RAMP_LEFT '<'
+#define _RAMP_RIGHT '>'
 #define _CUBE '#'
 #define _NONE '.'
 #define _NEWLINE '\n'
@@ -613,9 +616,10 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(0, 0, -1.5),		//vec3 pos;
-			vec3(1.0, 0.0, 0.0), // vec3 rotation
-			vec3(rampScale, rampScale * 1.75, rampScale * 2),		//vec3 scale;
+			pos + vec3(0, 0, -1.5f),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0f), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale),		//vec3 scale;
+			vec3(0,0,0)
 			});
 
 		gCoordinator.AddComponent(
@@ -631,8 +635,128 @@ public:
 				pos.z + rampScale
 			});
 
-		cout << "ramp @: " << pos.x << " " << pos.z << endl;
-		cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		//cout << "ramp @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampNegZ(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(0, 0, 1.5f),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3.14159265f / 1.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(0,0,-1),
+				-45,
+				pos.z - rampScale,
+				pos.z + rampScale
+			});
+
+		//cout << "ramp negZ @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampPosX(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(1.5f, 0, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3 * 3.14159265f / 2.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(-1,0,0),
+				45,
+				pos.x - rampScale,
+				pos.x + rampScale
+			});
+
+		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampNegX(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(-1.5, 0, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3.14159265f / 2.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(1,0,0),
+				45,
+				pos.x - rampScale,
+				pos.x + rampScale
+			});
+
+		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
 
@@ -700,7 +824,10 @@ public:
 
 			character = getc(input_file);
 			if (character == _CRATE) { obstacles.push_back(initCrate(pos)); }
-			else if (character == _RAMP) { obstacles.push_back(initRampPosZ(pos)); }
+			else if (character == _RAMP_UP) { obstacles.push_back(initRampPosZ(pos)); }
+			else if (character == _RAMP_DOWN) { obstacles.push_back(initRampNegZ(pos)); }
+			else if (character == _RAMP_LEFT) { obstacles.push_back(initRampPosX(pos)); }
+			else if (character == _RAMP_RIGHT) { obstacles.push_back(initRampNegX(pos)); }
 			else if (character == _CUBE) { obstacles.push_back(initCube(pos)); }
 			else if (character == _NONE) {} // empty space
 			else if (character == _NEWLINE) { i = -1; j--; }

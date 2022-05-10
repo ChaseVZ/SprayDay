@@ -84,15 +84,15 @@ void CollisionSys::printCol(vec2 newCol)
 void checkRampOrientation(float* y1, float* y2, CollisionComponent cc)
 {
 	if (cc.height <= 4.0f && (cc.dir.x == 1 || cc.dir.z == 1)) { *y2 = 0.0f; *y1 = cc.height; } // going from 0 > 4
-	else if (cc.height <= 4.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 0.0f; } // going from 4 > 0
+	else if (cc.height <= 4.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 0.0f; cout << "going down" << endl; } // going from 4 > 0
 	else if (cc.height <= 8.0f && (cc.dir.x == 1 || cc.dir.z == 1)) { *y2 = 4.0f; *y1 = cc.height; } // going from 4 > 8
 	else if (cc.height <= 8.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 4.0f; } // going from 8 > 4
 }
 
 void findInterpValue(float* x, CollisionComponent cc, vec3 pos)
 {
-	if (cc.dir == vec3(1, 0, 0)) { *x = pos.x; } // if ramp is oriented in x-axis, we interpolate on pos.x
-	else if (cc.dir == vec3(0, 0, 1)) { *x = pos.z; } // if ramp is oriented in z-axis, we interpolate on pos.z
+	if (cc.dir == vec3(1, 0, 0) || cc.dir == vec3(-1,0,0)) { *x = pos.x; } // if ramp is oriented in x-axis, we interpolate on pos.x
+	else if (cc.dir == vec3(0, 0, 1) || cc.dir == vec3(0,0,-1)) { *x = pos.z; } // if ramp is oriented in z-axis, we interpolate on pos.z
 	else { cout << "invalid ramp dir: " << cc.dir.x << " " << cc.dir.y << " " << cc.dir.z << endl; }
 }
 
@@ -111,13 +111,24 @@ bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 	findInterpValue(&x, cc, pos); // find value we interpolate on (either pos.x, or pos.z)
 	
 	float interp = y1 + (x - x1) * ((y2 - y1) / (x2 - x1)); // INTERPOLATION FUNCTION
-	//cout << "interp: " << interp << endl;
-	if (interp < y2) { interp = y2; } // if outside of bounds, cap it
-	if (interp > y1) { interp = y1; } // dido
+
+	/* ## CAP BOUNDS OF INTERP FUNCTION ## */
+	// caps for positive facing ramps
+	if (cc.dir.x == 1 || cc.dir.z == 1) {
+		if (interp < y2) { interp = y2; cout << "pos x y2" << endl;}
+		if (interp > y1) { interp = y1; cout << "pos x y1" << endl;}
+	}
+
+	// caps for negative facing ramps
+	if (cc.dir.x == -1 || cc.dir.z == -1) {
+		if (interp < y1) { interp = y1; cout << "neg x y1" << endl; }
+		if (interp > y2) { interp = y2; cout << "neg x y2" << endl; }
+	}
+
 	cout << "local ground (ramp) to: " << interp << endl;
 	localGround = interp;
 
-	//cout << "val: " << x << " y1: " << y1 << " y2: " << y2 << " x1: " << x1 << " x2: " << x2 << " localGround: " << localGround << endl;
+	cout << "val: " << x << " y1: " << y1 << " y2: " << y2 << " x1: " << x1 << " x2: " << x2 << " localGround: " << localGround << endl;
 	return false;
 }
 
