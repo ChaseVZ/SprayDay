@@ -14,8 +14,8 @@ void DamageSys::simulatePoisonCollision(Entity entity, float frameTime) {
 	enemyDC.poisonTimer -= frameTime;
 	if (enemyDC.poisonTimer < 0) {
 		float excessTime = -enemyDC.poisonTimer;
-		enemyDC.currentHp -= (POISON_TICK_TIME + excessTime);
-		enemyDC.poisonTimer = POISON_TICK_TIME;
+		enemyDC.currentHp -= POISON_TICK_TIME;
+		enemyDC.poisonTimer = POISON_TICK_TIME - excessTime;
 		enemyAC.poisonDamageFrame = 1;
 	}
 }

@@ -33,9 +33,12 @@
 #include "Components/Collision.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
+#include "Components/HudComponent.h"
 #include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/CollisionSystem.h"
+#include "systems/HudSystem.h"
+
 
 // Skybox
 #include "stb_image.h"
@@ -57,6 +60,7 @@ std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
+std::shared_ptr<HudSys> hudSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -109,6 +113,8 @@ public:
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
+	ShapeGroup greenCube;
+
 	ShapeGroup roundWon;
 	ShapeGroup crate;
 
@@ -117,7 +123,7 @@ public:
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
 	shared_ptr<Texture> sprayTexture;
-
+	//shared_ptr<Texture> greenTexture;
 	// Skybox Texture Files
 	vector<std::string> space_faces{
 	"right.jpg",
@@ -155,6 +161,7 @@ public:
 	particleSys* winParticleSys;
 
 	Entity skunkEnt;
+	Entity hpBarEnt;
 	vector<Entity> obstacles;
 
 	// Animation data
@@ -369,6 +376,12 @@ public:
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
 
+		//greenTexture = make_shared<Texture>();
+		//greenTexture->setFilename(resourceDirectory + "/chase_resources/green.png");
+		//greenTexture->init();
+		//greenTexture->setUnit(0);
+		//greenTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+
 		sprayTexture = make_shared<Texture>();
 		sprayTexture->setFilename(resourceDirectory + "/chase_resources/yellow_gas_tex.png");
 		sprayTexture->init();
@@ -444,6 +457,27 @@ public:
 			vec3(2.0),		//vec3 scale;
 			});
 	}
+
+	void initHpBar() {
+		hpBarEnt = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			hpBarEnt,
+			HudComponent{
+			vec3(0.0, 0.0, -0.1711),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0),     // vec3 lookdir
+			vec3(0.1, 0.01, 0.001),		//vec3 scale;
+			});
+		gCoordinator.AddComponent(
+			hpBarEnt,
+			RenderComponent{
+			&greenCube,			//ShapeGroup * sg;
+			1.0,           //float transparency;
+			texProg,
+			GL_BACK,
+			});
+		
+	}
+
 
 	void initBear() {
 		Entity bearEnt;
@@ -572,6 +606,10 @@ public:
 	{
 		// Initialize Cube mesh.
 		cube = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
+		greenCube = initShapes::load(resourceDirectory + "/cube.obj",
+			"",
+			"",
+			false, false, &numTextures);
 
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
@@ -612,6 +650,7 @@ public:
 		// RenderComponents
 		initSkunk();
 		initSkybox();
+		initHpBar();
 		//initBear();
 
 		// STATIC RenderComponents
@@ -872,6 +911,8 @@ public:
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
 		renderSys->update(Projection, View);
+		//greenTexture->bind(texProg->getUniform("Texture0"));
+		hudSys->update(Projection);
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
@@ -916,7 +957,14 @@ public:
 			signature.set(gCoordinator.GetComponentType<Transform>());
 			gCoordinator.SetSystemSignature<CollisionSys>(signature);
 		}
-		//collisionSys->init();
+
+		hudSys = gCoordinator.RegisterSystem<HudSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<RenderComponent>());
+			signature.set(gCoordinator.GetComponentType<HudComponent>());
+			gCoordinator.SetSystemSignature<HudSys>(signature);
+		}
 		
 	}
 };
@@ -929,6 +977,7 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<AnimationComponent>();
 	gCoordinator.RegisterComponent<Enemy>();
 	gCoordinator.RegisterComponent<CollisionComponent>();
+	gCoordinator.RegisterComponent<HudComponent>();
 }
 
 int main(int argc, char *argv[])
