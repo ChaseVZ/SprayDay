@@ -1,6 +1,8 @@
 #include "HudSystem.h"
 
 using namespace glm;
+float BASE_HP_SCALE = 0.1;
+float BASE_HP_CENTER = 0.0;
 
 extern Coordinator gCoordinator;
 
@@ -31,8 +33,17 @@ void draw(shared_ptr<MatrixStack> Projection, RenderComponent* rc, HudComponent*
 	vec3 lightPos = vec3(0.0f); // should be relative to camera for hud
 	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	setModelRC(curS, tr);
+
+	bool useCubeMap = false;
+	if (rc->texID != 999)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, rc->texID);
+		useCubeMap = true;
+	}
+
 	// non-textured shapes draw
-	if ((rc->sg)->textures.size() == 0)
+	if ((rc->sg)->textures.size() == 0 || useCubeMap)
 	{
 		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
 			(rc->sg)->shapes[i]->draw(curS);
@@ -41,16 +52,22 @@ void draw(shared_ptr<MatrixStack> Projection, RenderComponent* rc, HudComponent*
 	else {
 		// textured shapes draw
 		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
-			//(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
+			(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
 			(rc->sg)->shapes[i]->draw(curS);
 		}
 	}
 	curS->unbind();
 
 }
+void updateHpBar(Entity hpBarEnt, Player p) {
+	HudComponent& hpTrans = gCoordinator.GetComponent<HudComponent>(hpBarEnt);
+	float scaleFactor = p.health / 100.0;
+	hpTrans.scale.x = BASE_HP_SCALE*scaleFactor;
+}
 
-void HudSys::update(shared_ptr<MatrixStack> Projection)
+void HudSys::update(shared_ptr<MatrixStack> Projection, Entity hpBarEnt, Player p)
 {
+	updateHpBar(hpBarEnt, p);
 	vector<Entity> transparentEnts;
 	for (Entity const& entity : mEntities) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);

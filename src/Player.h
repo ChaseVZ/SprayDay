@@ -28,6 +28,7 @@ public:
 	vec3 pos_default = vec3(20, 0, 0);
 	vec3 win_loc = vec3(-41, -20, 70);
 	vec3 nextPos = vec3(0, 0, 0);
+	float health = 100.0;
 
 
 private:

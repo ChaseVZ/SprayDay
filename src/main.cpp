@@ -113,7 +113,6 @@ public:
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
-	ShapeGroup greenCube;
 
 	ShapeGroup ramp;
 	ShapeGroup roundWon;
@@ -162,6 +161,15 @@ public:
 	"gray.png"
 	};
 
+	vector<std::string> greenFaces{
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png"
+	};
+
 	vector<std::string> cartoon_sky_faces{
 	"CloudyCrown_Midday_Right.png",
 	"CloudyCrown_Midday_Left.png",
@@ -173,6 +181,7 @@ public:
 
 	int numTextures = 0;
 	unsigned int skyTexID;
+	unsigned int redTexID;
 	unsigned int cubeTexID;
 	unsigned int rampTexID;
 
@@ -486,19 +495,20 @@ public:
 		gCoordinator.AddComponent(
 			hpBarEnt,
 			HudComponent{
-			vec3(0.0, 0.0, -0.1711),		//vec3 pos;
+			vec3(-.00, -0.08, -0.1711),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0),     // vec3 lookdir
-			vec3(0.1, 0.01, 0.001),		//vec3 scale;
+			//vec3(1.0)
+			vec3(0.1, 0.005, 0.001),		//vec3 scale;
 			});
 		gCoordinator.AddComponent(
 			hpBarEnt,
 			RenderComponent{
-			&greenCube,			//ShapeGroup * sg;
+			&cube,			//ShapeGroup * sg;
 			1.0,           //float transparency;
-			texProg,
+			cubeProg,
 			GL_BACK,
+			redTexID
 			});
-		
 	}
 
 
@@ -704,10 +714,6 @@ public:
 	{
 		// Initialize Cube mesh.
 		cube = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
-		greenCube = initShapes::load(resourceDirectory + "/cube.obj",
-			"",
-			"",
-			false, false, &numTextures);
 
 		ramp = initShapes::load(resourceDirectory + "/chase_resources/SkateParkRamp/Ramp.obj", "", "", false, false, &numTextures);
 
@@ -746,6 +752,7 @@ public:
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
 		skyTexID = createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		redTexID = createSky(resourceDirectory + "/chase_resources/", greenFaces);
 		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
 		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
 
@@ -1009,13 +1016,13 @@ public:
 			//--end debug lookat--
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, player);
+			pathingSys->update(frametime, &player);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
 		renderSys->update(Projection, View);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
-		hudSys->update(Projection);
+		hudSys->update(Projection, hpBarEnt, player);
 			
 		if (!debugMode) { 
 			manageSpray(frametime);

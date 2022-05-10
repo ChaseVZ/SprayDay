@@ -27,5 +27,5 @@ class PathingSys : public System
 public:
     bool checkCollisions(Entity currentEnemy);
     void init();
-    void update(float frametime, Player player);
+    void update(float frametime, Player* player);
 };

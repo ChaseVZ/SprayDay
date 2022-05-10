@@ -11,12 +11,12 @@
 #include "../GameManager.h"
 #include "../EcsCore/Coordinator.h"
 #include "../Components/HudComponent.h"
-
+#include "../Player.h"
 class HudSys : public System
 {
 public:
 	void init();
-	void update(shared_ptr<MatrixStack> Projection);
+	void update(shared_ptr<MatrixStack> Projection, Entity, Player);
 };
 
 #endif
