@@ -29,6 +29,7 @@ public:
 	vec3 win_loc = vec3(-41, -20, 70);
 	vec3 nextPos = vec3(0, 0, 0);
 	float health = 100.0;
+	float maxHP = 100.0;
 
 
 private:

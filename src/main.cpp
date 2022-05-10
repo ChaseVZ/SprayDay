@@ -207,7 +207,7 @@ public:
 	// Pitch and Yaw info
 	float cursor_x = 0;
 	float cursor_y = 0;
-	float g_phi = 0;
+	float g_phi = -0.5;
 	double g_theta = radians(-90.0);
 	double player_y_range = radians(80.0);
 	double player_x_range = radians(360.0);
@@ -282,7 +282,6 @@ public:
 			cursor_x = g_width / 2;
 			cursor_y = g_height / 2;
 			gameBegin = true;
-			//vcam.goCamera = true;
 		}
 	}
 
@@ -296,6 +295,7 @@ public:
 			// Pitch and Yaw
 			g_theta += 0.3 * (xPos - cursor_x) * player_x_range / g_width;
 			g_phi += 0.4 * (cursor_y - yPos) * player_y_range / g_height;
+			cout << g_phi << endl;
 
 			// Set curX curY
 			cursor_x = xPos;
@@ -329,6 +329,7 @@ public:
 
 	void init(const std::string& resourceDirectory)
 	{
+		
 		GLSL::checkVersion();
 
 		// Set background color.
@@ -747,7 +748,8 @@ public:
 		player = Player();
 		player.pos = player.pos_default;
 		player.localGround = 0;
-		vcam = VirtualCamera(player.pos_default, vec3(-91, -20, 70));
+		vcam = VirtualCamera(player.pos_default);
+		initCamPos();
 
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
@@ -865,6 +867,11 @@ public:
 			vec3(1.0),		//vec3 scale;
 			});
 		trail.push_back(sprayEnt);
+	}
+	void healPlayer(float frametime) {
+		if (player.mvm_type == 0) {
+			player.health = std::min(player.health + frametime*3, player.maxHP);
+		}
 	}
 
 	void manageSpray(float frametime) {
@@ -1026,9 +1033,17 @@ public:
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
+			healPlayer(frametime);
 			spawnEnemies(frametime); 
 			damageSys->update(&trail, frametime);
 		}
+	}
+	void initCamPos() {
+		float radius = 1.0;
+		float lookAt_x = radius * cos(g_phi) * cos(g_theta);
+		float lookAt_y = radius * sin(g_phi);
+		float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
+		vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 	}
 
 	void initSystems() {

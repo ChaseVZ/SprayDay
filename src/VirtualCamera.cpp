@@ -3,7 +3,7 @@
 
 using namespace glm;
 
-VirtualCamera::VirtualCamera(vec3 playerStart, vec3 cameraStart) {
+VirtualCamera::VirtualCamera(vec3 playerStart) {
 	pos = playerStart + camera_offset;
 	goCamera = false;
 	lookAt = lookAt_default;
