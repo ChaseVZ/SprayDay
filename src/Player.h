@@ -25,7 +25,7 @@ public:
 	bool debugMode = false;
 	float localGround;
 	float boRad;
-	vec3 pos_default = vec3(0, 0, 0);
+	vec3 pos_default = vec3(20, 0, 0);
 	vec3 win_loc = vec3(-41, -20, 70);
 	vec3 nextPos = vec3(0, 0, 0);
 
@@ -37,6 +37,7 @@ private:
 	float lastTime = 0;
 	void checkCollision();
 	vec3 oldMoveDir;
+	bool falling;
 };
 
 

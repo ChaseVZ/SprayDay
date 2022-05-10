@@ -109,6 +109,7 @@ public:
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
+	ShapeGroup ramp;
 	ShapeGroup roundWon;
 	ShapeGroup crate;
 
@@ -137,6 +138,24 @@ public:
 	"back.jpg"
 	};
 
+	vector<std::string> crate_faces{
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png"
+	};
+
+	vector<std::string> crate_faces2{
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png"
+	};
+
 	vector<std::string> cartoon_sky_faces{
 	"CloudyCrown_Midday_Right.png",
 	"CloudyCrown_Midday_Left.png",
@@ -147,6 +166,9 @@ public:
 	};
 
 	int numTextures = 0;
+	unsigned int skyTexID;
+	unsigned int cubeTexID;
+	unsigned int rampTexID;
 
 
 	/* ================ GLOBAL ================= */
@@ -396,6 +418,7 @@ public:
 		cubeProg->addUniform("lightPos");
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
+		cubeProg->addAttribute("vertTex");
 
 	}
 
@@ -414,7 +437,7 @@ public:
 			1.0,           //float transparency;
 			cubeProg,
 			GL_FRONT,
-			//NONE
+			skyTexID
 		});
 
 		gCoordinator.AddComponent(
@@ -495,6 +518,79 @@ public:
 		return crateEnt;
 	};
 
+	Entity initCube(vec3 pos) {
+		Entity cubeEnt = gCoordinator.CreateEntity();
+		int cubeScale = TILE_SIZE;
+		float cubeHeight = cube.shapes[0]->max.y - cube.shapes[0]->min.y; // = 4
+
+		gCoordinator.AddComponent(
+			cubeEnt,
+			RenderComponent{
+				&cube,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				cubeTexID
+			});
+		gCoordinator.AddComponent(
+			cubeEnt,
+			Transform{
+			pos + vec3(0, 0.5, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(cubeScale, cubeScale * 1.0, cubeScale),		//vec3 scale;
+			});
+
+		gCoordinator.AddComponent(
+			cubeEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				CUBE,
+				cubeHeight * cubeScale
+			});
+
+		return cubeEnt;
+	};
+
+	Entity initRampPosZ(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(0, 0, -1.5),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale, rampScale * 1.75, rampScale * 2),		//vec3 scale;
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(0,0,1),
+				45,
+				pos.z - rampScale,
+				pos.z + rampScale
+			});
+
+		cout << "ramp @: " << pos.x << " " << pos.z << endl;
+		cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
 	void initWolf() {
 		Entity wolfEnt = gCoordinator.CreateEntity();
 		gCoordinator.AddComponent(
@@ -555,11 +651,13 @@ public:
 		int height = 0;
 		int s = MAP_SIZE / 2.0;
 		while (!feof(input_file)) {
+			vec3 pos = vec3((i * 4) - s, height, (j * 4) - s);
+
 			character = getc(input_file);
-			if (character == _CRATE) { obstacles.push_back(initCrate(vec3((i) * 4 - s, height, (j) * 4 - s))); }
-			else if (character == _RAMP) {}
-			else if (character == _CUBE) {}
-			else if (character == _NONE) {}
+			if (character == _CRATE) { obstacles.push_back(initCrate(pos)); }
+			else if (character == _RAMP) { obstacles.push_back(initRampPosZ(pos)); }
+			else if (character == _CUBE) { obstacles.push_back(initCube(pos)); }
+			else if (character == _NONE) {} // empty space
 			else if (character == _NEWLINE) { i = -1; j--; }
 			else { cout << "error reading map value: " << character << "@: " << i << endl; }
 			i++;
@@ -572,6 +670,8 @@ public:
 	{
 		// Initialize Cube mesh.
 		cube = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
+
+		ramp = initShapes::load(resourceDirectory + "/chase_resources/SkateParkRamp/Ramp.obj", "", "", false, false, &numTextures);
 
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
@@ -607,7 +707,9 @@ public:
 
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
-		createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		skyTexID = createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
+		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
 
 		// RenderComponents
 		initSkunk();
@@ -685,6 +787,7 @@ public:
 			
 			// only move player if there was no collision
 			if (!collisionSys->checkCollisions(player.nextPos)) {
+				player.localGround = collisionSys->localGround;
 				player.updatePos();
 			}
 			
