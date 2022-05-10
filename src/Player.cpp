@@ -112,15 +112,13 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 		vel.x = 20.0f * vel.x;
 		vel.z = 20.0f * vel.z;
 	}
-	//cout << "Velocity: " << vel.x << " " << vel.z << "\n";
-	//cout << "Total Velocity: " << sqrt(vel.x*vel.x) + sqrt(vel.z*vel.z)<< "\n\n";
 
-	// Only involve gravity when player is jumping
-	if (jumping) {
+	// Only involve gravity when player is jumping or falling
+	if (jumping || falling) {
 		vel = vel + acc * lastTime;
 
 		// Only have jump speed affect velocity @ start of jump
-		if (lastTime == 0)
+		if (lastTime == 0 && !falling)
 			vel += jumpSpeed;
 
 		// Stop gravity once player has reached localGround (located in collisions())
@@ -130,25 +128,27 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 			vel.y = 0;
 			lastTime = 0;
 			jumping = false;
+			falling = false;
 		}
 		else
 			lastTime = lastTime + frametime;
 	}
 	
 
-	nextPos = pos + vel*frametime;
+	nextPos = pos + vel * frametime;
 
-	//checkCollision();
-	//pos = nextPos;
+	//cout << std::boolalpha;
+	//cout << "jumping: " << jumping << " falling: " << falling << " localGround: " << localGround << " next y: " << nextPos.y << endl;
 
 	// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
-	if (pos.y < localGround) {pos.y = localGround;}
-	if (!jumping && pos.y > localGround) { pos.y = localGround;}
+	if (nextPos.y < localGround) { nextPos.y = localGround; } //cout << "MOVING DOWN TO " << nextPos.y << endl; }
+	if (nextPos.y > localGround && !jumping) { falling = true; } //cout << "FALLING NOW " << endl; }
 
 	return vel;
 }
 
 void Player::updatePos() {
+	//cout << "updating " << pos.y  << " to " << nextPos.y << endl;
 	pos = nextPos;
 }
 

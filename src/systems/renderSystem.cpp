@@ -15,7 +15,7 @@ int g_GiboLen;
 GLuint GroundVertexArrayID;
 
 void initGround(float grndSize) {
-	float g_groundSize = grndSize / 2.0;
+	float g_groundSize = grndSize / 2.0 + 2;
 	float g_groundY = -0.25;
 
 	// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
@@ -107,11 +107,19 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 	glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 	glUniform1f(curS->getUniform("alpha"), rc->transparency);
-	//vec3 lightPos = GameManager::GetInstance()->getLightPos();
 	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	setModelRC(curS, tr);
+
+	bool useCubeMap = false;
+	if (rc->texID != 999)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, rc->texID);
+		useCubeMap = true;
+	}
+
 	// non-textured shapes draw
-	if ((rc->sg)->textures.size() == 0)
+	if ((rc->sg)->textures.size() == 0 || useCubeMap)
 	{
 		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
 			(rc->sg)->shapes[i]->draw(curS);

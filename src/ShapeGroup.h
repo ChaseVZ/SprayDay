@@ -21,5 +21,5 @@ struct RenderComponent {
 	float transparency;
 	shared_ptr<Program> shader;
 	int cullDir;
-	//CollisionT c;
+	unsigned int texID = 999;
 };

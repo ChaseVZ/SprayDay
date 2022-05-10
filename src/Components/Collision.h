@@ -14,4 +14,9 @@ struct CollisionComponent {
 	int length; // in x direction
 	int width;  // in z direction
 	CollisionT c;
+	float height = 4.0;
+	vec3 dir = vec3(1, 0, 0);
+	float slope = 0;
+	float lowerBound = -1;
+	float upperBound = -1;
 };
