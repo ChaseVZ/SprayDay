@@ -116,10 +116,12 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	bool useCubeMap = false;
 	if (rc->texID != 999)
 	{
+		//TODO: send useCube to gpu
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, rc->texID);
 		useCubeMap = true;
 	}
+	glUniform1i(curS->getUniform("useCubeTex"), useCubeMap);
 
 	// non-textured shapes draw
 	if ((rc->sg)->textures.size() == 0 || useCubeMap)
@@ -170,20 +172,22 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View)
 namespace RenderSystem {
 	//code to draw the ground plane
 
-	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
-		shared_ptr<Program> texProg, shared_ptr<Texture> grassTexture) {
+	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View, shared_ptr<Texture> grassTexture) {
+		
 		curS->bind();
+		glUniform1i(curS->getUniform("useCubeTex"), false);
 		//glUniform3f(texProg->getUniform("lightPos"), 20.0, 10.0, 70.9);
 		//glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glDepthFunc(GL_LEQUAL);
-		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+		glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 		glCullFace(GL_BACK);
 
 		shared_ptr<MatrixStack> Model = make_shared<MatrixStack>();
 		Model->loadIdentity();
 		Model->pushMatrix();
 		glBindVertexArray(GroundVertexArrayID);
+
 		grassTexture->bind(curS->getUniform("Texture0"));
 		glUniform1f(curS->getUniform("alpha"), 1.0f);
 		Model->translate(vec3(0, -1, 0));
@@ -206,9 +210,11 @@ namespace RenderSystem {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
 		glDrawElements(GL_TRIANGLES, g_GiboLen, GL_UNSIGNED_SHORT, 0);
 
+		
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
+		
 		Model->popMatrix();
 
 		curS->unbind();

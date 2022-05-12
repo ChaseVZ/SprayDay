@@ -32,6 +32,6 @@ private:
 
 namespace RenderSystem {
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
-		shared_ptr<Program> texProg, shared_ptr<Texture> grassTexture);
+		 shared_ptr<Texture> grassTexture);
 
 }

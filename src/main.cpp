@@ -105,6 +105,9 @@ public:
 	// Skybox shader
 	std::shared_ptr<Program> cubeProg;
 
+	//cube shader
+	std::shared_ptr<Program> cubeProg2;
+
 	// Our shader program for particles
 	std::shared_ptr<Program> partProg;
 
@@ -360,6 +363,8 @@ public:
 		prog->addUniform("MatShine");
 		prog->addUniform("lightPos");
 		prog->addUniform("alpha");
+		prog->addUniform("useCubeTex");
+
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
 		//prog->addAttribute("vertTex");	// unused on purpose
@@ -376,9 +381,30 @@ public:
 		texProg->addUniform("MatShine");
 		texProg->addUniform("lightPos");
 		texProg->addUniform("alpha");
+		texProg->addUniform("cubeTex");
+		texProg->addUniform("useCubeTex");
+
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+
+		cubeProg2 = make_shared<Program>();
+		cubeProg2->setVerbose(true);
+		cubeProg2->setShaderNames(resourceDirectory + "/cube2_vert.glsl", resourceDirectory + "/cube2_frag.glsl");
+		cubeProg2->init();
+		cubeProg2->addUniform("P");
+		cubeProg2->addUniform("V");
+		cubeProg2->addUniform("M");
+		cubeProg2->addUniform("Texture0");
+		cubeProg2->addUniform("MatShine");
+		cubeProg2->addUniform("lightPos");
+		cubeProg2->addUniform("alpha");
+		cubeProg2->addUniform("cubeTex");
+		cubeProg2->addUniform("useCubeTex");
+
+		cubeProg2->addAttribute("vertPos");
+		cubeProg2->addAttribute("vertNor");
+		cubeProg2->addAttribute("vertTex");
 		
 
 		// Initialize the GLSL program.
@@ -404,7 +430,7 @@ public:
 		winParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
-		grassTexture->setFilename(resourceDirectory + "/chase_resources/grass4.jpg");
+		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
 		grassTexture->init();
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -439,6 +465,7 @@ public:
 		cubeProg->addUniform("V");
 		cubeProg->addUniform("M");
 		cubeProg->addUniform("alpha");
+		cubeProg->addUniform("useCubeTex");
 		cubeProg->addUniform("lightPos");
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
@@ -552,7 +579,7 @@ public:
 			RenderComponent{
 				&cube,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
+				cubeProg2,
 				GL_BACK,
 				cubeTexID
 			});
@@ -585,7 +612,7 @@ public:
 			RenderComponent{
 				&ramp,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
+				cubeProg2,
 				GL_BACK,
 				rampTexID
 			});
@@ -625,7 +652,7 @@ public:
 			RenderComponent{
 				&ramp,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
+				cubeProg2,
 				GL_BACK,
 				rampTexID
 			});
@@ -665,7 +692,7 @@ public:
 			RenderComponent{
 				&ramp,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
+				cubeProg2,
 				GL_BACK,
 				rampTexID
 			});
@@ -705,7 +732,7 @@ public:
 			RenderComponent{
 				&ramp,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
+				cubeProg2,
 				GL_BACK,
 				rampTexID
 			});
@@ -1087,7 +1114,7 @@ public:
 			pathingSys->update(frametime, &player);
 		}
 
-		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
+		RenderSystem::drawGround(texProg, Projection, View, grassTexture);
 		renderSys->update(Projection, View);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
 		hudSys->update(Projection, player);
