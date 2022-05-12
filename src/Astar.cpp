@@ -218,6 +218,14 @@ static vector<Node> checkNodes(Node object, Node player) {
 	}
 }
 
+bool vecIsLessThanOrEqual( vec3 a, vec3 b) {
+	return euclideanDist(a, vec3(0, 0, 0)) <= euclideanDist(b, vec3(0, 0, 0));
+}
+
+bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
+	return euclideanDist(a, vec3(0, 0, 0)) > euclideanDist(b, vec3(0, 0, 0));
+}
+
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
 	collisionSysAstar = collSys;
 
@@ -236,15 +244,19 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	moves = checkNodes(object, player);
 
 	if (!moves.empty()){
-		vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
-		if (retMove == tr->pos) {
+		glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords
+		glm::vec3 trPos = tr->pos;
+		//if (retMove == tr->pos) {
+		// if (vecIsLessThanOrEqual(retMove,  trPos + vec3(0.5f)) && vecIsLessThanOrEqual(retMove, trPos + vec3(0.5f)) &&
+		// 	vecIsGreaterThanOrEqual(retMove, trPos - vec3(0.5f)) && vecIsGreaterThanOrEqual(retMove, trPos + vec3(0.5f)) ) 
+		// 	{
 			if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 				moves.erase(moves.begin());
 				return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 			}
 			return tr->pos;
-		}
-		return retMove; //convert map coords back to world coords
+		//}
+		//return retMove;
 	}
 
 	return tr->pos;

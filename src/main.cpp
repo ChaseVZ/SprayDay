@@ -67,8 +67,8 @@ using Entity = std::uint32_t;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
-float spawnTimer = 30;
-float SPAWN_TIME = 31;
+float spawnTimer = 3;
+float SPAWN_TIME = 4;
 
 class Application : public EventCallbacks
 {

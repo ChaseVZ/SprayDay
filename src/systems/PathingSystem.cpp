@@ -66,30 +66,21 @@ extern Coordinator gCoordinator;
     }
 
     void move(Player p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
-       // if (!collideWithPlayer(tr->pos + e->vel*dt, p, e))
-       // {
-            //TODO: add in Astar pathing
-			//use GameManager::checkCollide(nextPos, radiusOfWolf) on all possible positions to check if collision
+       if (!collideWithPlayer(tr->pos + e->vel*dt, p, e))
+       {
 
 			vec3 nextPos = Astar::findNextPos(p, tr, collSys);
 			e->vel = nextPos - tr->pos;
 
-			// if (p.pos-tr->pos != vec3(0)) {
-			// 	e->vel = normalize(p.pos-tr->pos)/vec3(10);
-			// }
-			// else {
-			// 	e->vel = vec3(0);
-			// }
 
-			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
-			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
+			cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
+			cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			if (e->vel != vec3(0)) {
+				e->vel = normalize(e->vel) / vec3(10.0f);
 				tr->lookDir = normalize(e->vel);
 			}
 			tr->pos += e->vel*dt;
-			float mag = glm::length(e->vel);
-			e->vel = tr->lookDir * mag;
-        //}
+        }
     }
 
 void PathingSys::update(float frametime, Player player, shared_ptr<CollisionSys> collSys) {
