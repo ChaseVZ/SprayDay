@@ -170,6 +170,22 @@ bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround)
 	}
 }
 
+void CollisionSys::setColDir(vec3 colPos) {
+
+	float delta_i = colPos.x - entityPos.x;
+	float delta_j = colPos.z - entityPos.z;
+
+	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
+
+	if (abs(delta_i) < abs(delta_j)) { // we need to remove vel in i dir
+		colDir = vec3(1, 1, 0);
+	}
+	else { // remove vel in j dir
+		colDir = vec3(0, 1, 1); 
+	}
+
+}
+
 bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround)
 {
 	if (i < 0 || j < 0) { return true; } // don't let anything move outside of mapped world
@@ -177,7 +193,11 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* 
 
 	if ((colMap[i][j].c == 1 || colMap[i][j].c == 3))  // check map for crates & cubes
 	{ 
-		return checkHeight(i, j, pos, tempLocalGround);
+		if (checkHeight(i, j, pos, tempLocalGround)) {
+			setColDir(colMap[i][j].center);
+			return true;
+		}
+		return false;
 	}
 	
 	else if (colMap[i][j].c == 2) // check map for ramps (let player move on them)
@@ -192,39 +212,43 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* 
 	return false;
 }
 
-bool CollisionSys::checkCollide(vec3 pos, float radius)
+bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 {
 	//cerr << "CheckCollide\n";
 	int size = 0;
 	bool tempInRamp = false;
 	float tempLocalGround = 0;
 
+	//int i = worldToMap(pos.x);
+	//int j = worldToMap(pos.z);
+	entityPos = nextPos; // used to determine direction [potential] collision is occuring
+
 	// top right corner	
-	int i1 = worldToMap(pos.x + radius);
-	int j1 = worldToMap(pos.z + radius);
-	if (isCollision(i1, j1, pos, &tempInRamp, &tempLocalGround)) { return true; }
+	int i1 = worldToMap(nextPos.x + radius);
+	int j1 = worldToMap(nextPos.z + radius);
+	if (isCollision(i1, j1, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
 
 	// bot left corner
-	int i3 = worldToMap(pos.x - radius);
-	int j3 = worldToMap(pos.z - radius);
-	if (isCollision(i3, j3, pos, &tempInRamp, &tempLocalGround)) { return true; }
+	int i3 = worldToMap(nextPos.x - radius);
+	int j3 = worldToMap(nextPos.z - radius);
+	if (isCollision(i3, j3, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
 
 	// bot right corner
 	int i2 = (i1 + i3 + j1 - j3) / 2;
 	int j2 = (i3 - i1 + j1 + j3) / 2;
-	if (isCollision(i2, j2, pos, &tempInRamp, &tempLocalGround)) { return true; }
+	if (isCollision(i2, j2, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
 
 	// top left corner
 	int i4 = (i1 + i3 + j3 - j1) / 2;
 	int j4 = (i1 - i3 + j1 + j3) / 2;
-	if (isCollision(i4, j4, pos, &tempInRamp, &tempLocalGround)) { return true; }
+	if (isCollision(i4, j4, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
 
 	// tiles along vertical edges 
 	for (int k = 1; k < abs(j4 - j3) - 2 + 1; k++) {
-		if (isCollision(i4, j4 - k, pos, &tempInRamp, &tempLocalGround)) { return true; } // vertical R
-		if (isCollision(i1, j1 - k, pos, &tempInRamp, &tempLocalGround)) { return true; } // vetical L
-		if (isCollision(i4 + k, j4, pos, &tempInRamp, &tempLocalGround)) { return true; } // horizontal T
-		if (isCollision(i3 + k, j3, pos, &tempInRamp, &tempLocalGround)) { return true; } // horizontal B
+		if (isCollision(i4, j4 - k, nextPos, &tempInRamp, &tempLocalGround)) { return true; } // vertical R
+		if (isCollision(i1, j1 - k, nextPos, &tempInRamp, &tempLocalGround)) { return true; } // vetical L
+		if (isCollision(i4 + k, j4, nextPos, &tempInRamp, &tempLocalGround)) { return true; } // horizontal T
+		if (isCollision(i3 + k, j3, nextPos, &tempInRamp, &tempLocalGround)) { return true; } // horizontal B
 	}
 
 	if (tempInRamp == false) { 
@@ -233,29 +257,31 @@ bool CollisionSys::checkCollide(vec3 pos, float radius)
 		playerInRamp = false; 
 		//localGround = 0;
 
-		if (isCollision(i1, j1, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
-		if (isCollision(i3, j3, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
-		if (isCollision(i2, j2, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
-		if (isCollision(i4, j4, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
+		if (isCollision(i1, j1, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
+		if (isCollision(i3, j3, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
+		if (isCollision(i2, j2, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
+		if (isCollision(i4, j4, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; }
 
 		for (int k = 1; k < abs(j4 - j3) - 2 + 1; k++) {
-			if (isCollision(i4, j4 - k, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // vertical R
-			if (isCollision(i1, j1 - k, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // vetical L
-			if (isCollision(i4 + k, j4, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // horizontal T
-			if (isCollision(i3 + k, j3, pos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // horizontal B
+			if (isCollision(i4, j4 - k, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // vertical R
+			if (isCollision(i1, j1 - k, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // vetical L
+			if (isCollision(i4 + k, j4, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // horizontal T
+			if (isCollision(i3 + k, j3, nextPos, &tempInRamp, &tempLocalGround)) { localGround = tempLocalGround; return true; } // horizontal B
 		}
 
 		//cout << "local ground (final) to: " << tempLocalGround << endl;
 		localGround = tempLocalGround;
 	}
+
+	colDir = vec3(1);
 	return false;
 }
 
 // current;y just checks player collisions to static objects
-bool CollisionSys::checkCollisions(vec3 playerPos)
+CollisionOutput CollisionSys::checkCollisions(vec3 playerNextPos)
 {
-	bool res = checkCollide(playerPos, 2); // player radius hardcoded for now
+	bool res = checkCollide(playerNextPos, 2); // player radius hardcoded for now
+	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
 
-
-	return res;
+	//return res;
 }

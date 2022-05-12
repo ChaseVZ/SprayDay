@@ -9,19 +9,22 @@ class CollisionSys : public System
 {
 public:
 	void init();
-	bool checkCollisions(vec3 playerPos);
-
-	float localGround; // output param of checkCollide()
-	bool playerInRamp = false;
-	vec2 ignoreDir = vec2(0, 0);
-	vec2 rampLoc = vec2(0, 0);
+	CollisionOutput checkCollisions(vec3 playerPos);
 
 private:
+	float localGround; // output param of checkCollide()
+	vec3 colDir = vec3(1); // used with entityPos
+	bool playerInRamp = false;
+	vec2 ignoreDir = vec2(0); 
+	vec2 rampLoc = vec2(0); // used to determine which crate collisions need to be ignored (for that ramp)
+	vec3 entityPos = vec3(0); // used to determine direction at which collision is occurring 
 	CollisionComponent colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
+
 	void addStaticCollisions();
 	void verifyCollisionAddition(int i, int j, CollisionComponent c);
 
-	bool checkHeight(int i, int j, vec3 pos, float* tempLocalGround);
+	void CollisionSys::setColDir(vec3 colPos);
+	bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround);
 	bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
 	bool checkCollide(vec3 pos, float radius);
 

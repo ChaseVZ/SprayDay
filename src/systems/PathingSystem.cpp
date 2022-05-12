@@ -75,8 +75,8 @@ extern Coordinator gCoordinator;
 			e->vel = nextPos - tr->pos;
 
 
-			cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
-			cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
+			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
+			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			if (e->vel != vec3(0)) {
 				e->vel = normalize(e->vel) / vec3(10.0f);
 				tr->lookDir = normalize(e->vel);
