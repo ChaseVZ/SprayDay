@@ -35,7 +35,10 @@
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include <fstream>
-#include "systems/CollisionSystem.h"
+#ifndef COLL_SYS
+    #define COLL_SYS
+    #include "systems/CollisionSystem.h"
+#endif
 
 // Skybox
 #include "stb_image.h"
@@ -64,8 +67,8 @@ using Entity = std::uint32_t;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
-float spawnTimer = 3;
-float SPAWN_TIME = 4;
+float spawnTimer = 30;
+float SPAWN_TIME = 31;
 
 class Application : public EventCallbacks
 {
@@ -735,6 +738,7 @@ public:
 		}
 	}
 	vec3 getRandStart() {
+		//return vec3 (8, 0, 8);
 		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
 	}
 	
@@ -860,7 +864,7 @@ public:
 			//--end debug lookat--
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, player);
+			pathingSys->update(frametime, player, collisionSys);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
@@ -870,7 +874,7 @@ public:
 			manageSpray(frametime);
 			spawnEnemies(frametime); 
 		}
-		damageSys->update(&trail, frametime);
+		//damageSys->update(&trail, frametime);
 	}
 
 	void initSystems() {

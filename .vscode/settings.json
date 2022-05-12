@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "array": "cpp",
+        "iostream": "cpp",
+        "ios": "cpp",
+        "ostream": "cpp",
+        "set": "cpp",
+        "__tree": "cpp",
+        "map": "cpp",
+        "__split_buffer": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "queue": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "__node_handle": "cpp"
+    }
+}
