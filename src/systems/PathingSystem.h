@@ -22,7 +22,7 @@ using namespace glm;
 /*
 //Enemy Enemy(vec3 position, vec3 velocity, float boundingRadius);
 void move(Player p, float dt, Enemy* e, Transform* tr);
-bool collideWithPlayer(vec3 nextPos, Player p, Enemy* e);
+
 // void explode(Enemy* e);
 bool checkCollisions(Entity currentEnemy, set<Entity> enemies);
 vec3 faceAway(vec3 p1, vec3 p2);
@@ -32,6 +32,7 @@ vec3 calcScareVel(vec3 ePos, vec3 pPos);
 class PathingSys : public System
 {
 public:
+    bool collideWithPlayer(vec3 nextPos, Player p, Enemy* e, float frameTime);
     bool checkCollisionsWithEnemies(Entity currentEnemy);
     void init();
 

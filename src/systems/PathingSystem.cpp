@@ -46,17 +46,17 @@ extern Coordinator gCoordinator;
 	}
 
 
-    bool collide(vec3 nextPos, Player* p, Enemy* e, float frameTime) {
-        if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
-        {
-            e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
-            return true;
-        }
-        if (nextPos.z + e->boRad> 125 || nextPos.z - e->boRad < -125)
-        {
-            e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
-            return true;
-        }
+    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime) {
+        // if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
+        // {
+        //     e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
+        //     return true;
+        // }
+        // if (nextPos.z + e->boRad> 125 || nextPos.z - e->boRad < -125)
+        // {
+        //     e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
+        //     return true;
+        // }
 
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
@@ -68,8 +68,8 @@ extern Coordinator gCoordinator;
     }
 
     void move(Player p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
-    //    if (!collideWithPlayer(tr->pos + e->vel*dt, p, e))
-    //    {
+       if (!collideWithPlayer(tr->pos, &p, e, dt))
+       {
 
 			vec3 nextPos = Astar::findNextPos(p, tr, collSys);
 			e->vel = nextPos - tr->pos;
@@ -82,7 +82,7 @@ extern Coordinator gCoordinator;
 				tr->lookDir = normalize(e->vel);
 			}
 			tr->pos += e->vel*dt;
-        //}
+        }
     }
 
 void PathingSys::update(float frametime, Player player, shared_ptr<CollisionSys> collSys) {
