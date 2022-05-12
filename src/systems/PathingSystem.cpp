@@ -65,7 +65,7 @@ extern Coordinator gCoordinator;
             e->exploding = true;
 			p->health -= frameTime;
 			p->health = (max(p->health, 0.0f));
-			cerr << "WOLF ON PLAYER: " << p->health << endl;
+			//cerr << "WOLF ON PLAYER: " << p->health << endl;
 
             return true;
         }
@@ -77,13 +77,13 @@ extern Coordinator gCoordinator;
        {
 
 			vec3 nextPos = Astar::findNextPos(*p, tr, collSys);
-			e->vel = nextPos - tr->pos;
+			e->vel = (nextPos - tr->pos);
 
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			if (e->vel != vec3(0)) {
-				e->vel = normalize(e->vel) / vec3(10.0f);
+				e->vel = normalize(e->vel) / vec3(4.0f);
 				tr->lookDir = normalize(e->vel);
 			}
 			tr->pos += e->vel*dt;

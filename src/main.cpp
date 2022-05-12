@@ -989,7 +989,7 @@ public:
 	}
 	void healPlayer(float frametime) {
 		if (player.mvm_type == 0) {
-			player.health = std::min(player.health + frametime*3, player.maxHP);
+			player.health = std::min(player.health + frametime*1, player.maxHP);
 		}
 	}
 

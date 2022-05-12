@@ -1,9 +1,11 @@
 #include "SpawnSystem.h"
-
+#include <iostream>
 extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 4.0; // seconds of spraying until death (if divisible by tick time)
-float spawnTimer = 3;
-float SPAWN_TIME = 4;
+float spawnTimer = 3.9;
+float SPAWN_TIME = 4.0;
+float MIN_SPAWN_TIME = 0.5;
+float SPAWN_TIME_DECREASE = .02; // every 100 seconds, increase spawn time by 1 sec
 
 float randFloat() {
 	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -27,7 +29,7 @@ void SpawnSys::initWolf() {
 		wolfEnt,
 		Enemy{
 			2.0, // float boRad;
-			vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
+			vec3(8.25, 0, 8.25), // vec3 vel;
 			false, // bool exploding;
 			0, // int explodeFrame;
 		});
@@ -71,5 +73,7 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, shar
 	POISON_TICK_TIME = poisonTickTime;
 }
 void SpawnSys::update(float frameTime){
+	SPAWN_TIME = max(SPAWN_TIME - SPAWN_TIME * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
+	cout << "spawn_time:" << SPAWN_TIME << endl;
 	spawnEnemies(frameTime);
 }
