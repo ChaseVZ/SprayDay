@@ -1168,7 +1168,7 @@ public:
 		hudSys->init(&cube, cubeProg, redTexID);
 		collisionSys->init();
 		spawnSys = new SpawnSys();
-		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, texProg);
+		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 	}
 };
 
