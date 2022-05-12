@@ -83,9 +83,9 @@ void CollisionSys::printCol(vec2 newCol)
 
 bool CollisionSys::isCollision(int i, int j)
 {
-	if (i < 0 || j < 0) { cerr<<"coll 86\n"; return true; } // don't let anything move outside of mapped world
-	if (i >= MAP_SIZE || j >= MAP_SIZE) { cerr<<"coll 87\n";return true; } // don't let anything move outside of mapped world
-	if (colMap[i][j] == 1) { cerr<<"coll 88\n";printCol(vec2(i,j)); return true; } // check map
+	if (i < 0 || j < 0) { return true; } // don't let anything move outside of mapped world
+	if (i >= MAP_SIZE || j >= MAP_SIZE) { return true; } // don't let anything move outside of mapped world
+	if (colMap[i][j] == 1) { printCol(vec2(i,j)); return true; } // check map
 	return false;
 }
 
@@ -97,29 +97,29 @@ bool CollisionSys::checkCollide(vec3 pos, float radius)
 	// top right corner	
 	int i1 = worldToMap(pos.x + radius);
 	int j1 = worldToMap(pos.z + radius);
-	if (isCollision(i1, j1)) { cerr << "Collide! 1\n"; return true; }
+	if (isCollision(i1, j1)) { return true; }
 
 	// bot left corner
 	int i3 = worldToMap(pos.x - radius);
 	int j3 = worldToMap(pos.z - radius);
-	if (isCollision(i3, j3)) { cerr << "Collide! 2\n";return true; }
+	if (isCollision(i3, j3)) { return true; }
 
 	// bot right corner
 	int i2 = (i1 + i3 + j1 - j3) / 2;
 	int j2 = (i3 - i1 + j1 + j3) / 2;
-	if (isCollision(i2, j2)) { cerr << "Collide! 3\n";return true; }
+	if (isCollision(i2, j2)) { return true; }
 
 	// top left corner
 	int i4 = (i1 + i3 + j3 - j1) / 2;
 	int j4 = (i1 - i3 + j1 + j3) / 2;
-	if (isCollision(i4, j4)) { cerr << "Collide! 4\n";return true; }
+	if (isCollision(i4, j4)) { return true; }
 
 	// tiles along vertical edges 
 	for (int k = 1; k < abs(j4 - j3) - 2 + 1; k++) {
-		if (isCollision(i4, j4 - k)) { cerr << "Collide! 5\n";return true; } // vertical R
-		if (isCollision(i1, j1 - k)) { cerr << "Collide! 6\n";return true; } // vetical L
-		if (isCollision(i4 + k, j4)) { cerr << "Collide! 7\n";return true; } // horizontal T
-		if (isCollision(i3 + k, j3)) { cerr << "Collide! 8\n";return true; } // horizontal B
+		if (isCollision(i4, j4 - k)) { return true; } // vertical R
+		if (isCollision(i1, j1 - k)) { return true; } // vetical L
+		if (isCollision(i4 + k, j4)) { return true; } // horizontal T
+		if (isCollision(i3 + k, j3)) { return true; } // horizontal B
 	}
 	//cerr << "NoCollide!\n";
 	return false;

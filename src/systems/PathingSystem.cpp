@@ -71,15 +71,16 @@ extern Coordinator gCoordinator;
             //TODO: add in Astar pathing
 			//use GameManager::checkCollide(nextPos, radiusOfWolf) on all possible positions to check if collision
 
-			//vec3 nextPos = Astar::findNextPos(p, tr, collSys);
-			//e->vel = nextPos - tr->pos;
+			vec3 nextPos = Astar::findNextPos(p, tr, collSys);
+			e->vel = nextPos - tr->pos;
 
-			if (p.pos-tr->pos != vec3(0)) {
-				e->vel = normalize(p.pos-tr->pos)/vec3(10);
-			}
-			else {
-				e->vel = vec3(0);
-			}
+			// if (p.pos-tr->pos != vec3(0)) {
+			// 	e->vel = normalize(p.pos-tr->pos)/vec3(10);
+			// }
+			// else {
+			// 	e->vel = vec3(0);
+			// }
+
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			if (e->vel != vec3(0)) {

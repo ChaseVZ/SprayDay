@@ -738,8 +738,8 @@ public:
 		}
 	}
 	vec3 getRandStart() {
-		//return vec3 (8, 0, 8);
-		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
+		return vec3 (8, 0, 8);
+		//return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
 	}
 	
 	void spawnEnemies(float frametime) {

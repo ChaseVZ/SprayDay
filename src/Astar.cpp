@@ -54,27 +54,27 @@ static float calcH(vec3 newPos, Node dest) {
 }
 
 static vector<Node> makePath(array<array<Node, MAP_SIZE>, MAP_SIZE> map, Node player) {
-	cerr << "Making Path!\n";
+	//cerr << "Making Path!\n";
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
-    cerr << "Making Path! line62\n";
+    //cerr << "Making Path! line62\n";
 	while ((map[x][z].parentPos.x != x || map[x][z].parentPos.z != z) && x != -1 && z != -1) {
-		cerr << "path: " << x << " " << z << "\n";
+		//cerr << "path: " << x << " " << z << "\n";
 		path.push(map[x][z]);
 		x = map[x][z].parentPos.x;
 		z = map[x][z].parentPos.z;
 		
 	}
-	cerr << "Making Path! line70\n";
+	//cerr << "Making Path! line70\n";
 	path.push(map[x][z]);
 	while (!path.empty()) {
 		Node top = path.top();
 		path.pop();
 		usablePath.__emplace_back(top);
 	}
-	cerr << "Made Path!\n";
+	//cerr << "Made Path!\n";
 	return usablePath;
 }
 
@@ -89,12 +89,12 @@ static vector<Node> checkNodes(Node object, Node player) {
 	//cout << std::boolalpha;
 	//cout << "skunk pos is valid? " << isV << "\n";
 	if (!isValid(player.pos)) { //player is unreachable and is in an obstacle
-		cout << "Player is in obstacle!\n";
+		//cout << "Player is in obstacle!\n";
 		return empty;
 	}
 
 	if (isDestination(object.pos, player)) { 
-		cout << "Reached destination! You were already there :)\n";
+		//cout << "Reached destination! You were already there :)\n";
 		return empty;
 	}
 
@@ -126,7 +126,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 	map[x][z].hCost = 0.0;
 	map[x][z].parentPos.x = x;
 	map[x][z].parentPos.z = z;
-	cout << "wolf pos: " << x << " " << z << "\n";
+	//cout << "wolf pos: " << x << " " << z << "\n";
 
 	set<Node> openList;
 	openList.insert(map[x][z]);
@@ -136,20 +136,20 @@ static vector<Node> checkNodes(Node object, Node player) {
 		
 		float temp = FLT_MAX;
 		Node node;
-		cerr << "OpenList:\n";
+		//cerr << "OpenList:\n";
 
 		//if (openList.size())
 		for (Node n : openList) {
-			cerr << "Node: " << n.pos.x << " " << n.pos.z << "n.fCost: "<< n.fCost << "\n";
+			//cerr << "Node: " << n.pos.x << " " << n.pos.z << "n.fCost: "<< n.fCost << "\n";
 			if (n.fCost < temp) {
 				temp = n.fCost;
 				node = n;
 			}
 		}
 		openList.erase(node);
-		cerr << "OpenList after delete\n";
+		//cerr << "OpenList after delete\n";
 		for (Node n : openList) {
-			cerr << "    Node: " << n.pos.x << " " << n.pos.z << "\n";
+			//cerr << "    Node: " << n.pos.x << " " << n.pos.z << "\n";
 		}
 		assert(node.pos.x <= MAP_SIZE && node.pos.z <= MAP_SIZE);
 		assert(node.pos.z >= 0 || node.pos.x >= 0);
@@ -157,12 +157,12 @@ static vector<Node> checkNodes(Node object, Node player) {
 
 		x = node.pos.x;
 		z = node.pos.z;
-		cout << "Selected Node x: " << x << " Node z: " << z << "\n";
+		//cout << "Selected Node x: " << x << " Node z: " << z << "\n";
 		visitedList[x][z] = true;
 
 		if (isDestination(node.pos, player)) {
 			destinationFound = true;
-			cerr << "FOUND PLAYER\n";
+			//cerr << "FOUND PLAYER\n";
 			return makePath(map, player);
 		}
 
@@ -170,16 +170,16 @@ static vector<Node> checkNodes(Node object, Node player) {
 		for (int newX=-1; newX <= 1;  newX++) {
 			for (int newZ = -1; newZ<=1; newZ++){
 				double gNew, hNew, fNew;
-				cout << "Checking neighboring tile: " << x+newX << " " << z+newZ <<"\n";
+				//cout << "Checking neighboring tile: " << x+newX << " " << z+newZ <<"\n";
 				if (visitedList[x+newX][z+newZ] == false && isValid(vec3(x + newX, 0, z + newZ))) { //not blocked and unvisited tile
-					cout << "...it is valid\n";
+					//cout << "...it is valid\n";
 					//calc new costs
 					gNew = node.gCost + 1.0;
 					hNew = calcH(vec3(x+newX, 0, z+newZ), player);
 					fNew = gNew + hNew;
-					cerr << "fNew :                      "<<fNew<<"\n";
-					cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << map[x+newX][z+newZ].fCost<<"\n";
-					cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << map[x][z].fCost<<"\n";
+					// cerr << "fNew :                      "<<fNew<<"\n";
+					// cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << map[x+newX][z+newZ].fCost<<"\n";
+					// cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << map[x][z].fCost<<"\n";
 					//compare costs to current path
 					if (map[x+newX][z+newZ].fCost >= 10000) { //not on openList
 						map[x+newX][z+newZ].fCost = fNew;
@@ -188,7 +188,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 						map[x+newX][z+newZ].parentPos.x = x;
 						map[x+newX][z+newZ].parentPos.z = z;
 						openList.insert(map[x+newX][z+newZ]);
-						cerr << "adding tile " << x+newX << " " << z + newZ << " to open List\n";
+						//cerr << "adding tile " << x+newX << " " << z + newZ << " to open List\n";
 					}
 					else if (map[x][z].gCost > gNew) { //already on openList
 						map[x+newX][z+newZ].parentPos.x = x;
@@ -196,7 +196,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 						map[x+newX][z+newZ].gCost = node.gCost + 1.0;
 						map[x+newX][z+newZ].hCost = calcH(vec3(x+newX, 0, z+newZ), player);
 						map[x+newX][z+newZ].fCost = gNew + hNew;
-						cerr << "Tile is already in openList\n";
+						//cerr << "Tile is already in openList\n";
 
 					}
 				}
@@ -213,7 +213,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 
 	}
 	if (destinationFound == false) {
-			cout << "Did not find player: " << openList.size() << " nodes left to search\n";
+			//cout << "Did not find player: " << openList.size() << " nodes left to search\n";
 			return empty;
 	}
 }
@@ -226,26 +226,27 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 
 	Node object;
 	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
-	cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
-	cout << "Wolf POS " << object.pos.x << " " << object.pos.y << " " << object.pos.z << "\n";
+	//cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
+	//cout << "Wolf POS " << object.pos.x << " " << object.pos.y << " " << object.pos.z << "\n";
 	vector<Node> moves;
 
 	assert(!(object.pos.x > MAP_SIZE || object.pos.z > MAP_SIZE));
 	assert(!(object.pos.z < 0 || object.pos.x < 0));
 
-	if (!(object.pos.x > MAP_SIZE || object.pos.z > MAP_SIZE) && !(object.pos.z < 0 || object.pos.x < 0)) {
-		moves = checkNodes(object, player);
-	}
-	else {
-		Node zero;
-		zero.pos = vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
-		moves.push_back(zero);
-	}
+	moves = checkNodes(object, player);
 
 	if (!moves.empty()){
 		vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
+		if (retMove == tr->pos) {
+			if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
+				moves.erase(moves.begin());
+				return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
+			}
+			return tr->pos;
+		}
 		return retMove; //convert map coords back to world coords
 	}
+
 	return tr->pos;
 }
 
