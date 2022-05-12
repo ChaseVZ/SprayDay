@@ -68,8 +68,8 @@ extern Coordinator gCoordinator;
     }
 
     void move(Player p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
-       if (!collideWithPlayer(tr->pos + e->vel*dt, p, e))
-       {
+    //    if (!collideWithPlayer(tr->pos + e->vel*dt, p, e))
+    //    {
 
 			vec3 nextPos = Astar::findNextPos(p, tr, collSys);
 			e->vel = nextPos - tr->pos;
@@ -82,7 +82,7 @@ extern Coordinator gCoordinator;
 				tr->lookDir = normalize(e->vel);
 			}
 			tr->pos += e->vel*dt;
-        }
+        //}
     }
 
 void PathingSys::update(float frametime, Player player, shared_ptr<CollisionSys> collSys) {
