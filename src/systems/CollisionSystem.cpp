@@ -180,6 +180,7 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* 
 
 bool CollisionSys::checkCollide(vec3 pos, float radius)
 {
+	//cerr << "CheckCollide\n";
 	int size = 0;
 	bool tempInRamp = false;
 	float tempLocalGround = 0;
@@ -233,7 +234,6 @@ bool CollisionSys::checkCollide(vec3 pos, float radius)
 		//cout << "local ground (final) to: " << tempLocalGround << endl;
 		localGround = tempLocalGround;
 	}
-
 	return false;
 }
 
@@ -241,6 +241,7 @@ bool CollisionSys::checkCollide(vec3 pos, float radius)
 bool CollisionSys::checkCollisions(vec3 playerPos)
 {
 	bool res = checkCollide(playerPos, 2); // player radius hardcoded for now
+
 
 	return res;
 }
