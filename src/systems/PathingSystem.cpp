@@ -64,8 +64,10 @@ extern Coordinator gCoordinator;
         {
             e->exploding = true;
 			p->health -= frameTime;
-			p->health = (max(p->health, 0.0f));
-			//cerr << "WOLF ON PLAYER: " << p->health << endl;
+			p->health = std::max(p->health, 0.0f);
+			if (p->health == 0.0) {
+				cout << "YOU LOSE :(" << endl;
+			}
 
             return true;
         }
