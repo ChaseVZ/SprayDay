@@ -67,6 +67,7 @@ extern Coordinator gCoordinator;
 			p->health = std::max(p->health, 0.0f);
 			if (p->health == 0.0) {
 				cout << "YOU LOSE :(" << endl;
+				exit(EXIT_SUCCESS);
 			}
 
             return true;
