@@ -12,7 +12,7 @@ float randFloat() {
 	return r;
 }
 vec3 SpawnSys::getRandStart() {
-	return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.0 -2.0));
+	return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
 }
 
 void SpawnSys::initWolf() {
@@ -74,6 +74,6 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, shar
 }
 void SpawnSys::update(float frameTime){
 	SPAWN_TIME = max(SPAWN_TIME - SPAWN_TIME * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
-	cout << "spawn_time:" << SPAWN_TIME << endl;
+	//cout << "spawn_time:" << SPAWN_TIME << endl;
 	spawnEnemies(frameTime);
 }
