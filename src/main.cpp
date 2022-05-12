@@ -1092,7 +1092,7 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, player, collisionSys);
+			pathingSys->update(frametime, &player, collisionSys);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture);

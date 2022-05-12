@@ -62,16 +62,19 @@ extern Coordinator gCoordinator;
         {
             e->exploding = true;
 			p->health -= frameTime;
+			p->health = std::max(p->health, 0.0f);
+			cerr << "WOLF ON PLAYER: " << p->health << endl;
+
             return true;
         }
         return false;
     }
 
-    void move(Player p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
-       if (!collideWithPlayer(tr->pos, &p, e, dt))
+    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
+       if (!collideWithPlayer(tr->pos, p, e, dt))
        {
 
-			vec3 nextPos = Astar::findNextPos(p, tr, collSys);
+			vec3 nextPos = Astar::findNextPos(*p, tr, collSys);
 			e->vel = nextPos - tr->pos;
 
 
@@ -85,7 +88,7 @@ extern Coordinator gCoordinator;
         }
     }
 
-void PathingSys::update(float frametime, Player player, shared_ptr<CollisionSys> collSys) {
+void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys> collSys) {
 
 	for (Entity const& entity : mEntities) {
 		this->checkCollisionsWithEnemies(entity);
