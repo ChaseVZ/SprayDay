@@ -1,6 +1,5 @@
 #version 330 core
 uniform samplerCube cubeTex;
-uniform sampler2D Texture0;
 uniform int flip;
 uniform float alpha;
 uniform bool useCubeTex;
@@ -14,15 +13,9 @@ out vec4 Outcolor;
 
 void main() {
 	vec4 texColor0;
-	/*
 	if (useCubeTex){
 		texColor0 = texture(cubeTex, texCoords);
 	}
-	else{
-		texColor0 = texture(Texture0, vTexCoord);
-	}
-	*/
-	texColor0 = texture(Texture0, vTexCoord);
 
 	vec3 matDif = texColor0.xyz;
 	vec3 matAmb = matDif * 0.4;

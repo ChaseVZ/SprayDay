@@ -59,7 +59,7 @@ static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node pl
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
-    //cerr << "Making Path! line62\n";
+    cerr << "Making Path! line62: " << x << " " << z << "\n";
 	while ((map[x][z].parentPos.x != x || map[x][z].parentPos.z != z) && x != -1 && z != -1) {
 		//cerr << "path: " << x << " " << z << "\n";
 		path.push(map[x][z]);

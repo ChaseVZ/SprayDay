@@ -53,7 +53,6 @@ void animatePoison(Entity entity) {
 	}
 }
 void DamageSys :: update(vector<Entity>* trail, float frameTime)
-
 {
 	set<Entity>::iterator itr;
 	for (itr = mEntities.begin(); itr != mEntities.end(); ){

@@ -32,10 +32,10 @@ vec3 calcScareVel(vec3 ePos, vec3 pPos);
 class PathingSys : public System
 {
 public:
-    bool collideWithPlayer(vec3 nextPos, Player p, Enemy* e, float frameTime);
+    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime);
     bool checkCollisionsWithEnemies(Entity currentEnemy);
     void init();
 
-    void update(float frametime, Player player, shared_ptr<CollisionSys> collSys);
+    void update(float frametime, Player* player, shared_ptr<CollisionSys> collSys);
 
 };
