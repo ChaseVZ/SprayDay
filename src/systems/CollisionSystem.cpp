@@ -170,8 +170,13 @@ bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround)
 	}
 }
 
-void CollisionSys::setColDir(vec3 colPos) {
+void CollisionSys::setColDir(int i, int j) {
+	bool outsideMap = false;
+	if (i < 0 || i >= MAP_SIZE) { colDir.x = 0; outsideMap = true; }
+	if (j < 0 || j >= MAP_SIZE) { colDir.z = 0; outsideMap = true; }
+	if (outsideMap) { return; }
 
+	vec3 colPos = colMap[i][j].center;
 	float delta_i = colPos.x - entityPos.x;
 	float delta_j = colPos.z - entityPos.z;
 
@@ -188,13 +193,13 @@ void CollisionSys::setColDir(vec3 colPos) {
 
 bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround)
 {
-	if (i < 0 || j < 0) { return true; } // don't let anything move outside of mapped world
-	if (i >= MAP_SIZE || j >= MAP_SIZE) { return true; } // don't let anything move outside of mapped world
+	if (i < 0 || j < 0) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
+	if (i >= MAP_SIZE || j >= MAP_SIZE) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
 
 	if ((colMap[i][j].c == 1 || colMap[i][j].c == 3))  // check map for crates & cubes
 	{ 
 		if (checkHeight(i, j, pos, tempLocalGround)) {
-			setColDir(colMap[i][j].center);
+			setColDir(i, j);
 			return true;
 		}
 		return false;
