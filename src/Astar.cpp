@@ -34,7 +34,7 @@ std::shared_ptr<CollisionSys> collisionSysAstar;
 static bool isValid(vec3 newPos) {
 	//cout << "isValid\n";
 
-	return !collisionSysAstar->checkCollisions(newPos-vec3(MAP_SIZE/2, 0, MAP_SIZE/2));
+	return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2, 0, MAP_SIZE/2)).isCollide);
 }
 
 static bool isDestination(vec3 newPos, Node dest) {
@@ -53,7 +53,7 @@ static float calcH(vec3 newPos, Node dest) {
 	return euclideanDist(newPos, dest.pos);
 }
 
-static vector<Node> makePath(array<array<Node, MAP_SIZE>, MAP_SIZE> map, Node player) {
+static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node player) {
 	//cerr << "Making Path!\n";
 	int x = player.pos.x;
 	int z = player.pos.z;
@@ -72,7 +72,7 @@ static vector<Node> makePath(array<array<Node, MAP_SIZE>, MAP_SIZE> map, Node pl
 	while (!path.empty()) {
 		Node top = path.top();
 		path.pop();
-		usablePath.__emplace_back(top);
+		usablePath.emplace_back(top);
 	}
 	//cerr << "Made Path!\n";
 	return usablePath;
@@ -100,12 +100,12 @@ static vector<Node> checkNodes(Node object, Node player) {
 
 	//cout << "Astar: 1.2\n";
 
-	bool visitedList[MAP_SIZE][MAP_SIZE];
+	bool visitedList[IDX_SIZE][IDX_SIZE];
 
 	//initialize map array to be filled in later
-	array<array<Node, MAP_SIZE>, MAP_SIZE> map;
-	for (int x=0; x<MAP_SIZE; x++) {
-		for (int z=0; z<MAP_SIZE; z++) {
+	array<array<Node, IDX_SIZE>, IDX_SIZE> map;
+	for (int x=0; x<IDX_SIZE; x++) {
+		for (int z=0; z<IDX_SIZE; z++) {
 			map[x][z].fCost = FLT_MAX;
 			map[x][z].gCost = FLT_MAX;
 			map[x][z].hCost = FLT_MAX;
@@ -132,7 +132,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 	openList.insert(map[x][z]);
 	
 	bool destinationFound = false;
-	while (!openList.empty() && openList.size() < MAP_SIZE*MAP_SIZE) {
+	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
 		
 		float temp = FLT_MAX;
 		Node node;
@@ -151,7 +151,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 		for (Node n : openList) {
 			//cerr << "    Node: " << n.pos.x << " " << n.pos.z << "\n";
 		}
-		assert(node.pos.x <= MAP_SIZE && node.pos.z <= MAP_SIZE);
+		assert(node.pos.x <= IDX_SIZE && node.pos.z <= IDX_SIZE);
 		assert(node.pos.z >= 0 || node.pos.x >= 0);
 		assert(node.fCost < 10000);
 
@@ -204,8 +204,8 @@ static vector<Node> checkNodes(Node object, Node player) {
 		}
 
 		// cout << "MAP:\n";
-		// for (int i=0; i<MAP_SIZE; i++){
-		// 	for (int j = 0; j<MAP_SIZE; j++) {
+		// for (int i=0; i<IDX_SIZE; i++){
+		// 	for (int j = 0; j<IDX_SIZE; j++) {
 		// 		cout<< map[i][j].fCost << " ";
 		// 	}
 		// 	cout << "\n";
@@ -231,7 +231,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	collisionSysAstar = collSys;
 
 	Node player;
-	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
+	player.pos = vec3(round(p.pos)) + vec3(IDX_SIZE/2, 0, IDX_SIZE/2); //convert from world coors to map coords
 	if (player.pos.y > 0) {
 		//cerr << "Player above ground and unreachable";
 		return tr->pos;
@@ -239,18 +239,18 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	player.pos = vec3(player.pos.x, 0, player.pos.z);
 
 	Node object;
-	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
+	object.pos = tr->pos + vec3(IDX_SIZE/2, 0, IDX_SIZE/2);
 	//cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
 	//cout << "Wolf POS " << object.pos.x << " " << object.pos.y << " " << object.pos.z << "\n";
 	vector<Node> moves;
 
-	assert(!(object.pos.x > MAP_SIZE || object.pos.z > MAP_SIZE));
+	assert(!(object.pos.x > IDX_SIZE || object.pos.z > IDX_SIZE));
 	assert(!(object.pos.z < 0 || object.pos.x < 0));
 
 	moves = checkNodes(object, player);
 
 	if (!moves.empty()){
-		glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords
+		glm::vec3 retMove = vec3(moves.front().pos.x-IDX_SIZE/2, 0, moves.front().pos.z-IDX_SIZE/2); //convert map coords back to world coords
 		glm::vec3 trPos = tr->pos;
 		//if (retMove == tr->pos) {
 		// if (vecIsLessThanOrEqual(retMove,  trPos + vec3(0.5f)) && vecIsLessThanOrEqual(retMove, trPos + vec3(0.5f)) &&
@@ -258,7 +258,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		// 	{
 			if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 				moves.erase(moves.begin());
-				return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
+				return vec3(moves.front().pos.x-IDX_SIZE/2, 0, moves.front().pos.z-IDX_SIZE/2);
 			}
 			return tr->pos;
 		//}

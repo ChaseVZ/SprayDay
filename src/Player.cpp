@@ -134,8 +134,10 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 			lastTime = lastTime + frametime;
 	}
 	
-
-	nextPos = pos + vel * frametime;
+	//vec3 temp = vel * colDir;
+	//cout << " updating vel: " << vel.x << " " << vel.y << " " << vel.z << " to: " << temp.x << " " << temp.y << " " << temp.z << endl;
+	nextPos = pos + (vel) * frametime;
+	lastFrametime = frametime;
 
 	//cout << std::boolalpha;
 	//cout << "jumping: " << jumping << " falling: " << falling << " localGround: " << localGround << " next y: " << nextPos.y << endl;
@@ -147,9 +149,16 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 	return vel;
 }
 
-void Player::updatePos() {
+// 
+void Player::updatePos(vec3 dirMask, bool isCollide) {
 	//cout << "updating " << pos.y  << " to " << nextPos.y << endl;
-	pos = nextPos;
+	//cout << "dirMask: " << dirMask.x << " " << dirMask.y << " " << dirMask.z << endl;
+	colDir = dirMask;
+
+	if (!isCollide)
+		pos = nextPos;
+	else
+		pos = pos + (vel * colDir) * lastFrametime;
 }
 
 

@@ -17,7 +17,7 @@ class Player {
 public:
 	Player();  // constructor
 	vec3 calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward);
-	void updatePos();
+	void updatePos(vec3 dirMask, bool isCollide);
 	void playerResetPos() { pos = pos_default; }
 	vec3 pos;
 	bool w, a, s, d, jumping;
@@ -40,6 +40,8 @@ private:
 	void checkCollision();
 	vec3 oldMoveDir;
 	bool falling;
+	vec3 colDir = vec3(1);
+	float lastFrametime = 0;
 };
 
 

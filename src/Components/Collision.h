@@ -11,6 +11,7 @@ enum CollisionT : int {
 };
 
 struct CollisionComponent {
+	vec3 center;
 	int length; // in x direction
 	int width;  // in z direction
 	CollisionT c;
@@ -19,4 +20,11 @@ struct CollisionComponent {
 	float slope = 0;
 	float lowerBound = -1;
 	float upperBound = -1;
+};
+
+struct CollisionOutput {
+	float height;
+	vec3 dir;
+	bool isCollide;
+	vec2 colPos;
 };
