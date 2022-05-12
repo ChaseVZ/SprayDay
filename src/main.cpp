@@ -195,7 +195,6 @@ public:
 	particleSys* winParticleSys;
 
 	Entity skunkEnt;
-	Entity hpBarEnt;
 	vector<Entity> obstacles;
 
 	// Animation data
@@ -298,7 +297,6 @@ public:
 			// Pitch and Yaw
 			g_theta += 0.3 * (xPos - cursor_x) * player_x_range / g_width;
 			g_phi += 0.4 * (cursor_y - yPos) * player_y_range / g_height;
-			cout << g_phi << endl;
 
 			// Set curX curY
 			cursor_x = xPos;
@@ -493,28 +491,6 @@ public:
 			vec3(2.0),		//vec3 scale;
 			});
 	}
-
-	void initHpBar() {
-		hpBarEnt = gCoordinator.CreateEntity();
-		gCoordinator.AddComponent(
-			hpBarEnt,
-			HudComponent{
-			vec3(-.00, -0.08, -0.1711),		//vec3 pos;
-			vec3(1.0, 0.0, 0.0),     // vec3 lookdir
-			//vec3(1.0)
-			vec3(0.1, 0.005, 0.001),		//vec3 scale;
-			});
-		gCoordinator.AddComponent(
-			hpBarEnt,
-			RenderComponent{
-			&cube,			//ShapeGroup * sg;
-			1.0,           //float transparency;
-			cubeProg,
-			GL_BACK,
-			redTexID
-			});
-	}
-
 
 	void initBear() {
 		Entity bearEnt;
@@ -888,7 +864,6 @@ public:
 		// RenderComponents
 		initSkunk();
 		initSkybox();
-		initHpBar();
 		//initBear();
 
 		// STATIC RenderComponents
@@ -1107,47 +1082,6 @@ public:
 		
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
-
-			//--debug lookat--
-			//cout << moveDir.x << " " << moveDir.z << "\n";
-
-			// vec3 skunkLookAt = skunkRC.pos + 10.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt2 = skunkRC.pos + 20.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt3 = skunkRC.pos + 30.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt4 = skunkRC.pos + 40.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt5 = skunkRC.pos + 50.0f*moveDir + vec3(0,1,0);
-			// skunkLookAt.y = 1;
-			// skunkLookAt2.y = 1;
-			// skunkLookAt3.y = 1;
-			// skunkLookAt4.y = 1;
-			// skunkLookAt5.y = 1;
-			
-			// vec3 camLookAt = skunkRC.pos + 10.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt2 = skunkRC.pos + 20.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt3 = skunkRC.pos + 30.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt4 = skunkRC.pos + 40.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt5 = skunkRC.pos + 50.0f*vcam.lookAt + vec3(0,1,0);
-			// camLookAt.y = 1;
-			// camLookAt2.y = 1;
-			// camLookAt3.y = 1;
-			// camLookAt4.y = 1;
-			// camLookAt5.y = 1;
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-
-
-
-
-			//--end debug lookat--
 			
 		if (!debugMode) {
 			pathingSys->update(frametime, &player);
@@ -1156,7 +1090,7 @@ public:
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
 		renderSys->update(Projection, View);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
-		hudSys->update(Projection, hpBarEnt, player);
+		hudSys->update(Projection, player);
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
@@ -1173,7 +1107,7 @@ public:
 		vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 	}
 
-	void initSystems() {
+	void registerSystems() {
 		renderSys = gCoordinator.RegisterSystem<RenderSys>();
 		{
 			Signature signature;
@@ -1219,6 +1153,11 @@ public:
 		}
 		
 	}
+
+	void initSystems() {
+		hudSys->init(&cube, cubeProg, redTexID);
+		collisionSys->init();
+	}
 };
 
 void initCoordinator() {
@@ -1256,10 +1195,12 @@ int main(int argc, char *argv[])
 
 	initCoordinator();
 
-	application->initSystems();
+	application->registerSystems();
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
-	collisionSys->init();
+	application->initSystems();
+	
+	
 
 	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.

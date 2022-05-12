@@ -15,8 +15,8 @@
 class HudSys : public System
 {
 public:
-	void init();
-	void update(shared_ptr<MatrixStack> Projection, Entity, Player);
+	void init(ShapeGroup* cube, std::shared_ptr<Program> cubeProg, unsigned int redTexID);
+	void update(shared_ptr<MatrixStack> Projection, Player);
 };
 
 #endif
