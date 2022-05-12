@@ -1,10 +1,10 @@
+#pragma once
 #include "../Enemy.h"
 #include "../Player.h"
 #include "../Program.h"
 #include "../MatrixStack.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../CompManager.h"
 #include "../Components/Transform.h"
 #ifndef COLL_SYS
     #define COLL_SYS
@@ -34,5 +34,7 @@ class PathingSys : public System
 public:
     bool checkCollisionsWithEnemies(Entity currentEnemy);
     void init();
+
     void update(float frametime, Player player, shared_ptr<CollisionSys> collSys);
+
 };

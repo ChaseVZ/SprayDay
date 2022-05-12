@@ -30,15 +30,19 @@
 #include "systems/PathingSystem.h"
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
-#include "CompManager.h"
 #include "Components/Collision.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
+#include "Components/HudComponent.h"
+#include "Components/AnimationComponent.h"
 #include <fstream>
+#include "systems/HudSystem.h"
+
 #ifndef COLL_SYS
     #define COLL_SYS
     #include "systems/CollisionSystem.h"
 #endif
+
 
 // Skybox
 #include "stb_image.h"
@@ -60,6 +64,7 @@ std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
+std::shared_ptr<HudSys> hudSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -69,6 +74,9 @@ float timeSinceLastSpray = 0;
 float gameTime = 0;
 float spawnTimer = 3;
 float SPAWN_TIME = 4;
+
+float POISON_TICK_TIME = 0.5;
+float WOLF_BASE_HP = 4.0; // seconds of spraying until death (if divisible by tick time)
 
 class Application : public EventCallbacks
 {
@@ -80,7 +88,10 @@ public:
 #define ZERO_VEC vec3(0,0,0)
 #define ONES_VEC vec3(1,1,1)
 #define _CRATE '*'
-#define _RAMP '^'
+#define _RAMP_UP '^'
+#define _RAMP_DOWN 'v'
+#define _RAMP_LEFT '<'
+#define _RAMP_RIGHT '>'
 #define _CUBE '#'
 #define _NONE '.'
 #define _NEWLINE '\n'
@@ -103,14 +114,14 @@ public:
 
 	/* ================ GEOMETRY ================= */
 
-	//vector<Enemy> enemies;
-	//vector<DamageComponent> damageComps;
 	vector<Entity> trail;
 	ShapeGroup bear;
 	ShapeGroup wolf;
 	ShapeGroup skunk;
 	ShapeGroup sphere;
 	ShapeGroup cube;
+
+	ShapeGroup ramp;
 	ShapeGroup roundWon;
 	ShapeGroup crate;
 
@@ -119,7 +130,7 @@ public:
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
 	shared_ptr<Texture> sprayTexture;
-
+	//shared_ptr<Texture> greenTexture;
 	// Skybox Texture Files
 	vector<std::string> space_faces{
 	"right.jpg",
@@ -139,6 +150,33 @@ public:
 	"back.jpg"
 	};
 
+	vector<std::string> crate_faces{
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png",
+		"cratetex.png"
+	};
+
+	vector<std::string> crate_faces2{
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png",
+	"gray.png"
+	};
+
+	vector<std::string> greenFaces{
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png",
+	"red.png"
+	};
+
 	vector<std::string> cartoon_sky_faces{
 	"CloudyCrown_Midday_Right.png",
 	"CloudyCrown_Midday_Left.png",
@@ -149,13 +187,16 @@ public:
 	};
 
 	int numTextures = 0;
+	unsigned int skyTexID;
+	unsigned int redTexID;
+	unsigned int cubeTexID;
+	unsigned int rampTexID;
 
 
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
 	particleSys* winParticleSys;
-	CompManager* compManager;
 
 	Entity skunkEnt;
 	vector<Entity> obstacles;
@@ -172,7 +213,7 @@ public:
 	// Pitch and Yaw info
 	float cursor_x = 0;
 	float cursor_y = 0;
-	float g_phi = 0;
+	float g_phi = -0.5;
 	double g_theta = radians(-90.0);
 	double player_y_range = radians(80.0);
 	double player_x_range = radians(360.0);
@@ -247,7 +288,6 @@ public:
 			cursor_x = g_width / 2;
 			cursor_y = g_height / 2;
 			gameBegin = true;
-			//vcam.goCamera = true;
 		}
 	}
 
@@ -294,6 +334,7 @@ public:
 
 	void init(const std::string& resourceDirectory)
 	{
+		
 		GLSL::checkVersion();
 
 		// Set background color.
@@ -372,6 +413,12 @@ public:
 		grassTexture->setUnit(0);
 		grassTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
 
+		//greenTexture = make_shared<Texture>();
+		//greenTexture->setFilename(resourceDirectory + "/chase_resources/green.png");
+		//greenTexture->init();
+		//greenTexture->setUnit(0);
+		//greenTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+
 		sprayTexture = make_shared<Texture>();
 		sprayTexture->setFilename(resourceDirectory + "/chase_resources/yellow_gas_tex.png");
 		sprayTexture->init();
@@ -399,8 +446,8 @@ public:
 		cubeProg->addUniform("lightPos");
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
+		cubeProg->addAttribute("vertTex");
 
-		compManager = CompManager::GetInstance();
 	}
 
 	float randFloat() {
@@ -418,7 +465,7 @@ public:
 			1.0,           //float transparency;
 			cubeProg,
 			GL_FRONT,
-			//NONE
+			skyTexID
 		});
 
 		gCoordinator.AddComponent(
@@ -499,6 +546,200 @@ public:
 		return crateEnt;
 	};
 
+	Entity initCube(vec3 pos) {
+		Entity cubeEnt = gCoordinator.CreateEntity();
+		int cubeScale = TILE_SIZE;
+		float cubeHeight = cube.shapes[0]->max.y - cube.shapes[0]->min.y; // = 4
+
+		gCoordinator.AddComponent(
+			cubeEnt,
+			RenderComponent{
+				&cube,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				cubeTexID
+			});
+		gCoordinator.AddComponent(
+			cubeEnt,
+			Transform{
+			pos + vec3(0, 0.5, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(cubeScale, cubeScale * 1.0, cubeScale),		//vec3 scale;
+			});
+
+		gCoordinator.AddComponent(
+			cubeEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				CUBE,
+				cubeHeight * cubeScale
+			});
+
+		return cubeEnt;
+	};
+
+	Entity initRampPosZ(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(0, 0, -1.5f),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0f), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale),		//vec3 scale;
+			vec3(0,0,0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(0,0,1),
+				45,
+				pos.z - rampScale,
+				pos.z + rampScale
+			});
+
+		//cout << "ramp @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampNegZ(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(0, 0, 1.5f),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3.14159265f / 1.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(0,0,-1),
+				-45,
+				pos.z - rampScale,
+				pos.z + rampScale
+			});
+
+		//cout << "ramp negZ @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampPosX(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(1.5f, 0, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3 * 3.14159265f / 2.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(-1,0,0),
+				45,
+				pos.x - rampScale,
+				pos.x + rampScale
+			});
+
+		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
+	Entity initRampNegX(vec3 pos) {
+		Entity rampEnt = gCoordinator.CreateEntity();
+		int rampScale = TILE_SIZE;
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			RenderComponent{
+				&ramp,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				rampTexID
+			});
+		gCoordinator.AddComponent(
+			rampEnt,
+			Transform{
+			pos + vec3(-1.5, 0, 0),		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
+			vec3(0, 3.14159265f / 2.0f, 0)
+			});
+
+		gCoordinator.AddComponent(
+			rampEnt,
+			CollisionComponent{
+				TILE_SIZE,
+				TILE_SIZE,
+				RAMP,
+				4.0,
+				vec3(1,0,0),
+				45,
+				pos.x - rampScale,
+				pos.x + rampScale
+			});
+
+		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
+		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
+		return rampEnt;
+	};
+
 	void initWolf() {
 		Entity wolfEnt = gCoordinator.CreateEntity();
 		gCoordinator.AddComponent(
@@ -521,9 +762,17 @@ public:
 		gCoordinator.AddComponent(
 			wolfEnt,
 			DamageComponent{
-				20.0, // total hp
-				20.0, // current hp
+				WOLF_BASE_HP+ POISON_TICK_TIME, // total hp, tick time is added because of tick calculations
+				WOLF_BASE_HP+ POISON_TICK_TIME, // current hp
+				0.0 // poison timer
 		});
+
+		gCoordinator.AddComponent(
+			wolfEnt,
+			AnimationComponent{
+				false,
+				0 // poision damage frame
+			});
 
 		gCoordinator.AddComponent(
 			wolfEnt,
@@ -551,11 +800,16 @@ public:
 		int height = 0;
 		int s = MAP_SIZE / 2.0;
 		while (!feof(input_file)) {
+			vec3 pos = vec3((i * 4) - s, height, (j * 4) - s);
+
 			character = getc(input_file);
-			if (character == _CRATE) { obstacles.push_back(initCrate(vec3((i) * 4 - s, height, (j) * 4 - s))); }
-			else if (character == _RAMP) {}
-			else if (character == _CUBE) {}
-			else if (character == _NONE) {}
+			if (character == _CRATE) { obstacles.push_back(initCrate(pos)); }
+			else if (character == _RAMP_UP) { obstacles.push_back(initRampPosZ(pos)); }
+			else if (character == _RAMP_DOWN) { obstacles.push_back(initRampNegZ(pos)); }
+			else if (character == _RAMP_LEFT) { obstacles.push_back(initRampPosX(pos)); }
+			else if (character == _RAMP_RIGHT) { obstacles.push_back(initRampNegX(pos)); }
+			else if (character == _CUBE) { obstacles.push_back(initCube(pos)); }
+			else if (character == _NONE) {} // empty space
 			else if (character == _NEWLINE) { i = -1; j--; }
 			else { cout << "error reading map value: " << character << "@: " << i << endl; }
 			i++;
@@ -568,6 +822,8 @@ public:
 	{
 		// Initialize Cube mesh.
 		cube = initShapes::load(resourceDirectory + "/cube.obj", "", "", false, false, &numTextures);
+
+		ramp = initShapes::load(resourceDirectory + "/chase_resources/SkateParkRamp/Ramp.obj", "", "", false, false, &numTextures);
 
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
@@ -599,11 +855,15 @@ public:
 		player = Player();
 		player.pos = player.pos_default;
 		player.localGround = 0;
-		vcam = VirtualCamera(player.pos_default, vec3(-91, -20, 70));
+		vcam = VirtualCamera(player.pos_default);
+		initCamPos();
 
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
-		createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		skyTexID = createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		redTexID = createSky(resourceDirectory + "/chase_resources/", greenFaces);
+		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
+		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
 
 		// RenderComponents
 		initSkunk();
@@ -681,6 +941,7 @@ public:
 			
 			// only move player if there was no collision
 			if (!collisionSys->checkCollisions(player.nextPos)) {
+				player.localGround = collisionSys->localGround;
 				player.updatePos();
 			}
 			
@@ -712,6 +973,11 @@ public:
 			vec3(1.0),		//vec3 scale;
 			});
 		trail.push_back(sprayEnt);
+	}
+	void healPlayer(float frametime) {
+		if (player.mvm_type == 0) {
+			player.health = std::min(player.health + frametime*3, player.maxHP);
+		}
 	}
 
 	void manageSpray(float frametime) {
@@ -821,47 +1087,6 @@ public:
 		
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
-
-			//--debug lookat--
-			//cout << moveDir.x << " " << moveDir.z << "\n";
-
-			// vec3 skunkLookAt = skunkRC.pos + 10.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt2 = skunkRC.pos + 20.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt3 = skunkRC.pos + 30.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt4 = skunkRC.pos + 40.0f*moveDir + vec3(0,1,0);
-			// vec3 skunkLookAt5 = skunkRC.pos + 50.0f*moveDir + vec3(0,1,0);
-			// skunkLookAt.y = 1;
-			// skunkLookAt2.y = 1;
-			// skunkLookAt3.y = 1;
-			// skunkLookAt4.y = 1;
-			// skunkLookAt5.y = 1;
-			
-			// vec3 camLookAt = skunkRC.pos + 10.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt2 = skunkRC.pos + 20.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt3 = skunkRC.pos + 30.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt4 = skunkRC.pos + 40.0f*vcam.lookAt + vec3(0,1,0);
-			// vec3 camLookAt5 = skunkRC.pos + 50.0f*vcam.lookAt + vec3(0,1,0);
-			// camLookAt.y = 1;
-			// camLookAt2.y = 1;
-			// camLookAt3.y = 1;
-			// camLookAt4.y = 1;
-			// camLookAt5.y = 1;
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(skunk, texProg, Projection, View, skunkLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt2, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt3, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt4, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-			// RenderSystem::draw(wolf, texProg, Projection, View, camLookAt5, vec3(1, 1, 1), ZERO_VEC, false, ZERO_VEC);
-
-
-
-
-			//--end debug lookat--
 			
 		if (!debugMode) {
 			pathingSys->update(frametime, player, collisionSys);
@@ -869,15 +1094,26 @@ public:
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
 		renderSys->update(Projection, View);
+		//greenTexture->bind(texProg->getUniform("Texture0"));
+		hudSys->update(Projection, player);
 			
 		if (!debugMode) { 
 			manageSpray(frametime);
+			healPlayer(frametime);
 			spawnEnemies(frametime); 
+			damageSys->update(&trail, frametime);
 		}
+	}
+	void initCamPos() {
+		float radius = 1.0;
+		float lookAt_x = radius * cos(g_phi) * cos(g_theta);
+		float lookAt_y = radius * sin(g_phi);
+		float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
+		vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 		//damageSys->update(&trail, frametime);
 	}
 
-	void initSystems() {
+	void registerSystems() {
 		renderSys = gCoordinator.RegisterSystem<RenderSys>();
 		{
 			Signature signature;
@@ -891,10 +1127,11 @@ public:
 		Signature signature;
 		signature.set(gCoordinator.GetComponentType<Transform>());
 		signature.set(gCoordinator.GetComponentType<DamageComponent>());
+		signature.set(gCoordinator.GetComponentType<AnimationComponent>());
 		signature.set(gCoordinator.GetComponentType<Enemy>());
 		gCoordinator.SetSystemSignature<DamageSys>(signature);
 
-		damageSys->init();
+		damageSys->init(POISON_TICK_TIME);
 
 		pathingSys = gCoordinator.RegisterSystem<PathingSys>();
 		{
@@ -912,8 +1149,20 @@ public:
 			signature.set(gCoordinator.GetComponentType<Transform>());
 			gCoordinator.SetSystemSignature<CollisionSys>(signature);
 		}
-		//collisionSys->init();
+
+		hudSys = gCoordinator.RegisterSystem<HudSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<RenderComponent>());
+			signature.set(gCoordinator.GetComponentType<HudComponent>());
+			gCoordinator.SetSystemSignature<HudSys>(signature);
+		}
 		
+	}
+
+	void initSystems() {
+		hudSys->init(&cube, cubeProg, redTexID);
+		collisionSys->init();
 	}
 };
 
@@ -922,8 +1171,10 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<Transform>();
 	gCoordinator.RegisterComponent<RenderComponent>();
 	gCoordinator.RegisterComponent<DamageComponent>();
+	gCoordinator.RegisterComponent<AnimationComponent>();
 	gCoordinator.RegisterComponent<Enemy>();
 	gCoordinator.RegisterComponent<CollisionComponent>();
+	gCoordinator.RegisterComponent<HudComponent>();
 }
 
 int main(int argc, char *argv[])
@@ -950,10 +1201,12 @@ int main(int argc, char *argv[])
 
 	initCoordinator();
 
-	application->initSystems();
+	application->registerSystems();
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
-	collisionSys->init();
+	application->initSystems();
+	
+	
 
 	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.

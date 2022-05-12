@@ -2,8 +2,8 @@
 #include "../Components/Collision.h"
 #include "../GameManager.h"
 
-//const int MAP_SIZE = 160; // world bounds = -MAP_SIZE/2 to +MAP_SIZE/2
-//const int TILE_SIZE = 2; // crates take up a 1x1 * crate_size area in world space
+// MAP_SIZE = 160;
+// TILE_SIZE = 2;
 
 class CollisionSys : public System
 {
@@ -11,18 +11,23 @@ public:
 	void init();
 	bool checkCollisions(vec3 playerPos);
 
-	//int getSize() { return MAP_SIZE; }
-	//int getTileSize() { return TILE_SIZE; }
+	float localGround; // output param of checkCollide()
+	bool playerInRamp = false;
+	vec2 ignoreDir = vec2(0, 0);
+	vec2 rampLoc = vec2(0, 0);
 
 private:
-	//int MAP_SIZE = GameManager::GetInstance()->getSize();
-	int colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
+	CollisionComponent colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
 	void addStaticCollisions();
-	void verifyCollisionAddition(int i, int j, CollisionT c);
+	void verifyCollisionAddition(int i, int j, CollisionComponent c);
 
-	bool isCollision(int i, int j);
+	bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround);
+	bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
 	bool checkCollide(vec3 pos, float radius);
 
 	vec2 latestCol = vec2(-99, -99); // debug
 	void printCol(vec2 newCol);
+
+	bool interpRamp(vec3 pos, CollisionComponent cc);
+
 };

@@ -45,21 +45,23 @@ extern Coordinator gCoordinator;
 		return false;
 	}
 
-    bool collideWithPlayer(vec3 nextPos, Player p, Enemy* e) {
-        // if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
-        // {
-        //     e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
-        //     return true;
-        // }
-        // if (nextPos.z + e->boRad> 125 || nextPos.z - e->boRad < -125)
-        // {
-        //     e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
-        //     return true;
-        // }
 
-        if (sqrtf(pow((nextPos.x - p.pos.x), 2) + pow((nextPos.z - p.pos.z), 2)) < e->boRad + p.boRad) 
+    bool collide(vec3 nextPos, Player* p, Enemy* e, float frameTime) {
+        if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
+        {
+            e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
+            return true;
+        }
+        if (nextPos.z + e->boRad> 125 || nextPos.z - e->boRad < -125)
+        {
+            e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
+            return true;
+        }
+
+        if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
             e->exploding = true;
+			p->health -= frameTime;
             return true;
         }
         return false;
@@ -91,7 +93,9 @@ void PathingSys::update(float frametime, Player player, shared_ptr<CollisionSys>
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
+
 		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys);
+
 	}
 }
 
