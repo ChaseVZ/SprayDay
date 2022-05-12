@@ -37,8 +37,12 @@
 #include "Components/HudComponent.h"
 #include "Components/AnimationComponent.h"
 #include <fstream>
-#include "systems/CollisionSystem.h"
 #include "systems/HudSystem.h"
+
+#ifndef COLL_SYS
+    #define COLL_SYS
+    #include "systems/CollisionSystem.h"
+#endif
 
 
 // Skybox
@@ -557,6 +561,7 @@ public:
 		gCoordinator.AddComponent(
 			crateEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				CRATE
@@ -589,10 +594,35 @@ public:
 		gCoordinator.AddComponent(
 			cubeEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				CUBE,
 				cubeHeight * cubeScale
+			});
+
+		return cubeEnt;
+	};
+
+	Entity initDebugCube(vec3 pos) {
+		Entity cubeEnt = gCoordinator.CreateEntity();
+		int cubeScale = 1;
+
+		gCoordinator.AddComponent(
+			cubeEnt,
+			RenderComponent{
+				&cube,     //ShapeGroup * sg;
+				1.0,           //float transparency;
+				cubeProg,
+				GL_BACK,
+				cubeTexID
+			});
+		gCoordinator.AddComponent(
+			cubeEnt,
+			Transform{
+			pos,		//vec3 pos;
+			vec3(1.0, 0.0, 0.0), // vec3 rotation
+			vec3(cubeScale, cubeScale, cubeScale),		//vec3 scale;
 			});
 
 		return cubeEnt;
@@ -623,6 +653,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				RAMP,
@@ -663,6 +694,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				RAMP,
@@ -703,6 +735,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				RAMP,
@@ -743,6 +776,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			CollisionComponent{
+				pos,
 				TILE_SIZE,
 				TILE_SIZE,
 				RAMP,
@@ -914,10 +948,15 @@ public:
 			move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
 			
 			// only move player if there was no collision
-			if (!collisionSys->checkCollisions(player.nextPos)) {
-				player.localGround = collisionSys->localGround;
-				player.updatePos();
+			CollisionOutput co = collisionSys->checkCollisions(player.nextPos);
+			if (!co.isCollide) {
+				player.localGround = co.height;
 			}
+			else
+			{
+				//initDebugCube(vec3(co.colPos.x - 80, 0, co.colPos.y - 80)); // DEBUG
+			}
+			player.updatePos(co.dir, co.isCollide);
 			
 			// camera
 			vcam.updatePos(player.pos);
@@ -1053,7 +1092,7 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, &player);
+			pathingSys->update(frametime, player, collisionSys);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture);
@@ -1075,6 +1114,7 @@ public:
 		float lookAt_y = radius * sin(g_phi);
 		float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
 		vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
+		//damageSys->update(&trail, frametime);
 	}
 
 	void registerSystems() {
