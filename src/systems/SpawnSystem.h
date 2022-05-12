@@ -29,8 +29,8 @@ private:
 	ShapeGroup* wolf;
 	ShapeGroup* bear;
 
-	void SpawnSys::spawnEnemies(float frametime);
-	void SpawnSys::initWolf();
+	void spawnEnemies(float frametime);
+	void initWolf();
 	vec3 getRandStart();
 	shared_ptr<Program> texProg;
 };

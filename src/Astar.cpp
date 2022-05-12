@@ -54,7 +54,7 @@ static float calcH(vec3 newPos, Node dest) {
 }
 
 static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node player) {
-	//cerr << "Making Path!\n";
+	cerr << "Making Path!\n";
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
