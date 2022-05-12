@@ -10,6 +10,7 @@ struct Enemy {
 	vec3 vel;
 	bool exploding;
 	int explodeFrame;
+	float baseSpeed;
 };
 
 #endif
