@@ -6,12 +6,17 @@
 #include "../MatrixStack.h"
 
 
+#include <iostream>
+#include <list>
+#include <glad/glad.h>
+
 
 
 #include <iostream>
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
 using namespace glm;
 using namespace std;
@@ -62,7 +67,7 @@ extern Coordinator gCoordinator;
         {
             e->exploding = true;
 			p->health -= frameTime;
-			p->health = std::max(p->health, 0.0f);
+			p->health = (max(p->health, 0.0f));
 			cerr << "WOLF ON PLAYER: " << p->health << endl;
 
             return true;
