@@ -7,13 +7,14 @@
 #include <list>
 #include <stack>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 using namespace glm;
 
 //Developed with lots of help from https://dev.to/jansonsa/a-star-a-path-finding-c-4a4h and
 // https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
-
 
 
 struct Node {
@@ -37,9 +38,9 @@ static bool isValid(vec3 newPos) {
 	return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2, 0, MAP_SIZE/2)).isCollide);
 }
 
-static bool isDestination(vec3 newPos, Node dest) {
+static bool isDestination(vec3 newPos, vec3 destPos) {
 	//cout << "isDestination\n";
-	if (newPos == dest.pos) {
+	if (newPos.x == destPos.x && newPos.z == destPos.z) {
 		return true;
 	}
 	return false;
@@ -54,20 +55,20 @@ static float calcH(vec3 newPos, Node dest) {
 }
 
 static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node player) {
-	cerr << "Making Path!\n";
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
-    cerr << "Making Path! line62: " << x << " " << z << "\n";
-	while ((map[x][z].parentPos.x != x || map[x][z].parentPos.z != z) && x != -1 && z != -1) {
-		//cerr << "path: " << x << " " << z << "\n";
+	
+	while ( (map[x][z].parentPos.x != x || map[x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
+
 		path.push(map[x][z]);
+		int tempX = x;
 		x = map[x][z].parentPos.x;
-		z = map[x][z].parentPos.z;
+		z = map[tempX][z].parentPos.z;
+		
 		
 	}
-	//cerr << "Making Path! line70\n";
 	path.push(map[x][z]);
 	while (!path.empty()) {
 		Node top = path.top();
@@ -76,6 +77,9 @@ static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node pl
 	}
 	//cerr << "Made Path!\n";
 	return usablePath;
+}
+bool isLessThan(Node a, Node b) {
+	return a.fCost > b.fCost;
 }
 
 
@@ -94,7 +98,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 		return empty;
 	}
 
-	if (isDestination(object.pos, player)) { 
+	if (isDestination(object.pos, player.pos)) { 
 		//cout << "Reached destination! You were already there :)\n";
 		return empty;
 	}
@@ -129,30 +133,30 @@ static vector<Node> checkNodes(Node object, Node player) {
 	map[x][z].parentPos.z = z;
 	//cout << "wolf pos: " << x << " " << z << "\n";
 
-	set<Node> openList;
-	openList.insert(map[x][z]);
+	vector<Node> openList;
+	openList.push_back(map[x][z]);
+	std::make_heap(openList.begin(), openList.end(), isLessThan);
+
 	//cerr << "InCheckNodes: before whileloop\n";
 	bool destinationFound = false;
 	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
 		//cerr << "InCheckNodes: in whileloop\n";
 		float temp = FLT_MAX;
 		Node node;
-		//cerr << "OpenList:\n";
 
-		//if (openList.size())
+		/*
+		cerr << "OpenList\n";
 		for (Node n : openList) {
-			//cerr << "Node: " << n.pos.x << " " << n.pos.z << "n.fCost: "<< n.fCost << "\n";
-			if (n.fCost < temp) {
-				temp = n.fCost;
-				node = n;
-			}
+			cerr << "    Node: " << n.pos.x << " " << n.pos.z << " " << n.fCost << "\n";
 		}
+		*/
+		node = openList.front();
+		//cerr << "Minimum Node: " << node.pos.x << " " << node.pos.z << " " << node.fCost << "\n";
 		//cerr << "InCheckNodes: in whileloop 2\n";
-		openList.erase(node);
-		//cerr << "OpenList after delete\n";
-		for (Node n : openList) {
-			//cerr << "    Node: " << n.pos.x << " " << n.pos.z << "\n";
-		}
+		std::pop_heap(openList.begin(), openList.end(), isLessThan);
+		openList.pop_back();
+
+		
 		assert(node.pos.x <= IDX_SIZE && node.pos.z <= IDX_SIZE);
 		assert(node.pos.z >= 0 || node.pos.x >= 0);
 		assert(node.fCost < 10000);
@@ -162,9 +166,10 @@ static vector<Node> checkNodes(Node object, Node player) {
 		//cout << "Selected Node x: " << x << " Node z: " << z << "\n";
 		visitedList[x][z] = true;
 		//cerr << "InCheckNodes: in whileloop 4\n";
-		if (isDestination(node.pos, player)) {
+		//cout << "comparing pos (" << node.pos.x << " " << node.pos.z << ") and player (" << player.pos.x << " " << player.pos.z << endl;
+		if (isDestination(node.pos, player.pos)) {
 			destinationFound = true;
-			cerr << "FOUND PLAYER\n";
+			//cerr << "FOUND PLAYER\n";
 			return makePath(map, player);
 		}
 		//cerr << "InCheckNodes: in whileloop: before forloop\n\n";
@@ -189,7 +194,8 @@ static vector<Node> checkNodes(Node object, Node player) {
 						map[x+newX][z+newZ].hCost = hNew;
 						map[x+newX][z+newZ].parentPos.x = x;
 						map[x+newX][z+newZ].parentPos.z = z;
-						openList.insert(map[x+newX][z+newZ]);
+						openList.push_back(map[x+newX][z+newZ]);
+						std::push_heap(openList.begin(), openList.end(), isLessThan);
 						//cerr << "adding tile " << x+newX << " " << z + newZ << " to open List\n";
 					}
 					else if (map[x][z].gCost > gNew) { //already on openList
@@ -229,7 +235,7 @@ bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
 }
 
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
-	cerr << "inAstar\n";
+	//cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 	Node player;
 	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
@@ -238,6 +244,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		return tr->pos;
 	}
 	player.pos = vec3(player.pos.x, 0, player.pos.z);
+	//cerr << "playerPos: " << player.pos.x << " " << player.pos.z << endl;
 
 	Node object;
 	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
@@ -264,7 +271,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//}
 		//return retMove;
 	}
-	cerr << "outof Astar\n";
+	//cerr << "outof Astar\n";
 	return tr->pos;
 }
 

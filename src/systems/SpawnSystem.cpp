@@ -10,7 +10,7 @@ float randFloat() {
 	return r;
 }
 vec3 SpawnSys::getRandStart() {
-	return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 3.0));
+	return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.0 -2.0));
 }
 
 void SpawnSys::initWolf() {
