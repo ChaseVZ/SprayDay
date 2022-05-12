@@ -1,3 +1,4 @@
+#pragma once
 #include "../EcsCore/System.h"
 #include "../Components/Collision.h"
 #include "../GameManager.h"

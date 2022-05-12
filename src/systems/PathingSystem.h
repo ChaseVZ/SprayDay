@@ -6,10 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../Components/Transform.h"
-#ifndef COLL_SYS
-    #define COLL_SYS
-    #include "CollisionSystem.h"
-#endif
+#include "CollisionSystem.h"
 #include "../Astar.h"
 #include "../Enemy.h"
 #include "../EcsCore/EcsTypes.h"
