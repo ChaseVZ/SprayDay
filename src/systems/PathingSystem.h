@@ -1,10 +1,10 @@
+#pragma once
 #include "../Enemy.h"
 #include "../Player.h"
 #include "../Program.h"
 #include "../MatrixStack.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../CompManager.h"
 #include "../Components/Transform.h"
 #include "../Enemy.h"
 #include "../EcsCore/EcsTypes.h"
@@ -27,5 +27,5 @@ class PathingSys : public System
 public:
     bool checkCollisions(Entity currentEnemy);
     void init();
-    void update(float frametime, Player player);
+    void update(float frametime, Player* player);
 };

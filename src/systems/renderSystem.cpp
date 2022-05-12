@@ -15,7 +15,7 @@ int g_GiboLen;
 GLuint GroundVertexArrayID;
 
 void initGround(float grndSize) {
-	float g_groundSize = grndSize / 2.0;
+	float g_groundSize = grndSize / 2.0 + 2;
 	float g_groundY = -0.25;
 
 	// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
@@ -95,7 +95,10 @@ mat4 lookDirToMat(vec3 lookDir) {
 void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos);
 	mat4 ScaleS = glm::scale(glm::mat4(1.0f), tr->scale);
-	mat4 ctm = Trans * ScaleS * lookDirToMat(tr->lookDir);
+	mat4 RotX = glm::rotate(glm::mat4(1.0f), tr->rotation.x, vec3(1, 0, 0));
+	mat4 RotY = glm::rotate(glm::mat4(1.0f), tr->rotation.y, vec3(0, 1, 0));
+	mat4 RotZ = glm::rotate(glm::mat4(1.0f), tr->rotation.z, vec3(0, 0, 1));
+	mat4 ctm = Trans * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
 
@@ -107,11 +110,19 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	glUniformMatrix4fv(curS->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 	glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 	glUniform1f(curS->getUniform("alpha"), rc->transparency);
-	//vec3 lightPos = GameManager::GetInstance()->getLightPos();
 	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
 	setModelRC(curS, tr);
+
+	bool useCubeMap = false;
+	if (rc->texID != 999)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, rc->texID);
+		useCubeMap = true;
+	}
+
 	// non-textured shapes draw
-	if ((rc->sg)->textures.size() == 0)
+	if ((rc->sg)->textures.size() == 0 || useCubeMap)
 	{
 		for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
 			(rc->sg)->shapes[i]->draw(curS);

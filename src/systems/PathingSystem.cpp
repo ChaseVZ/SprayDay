@@ -42,7 +42,7 @@ extern Coordinator gCoordinator;
 		return false;
 	}
 
-    bool collideWithPlayerOrBoundry(vec3 nextPos, Player p, Enemy* e) {
+    bool collide(vec3 nextPos, Player* p, Enemy* e, float frameTime) {
         if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
         {
             e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
@@ -54,29 +54,26 @@ extern Coordinator gCoordinator;
             return true;
         }
 
-        if (sqrtf(pow((nextPos.x - p.pos.x), 2) + pow((nextPos.z - p.pos.z), 2)) < e->boRad + p.boRad) 
+        if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
             e->exploding = true;
+			p->health -= frameTime;
             return true;
         }
         return false;
     }
 
-    void move(Player p, float dt, Enemy* e, Transform* tr) {
-        if (!collideWithPlayerOrBoundry(tr->pos + e->vel*dt, p, e))
+    void move(Player* p, float frameTime, Enemy* e, Transform* tr) {
+        if (!collide(tr->pos + e->vel*frameTime, p, e, frameTime))
         {
-            //TODO: add in Astar pathing
-			//use GameManager::checkCollide(nextPos, radiusOfWolf) on all possible positions to check if collision
-			
-			
-			tr->pos += e->vel*dt;
-			tr->lookDir = normalize(p.pos - tr->pos);
+            tr->pos += e->vel*frameTime;
+			tr->lookDir = normalize(p->pos - tr->pos);
 			float mag = glm::length(e->vel);
 			e->vel = tr->lookDir * mag;
         }
     }
 
-void PathingSys::update(float frametime, Player player) {
+void PathingSys::update(float frameTime, Player* player) {
 
 	for (Entity const& entity : mEntities) {
 		this->checkCollisions(entity);
@@ -84,7 +81,7 @@ void PathingSys::update(float frametime, Player player) {
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
-		move(player, frametime*50, &entityEnemyComp, &entityTransComp);
+		move(player, frameTime*50, &entityEnemyComp, &entityTransComp);
 	}
 }
 

@@ -4,9 +4,8 @@
 
 using namespace glm;
 
-struct Transform {
+struct HudComponent {
 	vec3 pos;
 	vec3 lookDir;
 	vec3 scale;
-	vec3 rotation = vec3(0,0,0);
 };
