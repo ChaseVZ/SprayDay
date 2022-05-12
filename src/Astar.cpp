@@ -89,7 +89,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 	//cout << std::boolalpha;
 	//cout << "skunk pos is valid? " << isV << "\n";
 	if (!isValid(player.pos)) { //player is unreachable and is in an obstacle
-		//cout << "Player is in obstacle!\n";
+		cerr << "Player is in obstacle!\n";
 		return empty;
 	}
 
@@ -231,6 +231,11 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 
 	Node player;
 	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
+	if (player.pos.y > 0) {
+		//cerr << "Player above ground and unreachable";
+		return tr->pos;
+	}
+	player.pos = vec3(player.pos.x, 0, player.pos.z);
 
 	Node object;
 	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
