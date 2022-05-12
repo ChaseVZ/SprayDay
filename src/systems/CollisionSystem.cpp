@@ -77,14 +77,16 @@ void CollisionSys::printCol(vec2 newCol)
 	if (newCol != latestCol)
 	{
 		latestCol = newCol;
-		cout << "collision at >> i: " << latestCol.x << " j: " << latestCol.y << endl;
+		//cout << "collision at >> i: " << latestCol.x << " j: " << latestCol.y << endl;
 	}
 }
 
 void checkRampOrientation(float* y1, float* y2, CollisionComponent cc)
 {
 	if (cc.height <= 4.0f && (cc.dir.x == 1 || cc.dir.z == 1)) { *y2 = 0.0f; *y1 = cc.height; } // going from 0 > 4
-	else if (cc.height <= 4.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 0.0f; cout << "going down" << endl; } // going from 4 > 0
+	else if (cc.height <= 4.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 0.0f; 
+		//cout << "going down" << endl; 
+	} // going from 4 > 0
 	else if (cc.height <= 8.0f && (cc.dir.x == 1 || cc.dir.z == 1)) { *y2 = 4.0f; *y1 = cc.height; } // going from 4 > 8
 	else if (cc.height <= 8.0f && (cc.dir.x == -1 || cc.dir.z == -1)) { *y2 = cc.height; *y1 = 4.0f; } // going from 8 > 4
 }
@@ -115,20 +117,28 @@ bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 	/* ## CAP BOUNDS OF INTERP FUNCTION ## */
 	// caps for positive facing ramps
 	if (cc.dir.x == 1 || cc.dir.z == 1) {
-		if (interp < y2) { interp = y2; cout << "pos x y2" << endl;}
-		if (interp > y1) { interp = y1; cout << "pos x y1" << endl;}
+		if (interp < y2) { interp = y2; 
+			//cout << "pos x y2" << endl;
+		}
+		if (interp > y1) { interp = y1;
+			//cout << "pos x y1" << endl;
+		}
 	}
 
 	// caps for negative facing ramps
 	if (cc.dir.x == -1 || cc.dir.z == -1) {
-		if (interp < y1) { interp = y1; cout << "neg x y1" << endl; }
-		if (interp > y2) { interp = y2; cout << "neg x y2" << endl; }
+		if (interp < y1) { interp = y1;
+			//cout << "neg x y1" << endl; 
+		}
+		if (interp > y2) { interp = y2;
+			//cout << "neg x y2" << endl;
+		}
 	}
 
-	cout << "local ground (ramp) to: " << interp << endl;
+	//cout << "local ground (ramp) to: " << interp << endl;
 	localGround = interp;
 
-	cout << "val: " << x << " y1: " << y1 << " y2: " << y2 << " x1: " << x1 << " x2: " << x2 << " localGround: " << localGround << endl;
+	//cout << "val: " << x << " y1: " << y1 << " y2: " << y2 << " x1: " << x1 << " x2: " << x2 << " localGround: " << localGround << endl;
 	return false;
 }
 
@@ -139,17 +149,21 @@ bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround)
 	if (pos.y >= colMap[i][j].height) // allow player to walk on top of objects
 	{ 
 		*tempLocalGround = colMap[i][j].height; 
-		cout << "local ground (cube) to: " << *tempLocalGround << endl;
+		//cout << "local ground (cube) to: " << *tempLocalGround << endl;
 		return false; 
 	} 
 
 	else 
 	{ 
 		// if player is in a ramp, ignore the crate in front of it
-		if (ignoreDir.y == 1 && j > rampLoc.y) { cout << "ignoring crate in front of Z+ ramp" << endl; return false; }
-		else if (ignoreDir.x == 1 && i > rampLoc.x) { cout << "ignoring crate in front of X+ ramp" << endl; return false; }
-		else if (ignoreDir.y == -1 && j < rampLoc.y) { cout << "ignoring crate in front of Z- ramp" << endl; return false; }
-		else if (ignoreDir.x == -1 && i < rampLoc.x) { cout << "ignoring crate in front of X- ramp" << endl; return false; }
+		if (ignoreDir.y == 1 && j > rampLoc.y) { //cout << "ignoring crate in front of Z+ ramp" << endl; 
+			return false; }
+		else if (ignoreDir.x == 1 && i > rampLoc.x) { //cout << "ignoring crate in front of X+ ramp" << endl; 
+			return false; }
+		else if (ignoreDir.y == -1 && j < rampLoc.y) { //cout << "ignoring crate in front of Z- ramp" << endl; 
+			return false; }
+		else if (ignoreDir.x == -1 && i < rampLoc.x) { //cout << "ignoring crate in front of X- ramp" << endl; 
+			return false; }
 
 		printCol(vec2(i, j)); 
 		return true; 

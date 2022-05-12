@@ -227,6 +227,7 @@ bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
 }
 
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
+	cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 
 	Node player;
@@ -263,7 +264,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//}
 		//return retMove;
 	}
-
+	cerr << "outof Astar\n";
 	return tr->pos;
 }
 
