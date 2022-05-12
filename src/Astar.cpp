@@ -54,7 +54,7 @@ static float calcH(vec3 newPos, Node dest) {
 }
 
 static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node player) {
-	//cerr << "Making Path!\n";
+	cerr << "Making Path!\n";
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
@@ -80,6 +80,7 @@ static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node pl
 
 
 static vector<Node> checkNodes(Node object, Node player) {
+	//cerr << "InCheckNodes\n";
 	//cout << "Astar: 1\n";
 	vector<Node> empty;
 	//Node zeroNode;
@@ -130,10 +131,10 @@ static vector<Node> checkNodes(Node object, Node player) {
 
 	set<Node> openList;
 	openList.insert(map[x][z]);
-	
+	//cerr << "InCheckNodes: before whileloop\n";
 	bool destinationFound = false;
 	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
-		
+		//cerr << "InCheckNodes: in whileloop\n";
 		float temp = FLT_MAX;
 		Node node;
 		//cerr << "OpenList:\n";
@@ -146,6 +147,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 				node = n;
 			}
 		}
+		//cerr << "InCheckNodes: in whileloop 2\n";
 		openList.erase(node);
 		//cerr << "OpenList after delete\n";
 		for (Node n : openList) {
@@ -154,18 +156,18 @@ static vector<Node> checkNodes(Node object, Node player) {
 		assert(node.pos.x <= IDX_SIZE && node.pos.z <= IDX_SIZE);
 		assert(node.pos.z >= 0 || node.pos.x >= 0);
 		assert(node.fCost < 10000);
-
+		//cerr << "InCheckNodes: in whileloop 3\n";
 		x = node.pos.x;
 		z = node.pos.z;
 		//cout << "Selected Node x: " << x << " Node z: " << z << "\n";
 		visitedList[x][z] = true;
-
+		//cerr << "InCheckNodes: in whileloop 4\n";
 		if (isDestination(node.pos, player)) {
 			destinationFound = true;
-			//cerr << "FOUND PLAYER\n";
+			cerr << "FOUND PLAYER\n";
 			return makePath(map, player);
 		}
-
+		//cerr << "InCheckNodes: in whileloop: before forloop\n\n";
 		//loop over all neighboring tiles
 		for (int newX=-1; newX <= 1;  newX++) {
 			for (int newZ = -1; newZ<=1; newZ++){
@@ -245,7 +247,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 
 	assert(!(object.pos.x > IDX_SIZE || object.pos.z > IDX_SIZE));
 	assert(!(object.pos.z < 0 || object.pos.x < 0));
-
 	moves = checkNodes(object, player);
 
 	if (!moves.empty()){
