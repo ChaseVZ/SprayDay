@@ -227,8 +227,8 @@ bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
 }
 
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
+	cerr << "inAstar\n";
 	collisionSysAstar = collSys;
-
 	Node player;
 	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
 	if (player.pos.y > 0) {
@@ -263,7 +263,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//}
 		//return retMove;
 	}
-	//cerr << "outof Astar\n";
+	cerr << "outof Astar\n";
 	return tr->pos;
 }
 
