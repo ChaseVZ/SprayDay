@@ -30,6 +30,7 @@
 #include "systems/PathingSystem.h"
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
+#include "systems/SpawnSystem.h"
 #include "Components/Collision.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
@@ -58,6 +59,7 @@ Coordinator gCoordinator;
 
 std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
+SpawnSys* spawnSys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
 std::shared_ptr<HudSys> hudSys;
@@ -68,11 +70,9 @@ using Entity = std::uint32_t;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
-float spawnTimer = 3;
-float SPAWN_TIME = 4;
+
 
 float POISON_TICK_TIME = 0.5;
-float WOLF_BASE_HP = 4.0; // seconds of spraying until death (if divisible by tick time)
 
 class Application : public EventCallbacks
 {
@@ -473,11 +473,6 @@ public:
 
 	}
 
-	float randFloat() {
-		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		return r;
-	}
-
 	#pragma region InitEntities
 	void initSkybox() {
 		Entity skyEnt = gCoordinator.CreateEntity();
@@ -762,50 +757,6 @@ public:
 		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
-
-	void initWolf() {
-		Entity wolfEnt = gCoordinator.CreateEntity();
-		gCoordinator.AddComponent(
-			wolfEnt,
-			Transform{
-				getRandStart(),
-				vec3(1.0, 0.0, 0.0),
-				vec3(5.0),
-			});
-
-		gCoordinator.AddComponent(
-			wolfEnt,
-			Enemy {
-				2.0, // float boRad;
-				vec3(randFloat() / 4.0 - 0.125, 0, randFloat() / 4.0 - 0.125), // vec3 vel;
-				false, // bool exploding;
-				0, // int explodeFrame;
-			});
-
-		gCoordinator.AddComponent(
-			wolfEnt,
-			DamageComponent{
-				WOLF_BASE_HP+ POISON_TICK_TIME, // total hp, tick time is added because of tick calculations
-				WOLF_BASE_HP+ POISON_TICK_TIME, // current hp
-				0.0 // poison timer
-		});
-
-		gCoordinator.AddComponent(
-			wolfEnt,
-			AnimationComponent{
-				false,
-				0 // poision damage frame
-			});
-
-		gCoordinator.AddComponent(
-			wolfEnt,
-			RenderComponent{
-				&wolf,
-				1.0,
-				texProg,
-				GL_BACK,
-			});
-	}
 #pragma endregion
 
 	int readMap() {
@@ -1026,17 +977,9 @@ public:
 			}
 		}
 	}
-	vec3 getRandStart() {
-		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
-	}
 	
-	void spawnEnemies(float frametime) {
-		spawnTimer += frametime;
-		if (spawnTimer > SPAWN_TIME) {
-			spawnTimer -= SPAWN_TIME;
-			initWolf();
-		}
-	}
+	
+	
 
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
 		vec3 camPos = moveDir;
@@ -1106,7 +1049,6 @@ public:
 
 		// Create the matrix stacks playerPos-vcam.lookAt
 		
-		
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
@@ -1122,7 +1064,8 @@ public:
 		if (!debugMode) { 
 			manageSpray(frametime);
 			healPlayer(frametime);
-			spawnEnemies(frametime); 
+			
+			spawnSys->update(frametime);
 			damageSys->update(&trail, frametime);
 		}
 	}
@@ -1184,6 +1127,8 @@ public:
 	void initSystems() {
 		hudSys->init(&cube, cubeProg, redTexID);
 		collisionSys->init();
+		spawnSys = new SpawnSys();
+		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, texProg);
 	}
 };
 
