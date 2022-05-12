@@ -36,8 +36,12 @@
 #include "Components/HudComponent.h"
 #include "Components/AnimationComponent.h"
 #include <fstream>
-#include "systems/CollisionSystem.h"
 #include "systems/HudSystem.h"
+
+#ifndef COLL_SYS
+    #define COLL_SYS
+    #include "systems/CollisionSystem.h"
+#endif
 
 
 // Skybox
@@ -1000,7 +1004,8 @@ public:
 		}
 	}
 	vec3 getRandStart() {
-		return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
+		return vec3 (8, 0, 8);
+		//return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE / 2.0));
 	}
 	
 	void spawnEnemies(float frametime) {
@@ -1084,7 +1089,7 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, &player);
+			pathingSys->update(frametime, player, collisionSys);
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, texProg, grassTexture);
@@ -1105,6 +1110,7 @@ public:
 		float lookAt_y = radius * sin(g_phi);
 		float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
 		vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
+		//damageSys->update(&trail, frametime);
 	}
 
 	void registerSystems() {
