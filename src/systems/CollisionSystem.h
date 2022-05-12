@@ -23,7 +23,7 @@ private:
 	void addStaticCollisions();
 	void verifyCollisionAddition(int i, int j, CollisionComponent c);
 
-	void CollisionSys::setColDir(vec3 colPos);
+	void CollisionSys::setColDir(int i, int j);
 	bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround);
 	bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
 	bool checkCollide(vec3 pos, float radius);
