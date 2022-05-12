@@ -175,7 +175,7 @@ void CollisionSys::setColDir(vec3 colPos) {
 	float delta_i = colPos.x - entityPos.x;
 	float delta_j = colPos.z - entityPos.z;
 
-	cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
+	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
 
 	if (abs(delta_i) < abs(delta_j)) { // we need to remove vel in i dir
 		colDir = vec3(1, 1, 0);

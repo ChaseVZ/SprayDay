@@ -89,7 +89,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 	//cout << std::boolalpha;
 	//cout << "skunk pos is valid? " << isV << "\n";
 	if (!isValid(player.pos)) { //player is unreachable and is in an obstacle
-		cerr << "Player is in obstacle!\n";
+		//cerr << "Player is in obstacle!\n";
 		return empty;
 	}
 
@@ -227,11 +227,10 @@ bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
 }
 
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
-	cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 
 	Node player;
-	player.pos = vec3(round(p.pos)) + vec3(IDX_SIZE/2, 0, IDX_SIZE/2); //convert from world coors to map coords
+	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
 	if (player.pos.y > 0) {
 		//cerr << "Player above ground and unreachable";
 		return tr->pos;
@@ -239,7 +238,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	player.pos = vec3(player.pos.x, 0, player.pos.z);
 
 	Node object;
-	object.pos = tr->pos + vec3(IDX_SIZE/2, 0, IDX_SIZE/2);
+	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
 	//cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
 	//cout << "Wolf POS " << object.pos.x << " " << object.pos.y << " " << object.pos.z << "\n";
 	vector<Node> moves;
@@ -250,7 +249,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	moves = checkNodes(object, player);
 
 	if (!moves.empty()){
-		glm::vec3 retMove = vec3(moves.front().pos.x-IDX_SIZE/2, 0, moves.front().pos.z-IDX_SIZE/2); //convert map coords back to world coords
+		glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords
 		glm::vec3 trPos = tr->pos;
 		//if (retMove == tr->pos) {
 		// if (vecIsLessThanOrEqual(retMove,  trPos + vec3(0.5f)) && vecIsLessThanOrEqual(retMove, trPos + vec3(0.5f)) &&
@@ -258,13 +257,13 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		// 	{
 			if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 				moves.erase(moves.begin());
-				return vec3(moves.front().pos.x-IDX_SIZE/2, 0, moves.front().pos.z-IDX_SIZE/2);
+				return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 			}
 			return tr->pos;
 		//}
 		//return retMove;
 	}
-	cerr << "outof Astar\n";
+	//cerr << "outof Astar\n";
 	return tr->pos;
 }
 
