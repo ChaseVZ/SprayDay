@@ -183,10 +183,10 @@ void CollisionSys::setColDir(int i, int j) {
 	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
 
 	if (abs(delta_i) < abs(delta_j)) { // we need to remove vel in i dir
-		colDir = vec3(1, 1, 0);
+		colDir.z = 0;
 	}
 	else { // remove vel in j dir
-		colDir = vec3(0, 1, 1); 
+		colDir.x = 0;
 	}
 
 }
