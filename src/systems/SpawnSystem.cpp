@@ -128,7 +128,7 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	POISON_TICK_TIME = poisonTickTime;
 }
 void SpawnSys::update(float frameTime){
-	spawnTime = max(spawnTime - spawnTime * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
+	spawnTime = std::max(spawnTime - spawnTime * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
 	//cout << "spawn_time:" << SPAWN_TIME << endl;
 	spawnEnemies(frameTime);
 }
