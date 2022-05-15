@@ -4,9 +4,9 @@ extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 2.0; // seconds of spraying until death (if divisible by tick time)
 float BEAR_BASE_HP = 4.0;
 float spawnTimer = 3.9;
-float SPAWN_TIME = 4.0;
+float spawnTime = 4.0;
 float MIN_SPAWN_TIME = 0.5;
-float SPAWN_TIME_DECREASE = .02; // every 100 seconds, increase spawn time by 1 sec
+float SPAWN_TIME_DECREASE = .002; // every 1000 seconds, increase spawn time by 1 sec
 
 float randFloat() {
 	float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -34,7 +34,7 @@ void SpawnSys::initBear() {
 			vec3(8.25, 0, 8.25), // vec3 vel;
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.0
+			0.8
 		});
 
 	gCoordinator.AddComponent(
@@ -79,7 +79,7 @@ void SpawnSys::initWolf() {
 			vec3(8.25, 0, 8.25), // vec3 vel;
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.3 //SPEED
+			1.0 //SPEED
 		});
 
 	gCoordinator.AddComponent(
@@ -109,8 +109,8 @@ void SpawnSys::initWolf() {
 
 void SpawnSys::spawnEnemies(float frametime) {
 	spawnTimer += frametime;
-	if (spawnTimer > SPAWN_TIME) {
-		spawnTimer -= SPAWN_TIME;
+	if (spawnTimer > spawnTime) {
+		spawnTimer -= spawnTime;
 		int randEnemySpawn = rand() % 2;
 		if (randEnemySpawn == 1) {
 			initBear();
@@ -128,7 +128,7 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	POISON_TICK_TIME = poisonTickTime;
 }
 void SpawnSys::update(float frameTime){
-	SPAWN_TIME = max(SPAWN_TIME - SPAWN_TIME * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
+	spawnTime = max(spawnTime - spawnTime * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
 	//cout << "spawn_time:" << SPAWN_TIME << endl;
 	spawnEnemies(frameTime);
 }
