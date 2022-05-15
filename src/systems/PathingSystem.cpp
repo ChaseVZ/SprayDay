@@ -75,13 +75,20 @@ extern Coordinator gCoordinator;
         return false;
     }
 
+	bool vecEpsilonEqual(vec3 a, vec3 b, float epsilon) {
+		if (abs(a.x - b.x) <= epsilon && abs(a.y - b.y) <= epsilon && abs(a.z - b.z) <= epsilon) {
+			return true;
+		}
+		return false;
+	}
+
     void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
        if (!collideWithPlayer(tr->pos, p, e, dt))
        {
-
-			vec3 nextPos = Astar::findNextPos(*p, tr, collSys);
-			e->vel = (nextPos - tr->pos);
-
+			if (vecEpsilonEqual(e->nextTile, tr->pos, 0.2f)) {
+				e->nextTile = Astar::findNextPos(*p, tr, collSys);
+			}
+			e->vel = (e->nextTile - tr->pos);
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";

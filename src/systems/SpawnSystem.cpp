@@ -18,10 +18,11 @@ vec3 SpawnSys::getRandStart() {
 
 void SpawnSys::initBear() {
 	Entity bearEnt = gCoordinator.CreateEntity();
+	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
 		bearEnt,
 		Transform{
-			getRandStart(),
+			startPos,
 			vec3(1.0, 0.0, 0.0),
 			vec3(5.0),
 			vec3(0.0,-3.14/2, 0.0)
@@ -31,7 +32,8 @@ void SpawnSys::initBear() {
 		bearEnt,
 		Enemy{
 			2.0, // float boRad;
-			vec3(8.25, 0, 8.25), // vec3 vel;
+			startPos, // vec3 vel; (next move pos)
+			startPos, //vec3 nextTile
 			false, // bool exploding;
 			0, // int explodeFrame;
 			0.8
@@ -64,10 +66,11 @@ void SpawnSys::initBear() {
 
 void SpawnSys::initWolf() {
 	Entity wolfEnt = gCoordinator.CreateEntity();
+	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
 		wolfEnt,
 		Transform{
-			getRandStart(),
+			startPos,
 			vec3(1.0, 0.0, 0.0),
 			vec3(5.0),
 		});
@@ -76,7 +79,8 @@ void SpawnSys::initWolf() {
 		wolfEnt,
 		Enemy{
 			2.0, // float boRad;
-			vec3(8.25, 0, 8.25), // vec3 vel;
+			startPos, // vec3 vel;
+			startPos, //start poosition (nextTile)
 			false, // bool exploding;
 			0, // int explodeFrame;
 			1.0 //SPEED
