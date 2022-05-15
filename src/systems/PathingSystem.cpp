@@ -66,8 +66,8 @@ extern Coordinator gCoordinator;
 			p->health -= frameTime;
 			p->health = std::max(p->health, 0.0f);
 			if (p->health == 0.0) {
-				cout << "YOU LOSE :(" << endl;
-				exit(EXIT_SUCCESS);
+				//cout << "YOU LOSE :(" << endl;
+				//exit(EXIT_SUCCESS);
 			}
 
             return true;
@@ -85,7 +85,7 @@ extern Coordinator gCoordinator;
     void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
        if (!collideWithPlayer(tr->pos, p, e, dt))
        {
-			if (vecEpsilonEqual(e->nextTile, tr->pos, 0.2f)) {
+			if (vecEpsilonEqual(e->nextTile, tr->pos, 0.5f)) {
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 			}
 			e->vel = (e->nextTile - tr->pos);
