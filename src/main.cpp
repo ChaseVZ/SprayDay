@@ -794,7 +794,7 @@ public:
 #pragma endregion
 
 	int readMap() {
-		string filename("../StaticObjMap2.txt");
+		string filename("../maps/XandO.txt");
 		vector<char> bytes;
 
 		FILE* input_file = fopen(filename.c_str(), "r");
