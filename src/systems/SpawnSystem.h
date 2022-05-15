@@ -1,5 +1,6 @@
 #pragma once 
 
+#define NOMINMAX
 #include "../Enemy.h"
 #include "../DamageComponent.h"
 #include "../MatrixStack.h"

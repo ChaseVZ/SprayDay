@@ -1,5 +1,6 @@
 #include "SpawnSystem.h"
 #include <iostream>
+
 extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 2.0; // seconds of spraying until death (if divisible by tick time)
 float BEAR_BASE_HP = 4.0;

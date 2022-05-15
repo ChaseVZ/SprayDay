@@ -1,4 +1,5 @@
 #pragma once
+#define NOMINMAX
 #include "../Enemy.h"
 #include "../Player.h"
 #include "../Program.h"
