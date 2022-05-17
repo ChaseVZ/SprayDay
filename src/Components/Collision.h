@@ -5,7 +5,8 @@
 using namespace glm;
 
 enum CollisionT : int {
-	CRATE = 1,
+	GROUND = 0,
+	CRATE,
 	RAMP,
 	CUBE
 };

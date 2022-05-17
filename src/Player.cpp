@@ -119,7 +119,7 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 
 		// Only have jump speed affect velocity @ start of jump
 		if (lastTime == 0 && !falling)
-			vel += jumpSpeed;
+			vel.y = jumpSpeed.y;
 
 		// Stop gravity once player has reached localGround (located in collisions())
 		// Otherwise, player is still in the air so keep calculating time 

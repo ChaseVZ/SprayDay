@@ -212,3 +212,47 @@ public:
 //GameManager* GameManager::instance = NULL;
 
 #endif
+
+
+
+void CollisionSys::addStaticCollisions()
+{
+	for (Entity const& entity : mEntities) {
+		CollisionComponent& cc = gCoordinator.GetComponent<CollisionComponent>(entity);
+		Transform& tc = gCoordinator.GetComponent<Transform>(entity);
+
+		//int i = worldToMap(tc.pos.x);
+		//int j = worldToMap(tc.pos.z);
+
+		// top right
+		int i1 = worldToMap(tc.pos.x + cc.length) - 1;
+		int j1 = worldToMap(tc.pos.z + cc.width) - 1;
+
+		// bot left
+		int i3 = worldToMap(tc.pos.x - cc.length) + 1;
+		int j3 = worldToMap(tc.pos.z - cc.width) + 1;
+
+		//printf("col @ i:%d j:%d TO i:%d j:%d and width:%d height: %d with pos @ i:%d j:%d\n", i1, j1, i3, j3, cc.length, cc.width, i, j);
+
+		//// bot right
+		//int i2 = (i1 + i3 + j1 - j3) / 2;
+		//int j2 = (i3 - i1 + j1 + j3) / 2;
+
+		//// top left
+		//int i4 = (i1 + i3 + j3 - j1) / 2;
+		//int j4 = (i1 - i3 + j1 + j3) / 2;
+
+		//// verify corners
+		//verifyCollisionAddition(i1, j1, cc);
+		//verifyCollisionAddition(i2, j2, cc);
+		//verifyCollisionAddition(i3, j3, cc);
+		//verifyCollisionAddition(i4, j4, cc);
+
+		//// verify edges
+		//for (int k = 1; k <= abs(j4 - j3) - 2 + 1; k++) {
+		//	verifyCollisionAddition(i4, j4 - k, cc); // vertical R
+		//	verifyCollisionAddition(i1, j1 - k, cc); // vetical L
+		//	verifyCollisionAddition(i4 + k, j4, cc); // horizontal T
+		//	verifyCollisionAddition(i3 + k, j3, cc); // horizontal B
+		//}
+...
