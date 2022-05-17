@@ -152,12 +152,17 @@ void CollisionSys::setColDir(int i, int j) {
 	if (outsideMap) { return; }
 
 	vec3 colPos = colMap[i][j].center;
-	float delta_i = colPos.x - entityPos.x;
-	float delta_j = colPos.z - entityPos.z;
+	float delta_i = abs(colPos.x - entityPos.x);
+	float delta_j = abs(colPos.z - entityPos.z);
+
+	/* Ignore slide collision when it exists more than a tile (4 units) away or if the epsilon is less than 1*/
+	// might need to change last check to see if both values are greater than 3.0f? (instead of difference)
+	//if (delta_i > 4.0f || delta_j > 4.0f || abs(delta_i - delta_j) < 1.0f) { return; }
+	if (delta_i > 4.0f || delta_j > 4.0f || (delta_i > 2.9f && delta_j > 2.9f)) { return; }
 
 	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
 
-	if (abs(delta_i) < abs(delta_j)) { // we need to remove vel in i dir
+	if (delta_i < delta_j) { // we need to remove vel in i dir
 		//cout << "col in Z" << endl;
 		colDir.z = 0;
 	}
