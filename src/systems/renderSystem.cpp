@@ -111,11 +111,11 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 	glUniform1f(curS->getUniform("alpha"), rc->transparency);
 	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, depthMap);
-	//glUniform1i(curS->getUniform("shadowDepth"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glUniform1i(curS->getUniform("shadowDepth"), 1);
   	//glUniform3f(ShadowProg->getUniform("lightDir"), g_light.x, g_light.y, g_light.z);
-	//glUniformMatrix4fv(curS->getUniform("LS"), 1, GL_FALSE, value_ptr(LSpace));
+	glUniformMatrix4fv(curS->getUniform("LS"), 1, GL_FALSE, value_ptr(LSpace));
 	setModelRC(curS, tr);
 
 	bool useCubeMap = false;

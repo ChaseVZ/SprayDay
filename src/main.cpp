@@ -232,7 +232,7 @@ public:
 	GLuint depthMapFBO;
 	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
 	GLuint depthMap;
-	vec3 g_light = vec3(3, 5, 5);
+	vec3 g_light = vec3(10, 10, 10);
 
 	/* ================ DEBUG ================= */
 	bool debugMode = false;
@@ -939,7 +939,7 @@ public:
 	/* =================== HELPER FUNCTIONS ================== */
 
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
-		mat4 ortho = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, 0.1f, 100.0f);
+		mat4 ortho = glm::ortho(-80.0f, 80.0f, -2.0f, 10.0f, -80.0f, 80.0f);
 
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 			return ortho;

@@ -26,7 +26,7 @@ private:
 	GLuint mVao{};
 	GLuint mVboVertices{};
 	GLuint mVboNormals{};
-	vec3 lightPos = vec3(0, 10, 0);
+	vec3 lightPos = vec3(10, 10, 10);
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace);
 };

@@ -26,14 +26,14 @@ float TestShadow(vec4 LSfPos) {
 
 	// //1: shift the coordinates from -1, 1 to 0 ,1
   vec3 projCoord = 0.5*(LSfPos.xyz + vec3(1.0));
-  float curD = projCoord.z - 0.005;
+  float curD = projCoord.z - 0.001;
 	// //2: read off the stored depth (.) from the ShadowDepth, using the shifted.xy 
   float lightDepth = texture(shadowDepth, projCoord.xy).r;
 	// //3: compare to the current depth (.z) of the projected depth
 
 	// //4: return 1 if the point is shadowed
   if (curD > lightDepth) {
-    return 1.0f;
+    return 0.5f;
   }
   return 0.0f;
 }
@@ -66,7 +66,7 @@ void main() {
 
 	//Outcolor = texColor0;
 	//Outcolor = amb*(texColor0) + (1.0-Shade)*texColor0*color;
-	Outcolor = color + (1.0-Shade)*color;
+	Outcolor = vec4((1.0-Shade)*color.xyz, color.w);
 	//Outcolor = color;
 
 	//Outcolor = vec4(vTexCoord.x, vTexCoord.y, 0, 1);
