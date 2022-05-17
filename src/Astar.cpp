@@ -35,7 +35,7 @@ std::shared_ptr<CollisionSys> collisionSysAstar;
 static bool isValid(vec3 newPos) {
 	//cout << "isValid\n";
 
-	return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2, 0, MAP_SIZE/2)).isCollide);
+	return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2, 0, MAP_SIZE/2), false).isCollide);
 }
 
 static bool isDestination(vec3 newPos, vec3 destPos) {

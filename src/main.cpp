@@ -7,6 +7,7 @@
  */
 
 #include <iostream>
+#include <vector>
 #include <list>
 #include <glad/glad.h>
 
@@ -268,7 +269,7 @@ public:
 				if (key == GLFW_KEY_Z && action == GLFW_RELEASE) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
 				// Debug
-				if (key == GLFW_KEY_C && action == GLFW_PRESS) { debugMode = !debugMode; cout << debugMode << endl; }
+				if (key == GLFW_KEY_C && action == GLFW_PRESS) { debugMode = !debugMode; }
 			}
 		}
 
@@ -613,9 +614,8 @@ public:
 			RenderComponent{
 				&cube,     //ShapeGroup * sg;
 				1.0,           //float transparency;
-				cubeProg,
-				GL_BACK,
-				cubeTexID
+				texProg,
+				GL_BACK
 			});
 		gCoordinator.AddComponent(
 			cubeEnt,
@@ -655,7 +655,7 @@ public:
 			CollisionComponent{
 				pos,
 				TILE_SIZE,
-				TILE_SIZE,
+				TILE_SIZE + 1,
 				RAMP,
 				4.0,
 				vec3(0,0,1),
@@ -696,7 +696,7 @@ public:
 			CollisionComponent{
 				pos,
 				TILE_SIZE,
-				TILE_SIZE,
+				TILE_SIZE + 1,
 				RAMP,
 				4.0,
 				vec3(0,0,-1),
@@ -736,7 +736,7 @@ public:
 			rampEnt,
 			CollisionComponent{
 				pos,
-				TILE_SIZE,
+				TILE_SIZE + 1,
 				TILE_SIZE,
 				RAMP,
 				4.0,
@@ -777,7 +777,7 @@ public:
 			rampEnt,
 			CollisionComponent{
 				pos,
-				TILE_SIZE,
+				TILE_SIZE + 1,
 				TILE_SIZE,
 				RAMP,
 				4.0,
@@ -948,13 +948,20 @@ public:
 			move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
 			
 			// only move player if there was no collision
-			CollisionOutput co = collisionSys->checkCollisions(player.nextPos);
+			CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true);
 			if (!co.isCollide) {
 				player.localGround = co.height;
 			}
 			else
 			{
-				//initDebugCube(vec3(co.colPos.x - 80, 0, co.colPos.y - 80)); // DEBUG
+				// Uncomment to print collisions (laggy)
+				//vector<vec2> collisions;
+				//collisions = collisionSys->printMap(player.pos);
+
+				//for each (vec2 v in collisions) {
+				//	printVec(vec3(v.x, 0, v.y));
+				//	initDebugCube(vec3(v.x, 0, v.y));
+				//}
 			}
 			player.updatePos(co.dir, co.isCollide);
 			
@@ -964,7 +971,7 @@ public:
 		
 		// ALEX's CODE
 		*moveDir = move;
-		return player.pos;
+		return player.pos + vec3(0, -0.5f, 0);
 	}
 
 	void generateSpray() {
@@ -1209,7 +1216,9 @@ int main(int argc, char *argv[])
 
 	application->registerSystems();
 	application->init(resourceDir);
+	cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
+	cout << "doing geom2" << endl;
 	application->initSystems();
 	
 	

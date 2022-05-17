@@ -35,7 +35,7 @@ public:
 private:
 	vec3 vel = vec3(0, 0, 0);  // velocity
 	vec3 acc = vec3(0, -019.8, 0);	// acceleration
-	vec3 jumpSpeed = vec3(0, 019.8 * 2, 0);  // jumpspeed (time = 2s)
+	vec3 jumpSpeed = vec3(0, 009.8 * 2, 0);  // jumpspeed (time = 2s)
 	float lastTime = 0;
 	void checkCollision();
 	vec3 oldMoveDir;
