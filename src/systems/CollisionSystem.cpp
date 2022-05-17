@@ -158,11 +158,15 @@ void CollisionSys::setColDir(int i, int j) {
 	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
 
 	if (abs(delta_i) < abs(delta_j)) { // we need to remove vel in i dir
+		//cout << "col in Z" << endl;
 		colDir.z = 0;
 	}
 	else { // remove vel in j dir
 		colDir.x = 0;
+		//cout << "col in X" << endl;
 	}
+
+	//cout << "col dir is now " << colDir.x << " " << colDir.z << endl;
 
 }
 
@@ -199,7 +203,9 @@ bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 	bool tempInRamp = false;
 	float tempLocalGround = 0;
 	playerInRamp = false;
-	entityPos = nextPos; // used to determine direction [potential] collision is occuring
+	int k = 0;
+	bool res = false;
+	//entityPos = nextPos; // used to determine direction [potential] collision is occuring
 
 	// top right corner	
 	int i1 = worldToMap(nextPos.x + radius) - 1;
@@ -214,11 +220,15 @@ bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 
 	for (int _i = 0; _i <= i_extent; _i++) {
 		for (int _j = 0; _j <= j_extent; _j++) {
-			if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
+			k++;
+			if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) 
+			{ 
+				//cout << "collisions checked: " << k << endl;
+				res = true;
+			}
 			if (tempInRamp) { return false; }
 		}
 	}
-
 
 	if (tempInRamp == false) { 
 		ignoreDir = vec2(0, 0);
@@ -234,15 +244,17 @@ bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 		localGround = tempLocalGround;
 	}
 
-	colDir = vec3(1);
-	return false;
+	//cout << "collision dir is none" << endl;
+	colDir = vec3(1); // vel is multiplied by colDir so 1,1,1 means no collision block
+	return res;
 }
 
 // current;y just checks player collisions to static objects
-CollisionOutput CollisionSys::checkCollisions(vec3 playerNextPos, bool isPlayer)
+CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 curPos)
 {
 	isP = isPlayer;
-	bool res = checkCollide(playerNextPos, 2); // player radius hardcoded for now
+	entityPos = curPos;
+	bool res = checkCollide(nextPos, 3); // player radius hardcoded for now
 	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
 
 	//return res;

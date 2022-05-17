@@ -948,7 +948,7 @@ public:
 			move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
 			
 			// only move player if there was no collision
-			CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true);
+			CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
 			if (!co.isCollide) {
 				player.localGround = co.height;
 			}
@@ -959,7 +959,6 @@ public:
 				//collisions = collisionSys->printMap(player.pos);
 
 				//for each (vec2 v in collisions) {
-				//	printVec(vec3(v.x, 0, v.y));
 				//	initDebugCube(vec3(v.x, 0, v.y));
 				//}
 			}

@@ -14,7 +14,7 @@ class CollisionSys : public System
 {
 public:
 	void init();
-	CollisionOutput checkCollisions(vec3 playerPos, bool isPlayer);
+	CollisionOutput checkCollisions(vec3 nextPos, bool isPlayer, vec3 curPos);
 	std::vector<vec2> printMap(vec3 pos); // debug
 
 private:
