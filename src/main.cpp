@@ -116,6 +116,10 @@ public:
 	// Our shader program for particles
 	std::shared_ptr<Program> partProg;
 
+	//lighting depth shader
+	std::shared_ptr<Program> DepthProg;
+
+
 	/* ================ GEOMETRY ================= */
 
 	vector<Entity> trail;
@@ -225,6 +229,11 @@ public:
 	// 3rd person
 	float third_person[2] = { 0.0f, -0.7f };
 	int third = 0;
+
+	GLuint depthMapFBO;
+	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
+	GLuint depthMap;
+	vec3 g_light = vec3(10, 10, 10);
 
 	/* ================ DEBUG ================= */
 	bool debugMode = false;
@@ -374,6 +383,19 @@ public:
 		prog->addAttribute("vertNor");
 		//prog->addAttribute("vertTex");	// unused on purpose
 
+		//Initialize the depth mapping program for lighting/shadows
+		DepthProg = make_shared<Program>();
+		DepthProg->setVerbose(true);
+		DepthProg->setShaderNames(resourceDirectory + "/depth_vert.glsl", resourceDirectory + "/depth_frag.glsl");
+		DepthProg->init();
+		DepthProg->addUniform("LP");
+		DepthProg->addUniform("LV");
+		DepthProg->addUniform("M");
+		DepthProg->addAttribute("vertPos");
+		//un-needed, better solution to modifying shape
+		DepthProg->addAttribute("vertNor");
+		DepthProg->addAttribute("vertTex");
+
 		// Initialize the GLSL program that we will use for texture mapping
 		texProg = make_shared<Program>();
 		texProg->setVerbose(true);
@@ -388,6 +410,8 @@ public:
 		texProg->addUniform("alpha");
 		texProg->addUniform("cubeTex");
 		texProg->addUniform("useCubeTex");
+ 	 	texProg->addUniform("shadowDepth");
+		texProg->addUniform("LS");
 
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
@@ -406,6 +430,8 @@ public:
 		cubeProg2->addUniform("alpha");
 		cubeProg2->addUniform("cubeTex");
 		cubeProg2->addUniform("useCubeTex");
+		cubeProg2->addUniform("shadowDepth");
+		cubeProg2->addUniform("LS");
 
 		cubeProg2->addAttribute("vertPos");
 		cubeProg2->addAttribute("vertNor");
@@ -475,6 +501,34 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 		cubeProg->addAttribute("vertTex");
+
+		initShadow();
+
+	}
+
+	/* set up the FBO for storing the light's depth */
+	void initShadow() {
+
+		//generate the FBO for the shadow depth
+		glGenFramebuffers(1, &depthMapFBO);
+
+		//generate the texture
+		glGenTextures(1, &depthMap);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, S_WIDTH, S_HEIGHT, 
+			0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		//bind with framebuffer's depth buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
 
@@ -884,6 +938,20 @@ public:
 
 	/* =================== HELPER FUNCTIONS ================== */
 
+	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
+		mat4 ortho = glm::ortho(-80.0f, 80.0f, -2.0f, 10.0f, -80.0f, 80.0f);
+
+		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
+			return ortho;
+  	}
+
+	mat4 SetLightView(shared_ptr<Program> curShade, vec3 pos, vec3 LA, vec3 up) {
+		mat4 Cam = glm::lookAt(pos, LA, up); 
+
+		glUniformMatrix4fv(curShade->getUniform("LV"), 1, GL_FALSE, value_ptr(Cam));
+		return Cam;
+	}
+
 	void printVec(vec3 v) {
 		cout << v.x << " " << v.y << " " << v.z << endl;
 	}
@@ -1029,38 +1097,49 @@ public:
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
 		vec3 camPos = moveDir;
 		camPos.y = vcam.lookAt.y;
-		// if (movingForward) {      //skunk is moving forward (only w)
-		// 	camPos = vec3(moveDir.x, vcam.lookAt.y, moveDir.z);
-		// 	vcam.oldLookAt.x = camPos.x;
-		// 	vcam.oldLookAt.y = camPos.y;
-		// 	vcam.oldLookAt.z = camPos.z;
-		// }
-		// if (moveDir == vec3(0)) { //skunk is not moving
-		// 	cout << "Not moving!\n";
-		// 	vcam.oldLookAt = camPos;
-		// 	moveDir = camPos;
-		// }
-		// else {                    //skunk is going another dir (w+?)
-		// 	//camPos = vec3(vcam.oldLookAt.x, vcam.lookAt.y, vcam.oldLookAt.z);
-		// 	// vcam.lookAt.x = vcam.oldLookAt.x;
-		// 	// vcam.lookAt.y = vcam.oldLookAt.y;
-		// 	// vcam.lookAt.z = vcam.oldLookAt.z;
-			
-		// 	//cout << "oldLookAt: " << vcam.oldLookAt.x << " " << vcam.oldLookAt.z << "\n";
-		// }
+		
 		if (camPos.y > 0){
 			camPos.y=0;
 		}
 		camPos = normalize(camPos);
-		//cout << "camPos: ";
-		//printVec(camPos);
-		//cout << "CamDist: " << sqrt(camPos.x*camPos.x+camPos.y*camPos.y+camPos.z*camPos.z) << "\n";
+
 		return 20.0f*camPos;
 	}
 
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+
+		// //===SHADOW===
+		vec3 lightLA = vec3(0.0);
+    	vec3 lightUp = vec3(0, 1, 0);
+		mat4 LO, LV, LSpace;
+		//set up light's depth map
+		glViewport(0, 0, S_WIDTH, S_HEIGHT);
+
+		//sets up the output to be out FBO
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glCullFace(GL_FRONT);
+
+			//set up shadow shader and render the scene
+		DepthProg->bind();
+			//TODO you will need to fix these
+		LO = SetOrthoMatrix(DepthProg);
+		LV = SetLightView(DepthProg, g_light, lightLA, lightUp);
+		LSpace = LO*LV;
+		renderSys->drawDepth(DepthProg);
+		DepthProg->unbind();
+
+		//set culling back to normal
+		glCullFace(GL_BACK);
+
+		//this sets the output back to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		//===END SHADOW===
+
+		//Second pass, now draw the scene
 		glViewport(0, 0, width, height);
 		g_height = height;
 		g_width = width;
@@ -1079,7 +1158,6 @@ public:
 		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
 
 		skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
-		//vec3 newMoveDir = updatePlayer(frametime, &moveDir, &isMovingForward);
 
 		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
 			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
@@ -1102,7 +1180,7 @@ public:
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture);
-		renderSys->update(Projection, View);
+		renderSys->update(Projection, View, depthMap, LSpace);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
 		hudSys->update(Projection, player);
 			
