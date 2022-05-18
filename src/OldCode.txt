@@ -256,3 +256,59 @@ void CollisionSys::addStaticCollisions()
 		//	verifyCollisionAddition(i3 + k, j3, cc); // horizontal B
 		//}
 ...
+
+
+//bool CollisionSys::checkCollide(vec3 nextPos, float radius)
+//{
+//	bool tempInRamp = false;
+//	float tempLocalGround = 0;
+//	playerInRamp = false;
+//	int k = 0;
+//	bool res = false;
+//	colDir = vec3(1);
+//	ignoreDir = vec2(0);
+//	//entityPos = nextPos; // used to determine direction [potential] collision is occuring
+//
+//	// top right corner	
+//	int i1 = worldToMap(nextPos.x + radius) - 1;
+//	int j1 = worldToMap(nextPos.z + radius) - 1;
+//
+//	// bot left corner
+//	int i3 = worldToMap(nextPos.x - radius) + 1;
+//	int j3 = worldToMap(nextPos.z - radius) + 1;
+//
+//	int i_extent = abs(i1 - i3) + 0;
+//	int j_extent = abs(j1 - j3) + 0;
+//
+//	for (int _i = 0; _i <= i_extent; _i++) {
+//		for (int _j = 0; _j <= j_extent; _j++) {
+//			k++;
+//			if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) 
+//			{ 
+//				res = true;
+//			}
+//			//if (tempInRamp) { return false; }
+//		}
+//	}
+//	//cout << "collisions checked: " << k << endl;
+//	//if (tempInRamp) { return false; }
+//
+//	if (tempInRamp == false) { 
+//		cout << "not in a ramp rn\n";
+//		//ignoreDir = vec2(0, 0);
+//		//rampLoc = vec2(0, 0);
+//		playerInRamp = false; 
+//
+//		for (int _i = 0; _i <= i_extent; _i++) {
+//			for (int _j = 0; _j <= j_extent; _j++) {
+//				if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) { res = true; }
+//			}
+//		}
+//	
+//		localGround = tempLocalGround;
+//	}
+//
+//	//cout << "collision dir is none" << endl;
+//	//colDir = vec3(1); // vel is multiplied by colDir so 1,1,1 means no collision block
+//	return res;
+//}

@@ -149,23 +149,22 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 	return vel;
 }
 
+void printVec(vec3 v) {
+	cout << v.x << " " << v.y << " " << v.z << endl;
+}
+
 // 
 void Player::updatePos(vec3 dirMask, bool isCollide, shared_ptr<CollisionSys> cs) {
-	//cout << "updating " << pos.y  << " to " << nextPos.y << endl;
 	//cout << "dirMask: " << dirMask.x << " " << dirMask.y << " " << dirMask.z << endl;
 	colDir = dirMask;
 
-	if (!isCollide)
-		pos = nextPos;
-	else {
-		vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir);
-		if (!cs->isCollisionPublic(maskedNextPos)) {
-			pos = maskedNextPos;
-		}
-		//else { cout << "cant go there" << endl; }
-	}
+	vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir);
 
-	//if (cs->isCollisionPublic(pos)) { cout << "whoops" << endl; }
+	if (!cs->isCollisionPublic(maskedNextPos)) {
+		pos = maskedNextPos;
+		if (pos.y < localGround) { pos.y = localGround; } 
+		//if (pos.y > localGround && !jumping) { falling = true; }
+	}
 }
 
 

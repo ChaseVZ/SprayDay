@@ -1022,19 +1022,20 @@ public:
 			
 			// only move player if there was no collision
 			CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
-			if (!co.isCollide) {
-				player.localGround = co.height;
-			}
-			else
-			{
-				// Uncomment to print collisions (laggy)
-				//vector<vec2> collisions;
-				//collisions = collisionSys->printMap(player.pos);
+			//if (!co.isCollide) {
+			//	player.localGround = co.height;
+			//}
+			//else
+			//{
+			//	// Uncomment to print collisions (laggy)
+			//	//vector<vec2> collisions;
+			//	//collisions = collisionSys->printMap(player.pos);
 
-				//for each (vec2 v in collisions) {
-				//	initDebugCube(vec3(v.x, 0, v.y));
-				//}
-			}
+			//	//for each (vec2 v in collisions) {
+			//	//	initDebugCube(vec3(v.x, 0, v.y));
+			//	//}
+			//}
+			player.localGround = co.height;
 			player.updatePos(co.dir, co.isCollide, collisionSys);
 			
 			// camera

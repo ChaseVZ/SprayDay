@@ -26,25 +26,34 @@ private:
 	vec3 colDir = vec3(1); // used with entityPos
 	bool playerInRamp = false;
 	vec2 ignoreDir = vec2(0);  // used to ignore cube in front of a ramp
-	vec2 rampLoc = vec2(0); // used to determine which crate collisions need to be ignored (for that ramp)
+	//vec2 rampLoc = vec2(0); // used to determine which crate collisions need to be ignored (for that ramp)
 	vec3 entityPos = vec3(0); // used to determine direction at which collision is occurring 
 	CollisionComponent colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
+
+	float rampBase;
+	vec2 rampOrthoBounds;
 
 	float epsilon = 0.60f;
 
 	bool isP = false;
 
+	/* Collision Init */
 	void addStaticCollisions();
 	void fillEmpty();
 	void verifyCollisionAddition(int i, int j, CollisionComponent c);
 
+	/* HELPERS */
 	void setColDir(int i, int j);
-	bool checkHeight(int i, int j, vec3 pos, float* tempLocalGround);
-	bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
-	bool checkCollide(vec3 pos, float radius);
+	void setRampInfo(CollisionComponent cc);
+	void interpRamp(vec3 pos, CollisionComponent cc);
+	bool collideOrIgnore(int i, int j, vec3 pos);
+	//bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
+	
+	/* Main Functions */
+	bool isCollision(int i, int j, vec3 pos);
+	bool checkCollisionsAlg(vec3 pos, float radius);
 
-	vec2 latestCol = vec2(-99, -99); // debug
+	/* DEBUG */
+	vec2 latestCol = vec2(-99, -99);
 	void printCol(vec2 newCol);
-
-	bool interpRamp(vec3 pos, CollisionComponent cc);
 };

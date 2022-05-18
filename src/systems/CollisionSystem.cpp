@@ -104,7 +104,7 @@ void findInterpValue(float* x, CollisionComponent cc, vec3 pos)
 
 
 // return T if attempting to enter ramp from base
-bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
+void CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 {
 	float y1 = 0;
 	float y2 = 0;
@@ -132,25 +132,35 @@ bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 	}
 
 	localGround = interp;
-	return false;
 }
 
-bool CollisionSys::checkHeight(int i, int j, vec3 pos, float* tempLocalGround)
+bool CollisionSys::collideOrIgnore(int i, int j, vec3 pos)
 {
+
 	if (pos.y >= colMap[i][j].height - epsilon) // allow player to walk on top of objects
 	{ 
-		*tempLocalGround = colMap[i][j].height; 
+		// if player is in a ramp, we want to ignore setting localGround
+		if (!playerInRamp)
+			localGround = colMap[i][j].height;
 		return false; 
 	} 
+	else { 
+		/* if player is not above the crate, check if we can ignore it */
 
-	else 
-	{ 
-		// if player is in a ramp, ignore the crate in front of it
-		if (ignoreDir.y == 1 && j > rampLoc.y || ignoreDir.x == 1 && i > rampLoc.x
-			|| ignoreDir.y == -1 && j < rampLoc.y || ignoreDir.x == -1 && i < rampLoc.x) 
-		{ return false; }
+		// if player is not in a ramp, then we have a collision
+		if (!playerInRamp) { return true; }
 
-		printCol(vec2(i, j)); 
+		//cout << "rampBase: " << rampBase << " bounds: " << rampOrthoBounds.x << " " << rampOrthoBounds.y << endl;
+		//cout << "ignoreDir: " << ignoreDir.x << " " << ignoreDir.y << endl;
+		//cout << "ignoring: " << i << " " << j << endl << endl;
+		if (ignoreDir.x == 1 && i > rampBase && j >= rampOrthoBounds.x && j <= rampOrthoBounds.y) {  return false; }
+		if (ignoreDir.x == -1 && i < rampBase && j >= rampOrthoBounds.x && j <= rampOrthoBounds.y) { return false; }
+		if (ignoreDir.y == 1 && j > rampBase && i >= rampOrthoBounds.x && i <= rampOrthoBounds.y) { return false; }
+		if (ignoreDir.y == -1 && j < rampBase && i >= rampOrthoBounds.x && i <= rampOrthoBounds.y) { return false; }
+
+		// if we can't ignore it either, we have a collision
+		///cout << "cant ignore " << i << " " << j << endl << endl;
+		//printCol(vec2(i, j)); 
 		return true; 
 	}
 }
@@ -165,12 +175,12 @@ void CollisionSys::setColDir(int i, int j) {
 	float delta_i = abs(colPos.x - entityPos.x);
 	float delta_j = abs(colPos.z - entityPos.z);
 
+	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
+
 	/* Ignore slide collision when it exists more than a tile (4 units) away or if the epsilon is less than 1*/
 	// might need to change last check to see if both values are greater than 3.0f? (instead of difference)
 	//if (delta_i > 4.0f || delta_j > 4.0f || abs(delta_i - delta_j) < 1.0f) { return; }
-	if (delta_i > 4.0f || delta_j > 4.0f || (delta_i > 2.9f && delta_j > 2.9f)) { return; }
-
-	//cout << "Delta i " << delta_i << " Delta j " << delta_j << endl;
+	if ((delta_i > 2.9f && delta_j > 2.9f)) { return; } // delta_i > 4.0f || delta_j > 4.0f || 
 
 	if (delta_i < delta_j) { // we need to remove vel in i dir
 		//cout << "col in Z" << endl;
@@ -180,56 +190,46 @@ void CollisionSys::setColDir(int i, int j) {
 		colDir.x = 0;
 		//cout << "col in X" << endl;
 	}
-
-	//cout << "col dir is now " << colDir.x << " " << colDir.z << endl;
-
 }
 
-bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround)
+void CollisionSys::setRampInfo(CollisionComponent cc) {
+	rampBase = worldToMap(cc.lowerBound);
+
+	if (cc.dir.x == 1 || cc.dir.x == -1)
+		rampOrthoBounds = vec2(worldToMap(cc.center.z - 1), worldToMap(cc.center.z + 1));
+	else if (cc.dir.z == 1 || cc.dir.z == -1)
+		rampOrthoBounds = vec2(worldToMap(cc.center.x - 1), worldToMap(cc.center.x + 1));
+}
+
+bool CollisionSys::isCollision(int i, int j, vec3 pos)
 {
 	if (i < 0 || j < 0) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
 	if (i >= MAP_SIZE || j >= MAP_SIZE) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
 
 	if ((colMap[i][j].c == 1 || colMap[i][j].c == 3))  // check map for crates & cubes
 	{ 
-		if (checkHeight(i, j, pos, tempLocalGround)) {
+		// either we collide
+		if (collideOrIgnore(i, j, pos)) {
 			setColDir(i, j);
-			localGround = *tempLocalGround;
 			return true;
 		}
-		localGround = *tempLocalGround;
+
+		// or ignored the collision
 		return false;
 	}
 	
 	else if (colMap[i][j].c == 2) // check map for ramps (let player move on them)
 	{ 
-		rampLoc = vec2(i, j);
-		ignoreDir = vec2(colMap[i][j].dir.x, colMap[i][j].dir.z);
-		*tempInRamp = true;
-		playerInRamp = true;
-		return interpRamp(pos, colMap[i][j]); 
+		interpRamp(pos, colMap[i][j]); 
+		return false;
 	} 
 
 	return false;
 }
 
-bool CollisionSys::isCollisionPublic(vec3 pos) {
-	bool* unused = false;
-	float* unused2 = 0;
-	//if (colMap[worldToMap(pos.x)][worldToMap(pos.z)].c == 3) { cout << "next pos will collide" << endl; return true; }
-	//return false;
-	return checkCollide(pos, 3);
-	//return isCollision(worldToMap(pos.x), worldToMap(pos.z), pos, unused, unused2);
-}
-
-bool CollisionSys::checkCollide(vec3 nextPos, float radius)
+bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float radius)
 {
-	bool tempInRamp = false;
-	float tempLocalGround = 0;
-	playerInRamp = false;
-	int k = 0;
 	bool res = false;
-	//entityPos = nextPos; // used to determine direction [potential] collision is occuring
 
 	// top right corner	
 	int i1 = worldToMap(nextPos.x + radius) - 1;
@@ -242,34 +242,29 @@ bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 	int i_extent = abs(i1 - i3) + 0;
 	int j_extent = abs(j1 - j3) + 0;
 
+	// Initial check to see if a ramp exists
 	for (int _i = 0; _i <= i_extent; _i++) {
 		for (int _j = 0; _j <= j_extent; _j++) {
-			k++;
-			if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) 
-			{ 
-				//cout << "collisions checked: " << k << endl;
+			if (colMap[i3 + _i][j3 + _j].c == 2) { 
+				playerInRamp = true; 
+				setRampInfo(colMap[i3 + _i][j3 + _j]); 
+				ignoreDir = vec2(colMap[i3 + _i][j3 + _j].dir.x, colMap[i3 + _i][j3 + _j].dir.z);
+			}
+		}
+	}
+
+	// if no cube is found, localGround remains 0
+	// if ramp found, we ignore cube heights and just use interp ramp
+	// if no ramp found, we use cube heights (to cause a collision or set height)
+
+	for (int _i = 0; _i <= i_extent; _i++) {
+		for (int _j = 0; _j <= j_extent; _j++) {
+			if (isCollision(i3 + _i, j3 + _j, nextPos)) {
 				res = true;
 			}
-			if (tempInRamp) { return false; }
 		}
 	}
 
-	if (tempInRamp == false) { 
-		ignoreDir = vec2(0, 0);
-		rampLoc = vec2(0, 0);
-		playerInRamp = false; 
-
-		for (int _i = 0; _i <= i_extent; _i++) {
-			for (int _j = 0; _j <= j_extent; _j++) {
-				if (isCollision(i3 + _i, j3 + _j, nextPos, &tempInRamp, &tempLocalGround)) { return true; }
-			}
-		}
-	
-		localGround = tempLocalGround;
-	}
-
-	//cout << "collision dir is none" << endl;
-	colDir = vec3(1); // vel is multiplied by colDir so 1,1,1 means no collision block
 	return res;
 }
 
@@ -278,10 +273,20 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 {
 	isP = isPlayer;
 	entityPos = curPos;
-	bool res = checkCollide(nextPos, 3); // player radius hardcoded for now
-	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
+	playerInRamp = false;
+	colDir = vec3(1);
+	ignoreDir = vec2(0);
+	localGround = 0;
 
-	//return res;
+	bool res = checkCollisionsAlg(nextPos, 3); // player radius hardcoded for now
+	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
+}
+
+
+bool CollisionSys::isCollisionPublic(vec3 pos) {
+	bool* unused = false;
+	float* unused2 = 0;
+	return checkCollisionsAlg(pos, 3);
 }
 
 std::vector<vec2> CollisionSys::printMap(vec3 pos) {

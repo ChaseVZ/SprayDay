@@ -95,7 +95,7 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 	//cout << std::boolalpha;
 	//cout << "skunk pos is valid? " << isV << "\n";
 	if (!isValid(player.pos, collSys)) { //player is unreachable and is in an obstacle
-		cerr << "Player is in obstacle!\n";
+		//cerr << "Player is in obstacle!\n";
 		return empty;
 	}
 
