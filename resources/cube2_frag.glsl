@@ -65,7 +65,7 @@ void main() {
 	//if (color.g > 0.5)
 	//	discard;
 
-	color = vec4((1.0-Shade)*color.xyz, color.w)
+	color = vec4((1.0-Shade)*color.xyz, color.w);
 	if(isGrey){
 	float averageCol = (color.x + color.y + color.z)/3.0;
 	Outcolor = vec4(vec3(averageCol), color.w);
