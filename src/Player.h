@@ -8,6 +8,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <map>
 #include <vector>
+#include "systems/CollisionSystem.h"
 
 using namespace std;
 using namespace glm;
@@ -17,7 +18,7 @@ class Player {
 public:
 	Player();  // constructor
 	vec3 calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward);
-	void updatePos(vec3 dirMask, bool isCollide);
+	void updatePos(vec3 dirMask, bool isCollide, shared_ptr<CollisionSys> cs);
 	void playerResetPos() { pos = pos_default; }
 	vec3 pos;
 	bool w, a, s, d, jumping;

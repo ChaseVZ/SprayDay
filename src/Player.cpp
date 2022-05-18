@@ -150,15 +150,22 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 }
 
 // 
-void Player::updatePos(vec3 dirMask, bool isCollide) {
+void Player::updatePos(vec3 dirMask, bool isCollide, shared_ptr<CollisionSys> cs) {
 	//cout << "updating " << pos.y  << " to " << nextPos.y << endl;
 	//cout << "dirMask: " << dirMask.x << " " << dirMask.y << " " << dirMask.z << endl;
 	colDir = dirMask;
 
 	if (!isCollide)
 		pos = nextPos;
-	else
-		pos = pos + (vel * colDir) * lastFrametime;
+	else {
+		vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir);
+		if (!cs->isCollisionPublic(maskedNextPos)) {
+			pos = maskedNextPos;
+		}
+		//else { cout << "cant go there" << endl; }
+	}
+
+	//if (cs->isCollisionPublic(pos)) { cout << "whoops" << endl; }
 }
 
 

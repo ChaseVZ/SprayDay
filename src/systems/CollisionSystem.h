@@ -15,7 +15,11 @@ class CollisionSys : public System
 public:
 	void init();
 	CollisionOutput checkCollisions(vec3 nextPos, bool isPlayer, vec3 curPos);
+	bool isCollisionPublic(vec3 pos);
 	std::vector<vec2> printMap(vec3 pos); // debug
+
+	vec3 worldToMapVec(vec3 val);
+	vec3 mapToWorldVec(vec3 val);
 
 private:
 	float localGround; // output param of checkCollide()

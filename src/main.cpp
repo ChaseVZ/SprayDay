@@ -1030,7 +1030,7 @@ public:
 				//	initDebugCube(vec3(v.x, 0, v.y));
 				//}
 			}
-			player.updatePos(co.dir, co.isCollide);
+			player.updatePos(co.dir, co.isCollide, collisionSys);
 			
 			// camera
 			vcam.updatePos(player.pos);

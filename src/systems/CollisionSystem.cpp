@@ -3,6 +3,8 @@
 using namespace std;
 extern Coordinator gCoordinator;
 
+
+
 // covert world coordinate to collision map index
 int worldToMap(float val)
 {
@@ -18,9 +20,17 @@ int worldToMap(float val)
 	return res;
 }
 
-int MaptoWorld(float val)
+int mapToWorld(float val)
 {
 	return val - (MAP_SIZE / 2) + 1;
+}
+
+vec3 CollisionSys::worldToMapVec(vec3 val) {
+	return vec3(worldToMap(val.x), 0, worldToMap(val.z));
+}
+
+vec3 CollisionSys::mapToWorldVec(vec3 val) {
+	return vec3(mapToWorld(val.x), 0, mapToWorld(val.z));
 }
 
 void CollisionSys::verifyCollisionAddition(int i, int j, CollisionComponent cc)
@@ -203,6 +213,15 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* 
 	return false;
 }
 
+bool CollisionSys::isCollisionPublic(vec3 pos) {
+	bool* unused = false;
+	float* unused2 = 0;
+	//if (colMap[worldToMap(pos.x)][worldToMap(pos.z)].c == 3) { cout << "next pos will collide" << endl; return true; }
+	//return false;
+	return checkCollide(pos, 3);
+	//return isCollision(worldToMap(pos.x), worldToMap(pos.z), pos, unused, unused2);
+}
+
 bool CollisionSys::checkCollide(vec3 nextPos, float radius)
 {
 	bool tempInRamp = false;
@@ -279,7 +298,7 @@ std::vector<vec2> CollisionSys::printMap(vec3 pos) {
 				printf(".");
 			else {
 				printf("%d", colMap[i][j].c);
-				collisions.push_back(vec2(MaptoWorld(i), MaptoWorld(j)));
+				collisions.push_back(vec2(mapToWorld(i), mapToWorld(j)));
 			}
 		}
 		cout << "\n";
