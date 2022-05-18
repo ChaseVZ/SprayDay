@@ -19,15 +19,17 @@ class RenderSys : public System
 {
 public:
 	void init(float grndSize);
-	void update(shared_ptr<MatrixStack> Projection, mat4 View, bool isGrey);
+	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey);
+	void drawDepth(shared_ptr<Program> curS);
 private:
 	Entity mCamera;
 	GLuint mVao{};
 	GLuint mVboVertices{};
 	GLuint mVboNormals{};
-	vec3 lightPos = vec3(0, 10, 0);
-
-	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, bool isGrey);
+	vec3 lightPos = vec3(10, 10, 10);
+	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
+	void draw(shared_ptr<MatrixStack> Projection, mat4 View,
+	 RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
 };
 
 namespace RenderSystem {

@@ -86,7 +86,7 @@ extern Coordinator gCoordinator;
     void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys, bool* isGrey) {
        if (!collideWithPlayer(tr->pos, p, e, dt, isGrey))
        {
-			if (vecEpsilonEqual(e->nextTile, tr->pos, 0.5f)) {
+			if (vecEpsilonEqual(e->nextTile, tr->pos, e->baseSpeed/4.0f)) {
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 			}
 			e->vel = (e->nextTile - tr->pos);

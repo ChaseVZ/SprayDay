@@ -32,10 +32,11 @@ inline bool operator < (const Node& lhs, const Node& rhs) {
 
 std::shared_ptr<CollisionSys> collisionSysAstar;
 
-static bool isValid(vec3 newPos) {
+static bool isValid(vec3 newPos, shared_ptr<CollisionSys> collSys) {
 	//cout << "isValid\n";
 
-	return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2, 0, MAP_SIZE/2), false, vec3(-1)).isCollide);
+	return !(collisionSysAstar->checkCollisions(collSys->mapToWorldVec(newPos), false, vec3(-1)).isCollide);
+	//return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2 + 1, 0, MAP_SIZE/2 + 1), false, vec3(-1)).isCollide);
 }
 
 static bool isDestination(vec3 newPos, vec3 destPos) {
@@ -83,7 +84,7 @@ bool isLessThan(Node a, Node b) {
 }
 
 
-static vector<Node> checkNodes(Node object, Node player) {
+static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys> collSys) {
 	//cerr << "InCheckNodes\n";
 	//cout << "Astar: 1\n";
 	vector<Node> empty;
@@ -93,8 +94,8 @@ static vector<Node> checkNodes(Node object, Node player) {
 	//bool isV = isValid(player.pos);
 	//cout << std::boolalpha;
 	//cout << "skunk pos is valid? " << isV << "\n";
-	if (!isValid(player.pos)) { //player is unreachable and is in an obstacle
-		//cerr << "Player is in obstacle!\n";
+	if (!isValid(player.pos, collSys)) { //player is unreachable and is in an obstacle
+		cerr << "Player is in obstacle!\n";
 		return empty;
 	}
 
@@ -178,7 +179,7 @@ static vector<Node> checkNodes(Node object, Node player) {
 			for (int newZ = -1; newZ<=1; newZ++){
 				double gNew, hNew, fNew;
 				//cout << "Checking neighboring tile: " << x+newX << " " << z+newZ <<"\n";
-				if (visitedList[x+newX][z+newZ] == false && isValid(vec3(x + newX, 0, z + newZ))) { //not blocked and unvisited tile
+				if (visitedList[x+newX][z+newZ] == false && isValid(vec3(x + newX, 0, z + newZ), collSys)) { //not blocked and unvisited tile
 					//cout << "...it is valid\n";
 					//calc new costs
 					gNew = node.gCost + 1.0;
@@ -220,10 +221,10 @@ static vector<Node> checkNodes(Node object, Node player) {
 		// }
 
 	}
-	if (destinationFound == false) {
+	//if (destinationFound == false) {
 			//cout << "Did not find player: " << openList.size() << " nodes left to search\n";
-			return empty;
-	}
+	return empty;
+	//}
 }
 
 bool vecIsLessThanOrEqual( vec3 a, vec3 b) {
@@ -234,11 +235,19 @@ bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
 	return euclideanDist(a, vec3(0, 0, 0)) > euclideanDist(b, vec3(0, 0, 0));
 }
 
+bool vecEpsilonEqual2(vec3 a, vec3 b, float epsilon) {
+		if (abs(a.x - b.x) <= epsilon && abs(a.y - b.y) <= epsilon && abs(a.z - b.z) <= epsilon) {
+			return true;
+		}
+		return false;
+}
+
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
 	//cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 	Node player;
-	player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
+	player.pos = collSys->worldToMapVec(p.pos);
+	//player.pos = vec3(round(p.pos)) + vec3(MAP_SIZE/2, 0, MAP_SIZE/2); //convert from world coors to map coords
 	if (player.pos.y > 0) {
 		//cerr << "Player above ground and unreachable";
 		return tr->pos;
@@ -247,27 +256,30 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	//cerr << "playerPos: " << player.pos.x << " " << player.pos.z << endl;
 
 	Node object;
-	object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
+	object.pos = collSys->worldToMapVec(tr->pos);
+	//object.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
 	//cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
 	//cout << "Wolf POS " << object.pos.x << " " << object.pos.y << " " << object.pos.z << "\n";
 	vector<Node> moves;
 
-	assert(!(object.pos.x > IDX_SIZE || object.pos.z > IDX_SIZE));
-	assert(!(object.pos.z < 0 || object.pos.x < 0));
-	moves = checkNodes(object, player);
+	assert(!(object.pos.x >= IDX_SIZE || object.pos.z >= IDX_SIZE));
+	assert(!(object.pos.z <= 0 || object.pos.x <= 0));
+	moves = checkNodes(object, player, collSys);
 
 	if (!moves.empty()){
-		glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords
+		glm::vec3 retMove = collSys->mapToWorldVec(moves.front().pos);
+		//glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords
 		glm::vec3 trPos = tr->pos;
-		//if (retMove == tr->pos) {
+		//if (vecEpsilonEqual2(retMove, tr->pos, 0.3)) {
 		// if (vecIsLessThanOrEqual(retMove,  trPos + vec3(0.5f)) && vecIsLessThanOrEqual(retMove, trPos + vec3(0.5f)) &&
 		// 	vecIsGreaterThanOrEqual(retMove, trPos - vec3(0.5f)) && vecIsGreaterThanOrEqual(retMove, trPos + vec3(0.5f)) ) 
 		// 	{
 			if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 				moves.erase(moves.begin());
-				return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
+				return collSys->mapToWorldVec(moves.front().pos);
+				//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 			}
-			return tr->pos;
+			//return tr->pos;
 		//}
 		//return retMove;
 	}

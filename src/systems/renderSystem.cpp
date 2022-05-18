@@ -115,7 +115,7 @@ void setModelRC_Origin(shared_ptr<Program> curS, Transform* tr) {
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
-void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, bool isGrey)
+void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey)
 {
 	shared_ptr<Program> curS = rc->shader;
 	glCullFace(rc->cullDir);
@@ -124,6 +124,11 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	glUniformMatrix4fv(curS->getUniform("V"), 1, GL_FALSE, value_ptr(View));
 	glUniform1f(curS->getUniform("alpha"), rc->transparency);
 	glUniform3f(curS->getUniform("lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glUniform1i(curS->getUniform("shadowDepth"), 1);
+  	//glUniform3f(ShadowProg->getUniform("lightDir"), g_light.x, g_light.y, g_light.z);
+	glUniformMatrix4fv(curS->getUniform("LS"), 1, GL_FALSE, value_ptr(LSpace));
 	setModelRC(curS, tr);
 
 	bool useCubeMap = false;
@@ -162,7 +167,7 @@ void RenderSys::init(float grndSize)
 }
 
 
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, bool isGrey)
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey)
 {
 	vector<Entity> transparentEnts;
 	for (Entity const& entity : mEntities) {
@@ -172,14 +177,43 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, bool isGre
 			transparentEnts.push_back(entity);
 		}
 		else {
-			draw(Projection, View, &rc, &tr, isGrey);
+			draw(Projection, View, &rc, &tr, depthMap, LSpace, isGrey);
 		}
 	}
 	// draw all transparent entities second
 	for (Entity entity : transparentEnts) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
-		draw(Projection, View, &rc ,&tr, isGrey);
+		draw(Projection, View, &rc ,&tr, depthMap, LSpace, isGrey);
+	}
+}
+
+void RenderSys::drawDepth(shared_ptr<Program> curS) {
+	vector<Entity> transparentEnts;
+	for (Entity const& entity : mEntities) {
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		if (rc.transparency < 1.0) {
+			transparentEnts.push_back(entity);
+		}
+		else {
+			drawShadows(&rc, &tr, curS);
+		}
+	}
+	// draw all transparent entities second
+	for (Entity entity : transparentEnts) {
+		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
+		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		drawShadows(&rc, &tr, curS);
+	}
+}
+
+void RenderSys::drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS)
+{
+	setModelRC(curS, tr);
+
+	for (int i = 0; i < (rc->sg)->shapes.size(); i++) {
+			(rc->sg)->shapes[i]->draw(curS);
 	}
 }
 
