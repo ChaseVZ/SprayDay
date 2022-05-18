@@ -48,7 +48,7 @@ extern Coordinator gCoordinator;
 	}
 
 
-    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime) {
+    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime, bool* isGrey) {
         // if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
         // {
         //     e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
@@ -66,6 +66,7 @@ extern Coordinator gCoordinator;
 			p->health -= frameTime;
 			p->health = (std::max)(p->health, 0.0f);
 			if (p->health == 0.0) {
+				*isGrey = true;
 				//cout << "YOU LOSE :(" << endl;
 				//exit(EXIT_SUCCESS);
 			}
@@ -82,8 +83,8 @@ extern Coordinator gCoordinator;
 		return false;
 	}
 
-    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys) {
-       if (!collideWithPlayer(tr->pos, p, e, dt))
+    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys, bool* isGrey) {
+       if (!collideWithPlayer(tr->pos, p, e, dt, isGrey))
        {
 			if (vecEpsilonEqual(e->nextTile, tr->pos, 0.5f)) {
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
@@ -100,7 +101,7 @@ extern Coordinator gCoordinator;
         }
     }
 
-void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys> collSys) {
+void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys> collSys, bool* isGrey) {
 
 	for (Entity const& entity : mEntities) {
 		this->checkCollisionsWithEnemies(entity);
@@ -109,7 +110,7 @@ void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
 
-		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys);
+		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys, isGrey);
 
 	}
 }

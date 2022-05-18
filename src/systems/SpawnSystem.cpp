@@ -24,9 +24,9 @@ void SpawnSys::initBear() {
 		bearEnt,
 		Transform{
 			startPos,
-			vec3(1.0, 0.0, 0.0),
-			vec3(5.0),
-			vec3(0.0,-3.14/2, 0.0)
+			vec3(1.0, 0.0, 0.0), //lookdir
+			vec3(5.0), //scale
+			vec3(0.0,-3.14/2, 0.0) //rotation
 		});
 
 	gCoordinator.AddComponent(

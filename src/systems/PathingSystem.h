@@ -34,6 +34,6 @@ public:
     bool checkCollisionsWithEnemies(Entity currentEnemy);
     void init();
 
-    void update(float frametime, Player* player, shared_ptr<CollisionSys> collSys);
+    void update(float frametime, Player* player, shared_ptr<CollisionSys> collSys, bool* isGrey);
 
 };

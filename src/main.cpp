@@ -75,6 +75,7 @@ using Entity = std::uint32_t;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 float gameTime = 0;
+bool isGrey = false;
 
 
 float POISON_TICK_TIME = 0.5;
@@ -369,6 +370,7 @@ public:
 		prog->addUniform("lightPos");
 		prog->addUniform("alpha");
 		prog->addUniform("useCubeTex");
+		prog->addUniform("isGrey");
 
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
@@ -388,14 +390,15 @@ public:
 		texProg->addUniform("alpha");
 		texProg->addUniform("cubeTex");
 		texProg->addUniform("useCubeTex");
-
+		texProg->addUniform("isGrey");
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+		
 
 		cubeProg2 = make_shared<Program>();
 		cubeProg2->setVerbose(true);
-		cubeProg2->setShaderNames(resourceDirectory + "/cube2_vert.glsl", resourceDirectory + "/cube2_frag.glsl");
+		cubeProg2->setShaderNames(resourceDirectory + "/tex_vert.glsl", resourceDirectory + "/cube2_frag.glsl");
 		cubeProg2->init();
 		cubeProg2->addUniform("P");
 		cubeProg2->addUniform("V");
@@ -406,6 +409,7 @@ public:
 		cubeProg2->addUniform("alpha");
 		cubeProg2->addUniform("cubeTex");
 		cubeProg2->addUniform("useCubeTex");
+		cubeProg2->addUniform("isGrey");
 
 		cubeProg2->addAttribute("vertPos");
 		cubeProg2->addAttribute("vertNor");
@@ -475,7 +479,7 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 		cubeProg->addAttribute("vertTex");
-
+		cubeProg->addUniform("isGrey");
 	}
 
 	#pragma region InitEntities
@@ -876,7 +880,6 @@ public:
 		// RenderComponents
 		initSkunk();
 		initSkybox();
-		//initBear();
 
 		// STATIC RenderComponents
 		readMap();
@@ -995,7 +998,7 @@ public:
 	}
 	void healPlayer(float frametime) {
 		if (player.mvm_type == 0) {
-			player.health = std::min(player.health + frametime*1, player.maxHP);
+			player.health = std::min(player.health + frametime*3, player.maxHP);
 		}
 	}
 
@@ -1098,11 +1101,11 @@ public:
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
 		if (!debugMode) {
-			pathingSys->update(frametime, &player, collisionSys);
+			pathingSys->update(frametime, &player, collisionSys, &isGrey);
 		}
 
-		RenderSystem::drawGround(texProg, Projection, View, grassTexture);
-		renderSys->update(Projection, View);
+		RenderSystem::drawGround(texProg, Projection, View, grassTexture, isGrey);
+		renderSys->update(Projection, View, isGrey);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
 		hudSys->update(Projection, player);
 			

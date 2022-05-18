@@ -4,6 +4,7 @@ uniform sampler2D Texture0;
 uniform int flip;
 uniform float alpha;
 uniform bool useCubeTex;
+uniform bool isGrey;
 
 in vec3 texCoords;
 in vec3 fragNor;
@@ -42,7 +43,12 @@ void main() {
 	//if (color.g > 0.5)
 	//	discard;
 
-	//Outcolor = texColor0;
+	if(isGrey){
+	float averageCol = (color.x + color.y + color.z)/3.0;
+	Outcolor = vec4(vec3(averageCol), color.w);
+	}
+	else{
 	Outcolor = color;
-	//Outcolor = vec4(vTexCoord.x, vTexCoord.y, 0, 1);
+	}
+
 }
