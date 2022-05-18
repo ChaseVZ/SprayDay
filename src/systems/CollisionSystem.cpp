@@ -227,17 +227,17 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos)
 	return false;
 }
 
-bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float radius)
+bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 {
 	bool res = false;
 
 	// top right corner	
-	int i1 = worldToMap(nextPos.x + radius) - 1;
-	int j1 = worldToMap(nextPos.z + radius) - 1;
+	int i1 = worldToMap(nextPos.x + length) - 1;
+	int j1 = worldToMap(nextPos.z + width) - 1;
 
 	// bot left corner
-	int i3 = worldToMap(nextPos.x - radius) + 1;
-	int j3 = worldToMap(nextPos.z - radius) + 1;
+	int i3 = worldToMap(nextPos.x - length) + 1;
+	int j3 = worldToMap(nextPos.z - width) + 1;
 
 	int i_extent = abs(i1 - i3) + 0;
 	int j_extent = abs(j1 - j3) + 0;
@@ -278,7 +278,10 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 	ignoreDir = vec2(0);
 	localGround = 0;
 
-	bool res = checkCollisionsAlg(nextPos, 3); // player radius hardcoded for now
+	bool res;
+
+	if (isP) { res = checkCollisionsAlg(nextPos, 3, 2); } // player l x w hardcoded for now}
+	else { res = checkCollisionsAlg(nextPos, 3, 3); } // enemy ; x w hardcoded for now}
 	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
 }
 
@@ -286,7 +289,7 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 bool CollisionSys::isCollisionPublic(vec3 pos) {
 	bool* unused = false;
 	float* unused2 = 0;
-	return checkCollisionsAlg(pos, 3);
+	return checkCollisionsAlg(pos, 3, 2);
 }
 
 std::vector<vec2> CollisionSys::printMap(vec3 pos) {

@@ -51,7 +51,7 @@ private:
 	
 	/* Main Functions */
 	bool isCollision(int i, int j, vec3 pos);
-	bool checkCollisionsAlg(vec3 pos, float radius);
+	bool checkCollisionsAlg(vec3 pos, float length, float width);
 
 	/* DEBUG */
 	vec2 latestCol = vec2(-99, -99);
