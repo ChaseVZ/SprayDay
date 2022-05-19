@@ -32,6 +32,7 @@
 #include "DamageComponent.h"
 #include "systems/DamageSystem.h"
 #include "systems/SpawnSystem.h"
+#include "systems/SpraySystem.h"
 #include "Components/Collision.h"
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
@@ -65,6 +66,7 @@ Coordinator gCoordinator;
 std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
 SpawnSys* spawnSys;
+SpraySys* spraySys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
 std::shared_ptr<HudSys> hudSys;
@@ -72,10 +74,9 @@ std::shared_ptr<HudSys> hudSys;
 // A simple type alias
 using Entity = std::uint32_t;
 
-float TIME_UNTIL_SPRAY = .15;
-float timeSinceLastSpray = 0;
+
 float gameTime = 0;
-bool isGrey = false;
+bool gameOver = false;
 
 
 float POISON_TICK_TIME = 0.5;
@@ -239,7 +240,6 @@ public:
 	/* ================ DEBUG ================= */
 	bool debugMode = false;
 	bool gameBegin = false;
-	bool gameDone = false;
 
 
 
@@ -251,7 +251,8 @@ public:
 		// Move Character/Camera
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) { glfwSetWindowShouldClose(window, GL_TRUE); }
 
-		if (gameBegin && !gameDone) {
+		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { resetGame(); }
+		if (gameBegin && !gameOver) {
 			if (!vcam.goCamera) {
 				// Movement
 				if (key == GLFW_KEY_W && action == GLFW_PRESS) { player.w = true; }
@@ -282,8 +283,9 @@ public:
 				if (key == GLFW_KEY_C && action == GLFW_PRESS) { debugMode = !debugMode; }
 			}
 		}
-
+		
 	}
+	
 
 	void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 	{
@@ -332,8 +334,8 @@ public:
 			float lookAt_y = radius * sin(g_phi);
 			float lookAt_z = radius * cos(g_phi) * cos(radians(90.0) - g_theta);
 
-			// Dont change if gameStart or gameDone
-			if (!gameDone)
+			// Dont change if gameStart or gameOver
+			//if (!gameOver)
 				vcam.lookAt = vec3(lookAt_x, lookAt_y, lookAt_z);
 		}
 	}
@@ -1007,98 +1009,45 @@ public:
 		return res;
 	}
 
-
-	/* =================== DRAW FUNCTIONS ================== */
-
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
 		vec3 move = player.pos;
 		bool forward;
-		if (gameDone) {
-			vcam.updatePos(player.win_loc);
-			vcam.lookAt = vec3(0, 0, -1);
-		}
-		else {
-			// calculate where the player is going next (regardless of collisions)
-			move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
+		// calculate where the player is going next (regardless of collisions)
+		move = player.calcNextPos(vcam.lookAt, vcam.goCamera, frametime, isMovingForward);
 			
-			// only move player if there was no collision
-			CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
-			//if (!co.isCollide) {
-			//	player.localGround = co.height;
-			//}
-			//else
-			//{
-			//	// Uncomment to print collisions (laggy)
-			//	//vector<vec2> collisions;
-			//	//collisions = collisionSys->printMap(player.pos);
+		// only move player if there was no collision
+		CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
+		//if (!co.isCollide) {
+		//	player.localGround = co.height;
+		//}
+		//else
+		//{
+		//	// Uncomment to print collisions (laggy)
+		//	//vector<vec2> collisions;
+		//	//collisions = collisionSys->printMap(player.pos);
 
-			//	//for each (vec2 v in collisions) {
-			//	//	initDebugCube(vec3(v.x, 0, v.y));
-			//	//}
-			//}
-			player.localGround = co.height;
-			player.updatePos(co.dir, co.isCollide, collisionSys);
+		//	//for each (vec2 v in collisions) {
+		//	//	initDebugCube(vec3(v.x, 0, v.y));
+		//	//}
+		//}
+		player.localGround = co.height;
+		player.updatePos(co.dir, co.isCollide, collisionSys);
 			
-			// camera
-			vcam.updatePos(player.pos);
-		}
+		// camera
+		vcam.updatePos(player.pos);
 		
 		// ALEX's CODE
 		*moveDir = move;
 		return player.pos + vec3(0, -0.5f, 0);
 	}
 
-	void generateSpray() {
-		Entity sprayEnt = gCoordinator.CreateEntity();
-		gCoordinator.AddComponent(
-			sprayEnt,
-			RenderComponent{
-				&sphere, //ShapeGroup*
-				0.4,  //transparency
-				texProg,
-				GL_BACK,
-				//SPRAY
-			});
-		gCoordinator.AddComponent(
-			sprayEnt,
-			Transform{
-			player.pos,		//vec3 pos;
-			vec3(1.0, 0.0, 0.0),     // vec3 rotation
-			vec3(1.0),		//vec3 scale;
-			});
-		trail.push_back(sprayEnt);
-	}
+	
 	void healPlayer(float frametime) {
 		if (player.mvm_type == 0) {
 			player.health = std::min(player.health + frametime*3, player.maxHP);
 		}
 	}
 
-	void manageSpray(float frametime) {
-		timeSinceLastSpray += frametime;
-		for (int i = 0; i < trail.size(); i++) {
-			RenderComponent* sprayRC = &(gCoordinator.GetComponent<RenderComponent>(trail[i]));
-			Transform* sprayTR = &(gCoordinator.GetComponent<Transform>(trail[i]));
-			sprayTR->scale += 0.15*frametime;
-			sprayRC->transparency -= 0.005*frametime;
-			if (sprayTR->scale.x >= 3) {
-				gCoordinator.DestroyEntity(trail[i]);
-				trail.erase(trail.begin() + i);
-				i -= 1;
-			}
-		}
-		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
-			if (player.mvm_type == 1) {
-				timeSinceLastSpray -= TIME_UNTIL_SPRAY;
-				generateSpray();
-			}
-			else {
-				timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
-			}
-		}
-	}
-	
-	
 	
 
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
@@ -1113,6 +1062,18 @@ public:
 		return 20.0f*camPos;
 	}
 
+	void clearAllEnemies() {
+
+	}
+
+	void resetGame() {
+		cout << "resetting game" << endl;
+		player.health = 100.0;
+		gameOver = false;
+		clearAllEnemies();
+		player.pos = player.pos_default;
+		player.localGround = 0;
+	}
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -1164,8 +1125,9 @@ public:
 		RenderComponent& skunkRC2 = gCoordinator.GetComponent<RenderComponent>(skunkEnt);
 		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
 
-		skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
-
+		if (!gameOver) {
+			skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
+		}
 		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
 			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
 		}
@@ -1182,23 +1144,24 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.17f, 600.0f);
 			
-		if (!debugMode) {
-			pathingSys->update(frametime, &player, collisionSys, &isGrey);
+		if (!debugMode && !gameOver) {
+			pathingSys->update(frametime, &player, collisionSys, &gameOver);
 		}
 
-		RenderSystem::drawGround(texProg, Projection, View, grassTexture, isGrey);
-		renderSys->update(Projection, View, depthMap, LSpace, isGrey);
+		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
 		//greenTexture->bind(texProg->getUniform("Texture0"));
 		hudSys->update(Projection, player);
 			
-		if (!debugMode) { 
-			manageSpray(frametime);
+		if (!debugMode && !gameOver) { 
+			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
 			
 			spawnSys->update(frametime);
 			damageSys->update(&trail, frametime);
 		}
 	}
+
 	void initCamPos() {
 		float radius = 1.0;
 		float lookAt_x = radius * cos(g_phi) * cos(g_theta);
@@ -1260,6 +1223,8 @@ public:
 		collisionSys->init();
 		spawnSys = new SpawnSys();
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
+		spraySys = new SpraySys();
+		spraySys->init(&sphere, texProg);
 	}
 };
 

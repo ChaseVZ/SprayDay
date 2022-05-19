@@ -16,9 +16,6 @@
 using namespace glm;
 using namespace std;
 
-
-
-
 class SpawnSys : public System
 {
 public:
