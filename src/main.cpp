@@ -945,7 +945,7 @@ public:
 	/* =================== HELPER FUNCTIONS ================== */
 
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
-		mat4 ortho = glm::ortho(-80.0f, 80.0f, -2.0f, 10.0f, -80.0f, 80.0f);
+		mat4 ortho = glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, -120.0f, 120.0f);
 
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 			return ortho;
