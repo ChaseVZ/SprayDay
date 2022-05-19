@@ -123,6 +123,7 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 
 		// Stop gravity once player has reached localGround (located in collisions())
 		// Otherwise, player is still in the air so keep calculating time 
+		//cout << pos.y << " " << lastTime << " " << localGround << endl;
 		if (pos.y <= localGround && lastTime != 0) {
 			pos.y = localGround;
 			vel.y = 0;
@@ -140,7 +141,7 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 	lastFrametime = frametime;
 
 	//cout << std::boolalpha;
-	//cout << "jumping: " << jumping << " falling: " << falling << " localGround: " << localGround << " next y: " << nextPos.y << endl;
+	//cout << "jumping: " << jumping << " falling: " << falling << " localGround: " << localGround << " next y: " << nextPos.y << " " << lastTime << endl;
 
 	// Cap position (otherwise player sometimes goes into ground for a sec at the end of a jump)
 	if (nextPos.y < localGround) { nextPos.y = localGround; } //cout << "MOVING DOWN TO " << nextPos.y << endl; }
@@ -159,12 +160,12 @@ void Player::updatePos(vec3 dirMask, bool isCollide, shared_ptr<CollisionSys> cs
 	colDir = dirMask;
 
 	vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir);
+	if (maskedNextPos.y < localGround) { maskedNextPos.y = localGround; }
 
 	if (!cs->isCollisionPublic(maskedNextPos)) {
 		pos = maskedNextPos;
-		if (pos.y < localGround) { pos.y = localGround; } 
-		//if (pos.y > localGround && !jumping) { falling = true; }
 	}
+
 }
 
 
