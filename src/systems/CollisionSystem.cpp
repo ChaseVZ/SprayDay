@@ -104,7 +104,7 @@ void findInterpValue(float* x, CollisionComponent cc, vec3 pos)
 
 
 // return T if attempting to enter ramp from base
-void CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
+bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 {
 	float y1 = 0;
 	float y2 = 0;
@@ -131,7 +131,9 @@ void CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 		if (interp > y2) { interp = y2; }
 	}
 
+	if (interp > pos.y && interp > pos.y + 1.2f) { setColDir(worldToMap(cc.center.x), worldToMap(cc.center.z)); return true; } // disallow teleporting up ramps
 	localGround = interp;
+	return false;
 }
 
 bool CollisionSys::collideOrIgnore(int i, int j, vec3 pos)
@@ -278,10 +280,10 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 		}
 	}
 
-	if (cubes > ramps && ramps != 0) { localGround = 4.0; }
+	if (cubes > ramps && ramps != 0) { localGround = 4.0; } // avoids falling into ramps when you are mostly off the ramp
 
 	if (playerInRamp) { return false; }
-	if (ramps < 4) { return false; } //so you dont collide with corners
+	if (cubes < 6) { localGround = 0; return false; } //so you dont collide with corners & so you fall off cubes if you are partway off
 	return res;
 }
 
