@@ -21,6 +21,7 @@ class SpawnSys : public System
 public:
 	void init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, ShapeGroup* bearPtr, shared_ptr<Program> texProg);
 	void update(float frameTime);
+	void reset();
 	int MAP_SIZE;
 	float POISON_TICK_TIME;
 private:

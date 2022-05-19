@@ -285,6 +285,13 @@ public:
 		}
 		
 	}
+	void resetMovement() {
+		player.w = false;
+		player.a = false;
+		player.s = false;
+		player.d = false;
+		player.mvm_type = 1;
+	}
 	
 
 	void mouseCallback(GLFWwindow* window, int button, int action, int mods)
@@ -1062,18 +1069,37 @@ public:
 		return 20.0f*camPos;
 	}
 
-	void clearAllEnemies() {
-
+	void removeAllEnemies() {
+		// pathing system has a set with all enemies, so we iterate over that.
+		set<Entity>::iterator itr;
+		for (itr = pathingSys->mEntities.begin(); itr != pathingSys->mEntities.end(); ) {
+			Entity enemy = *itr; 
+			itr++;  // avoid deletion errors
+			gCoordinator.DestroyEntity(enemy);
+		}
 	}
 
+	void removeSpray() {
+		vector<Entity>::iterator itr;
+		for (itr = trail.begin(); itr != trail.end(); ) {
+			Entity spraySphere = *itr;
+			itr++;  // avoid deletion errors
+			gCoordinator.DestroyEntity(spraySphere);
+		}
+		trail.clear();
+	}
+	
 	void resetGame() {
 		cout << "resetting game" << endl;
 		player.health = 100.0;
 		gameOver = false;
-		clearAllEnemies();
+		removeAllEnemies();
+		removeSpray();
 		player.pos = player.pos_default;
 		player.localGround = 0;
+		spawnSys->reset();
 	}
+
 	void render(float frametime) {
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -1146,11 +1172,14 @@ public:
 			
 		if (!debugMode && !gameOver) {
 			pathingSys->update(frametime, &player, collisionSys, &gameOver);
+			if (gameOver) {
+				// game just ended
+				resetMovement();				
+			}
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
 		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
-		//greenTexture->bind(texProg->getUniform("Texture0"));
 		hudSys->update(Projection, player);
 			
 		if (!debugMode && !gameOver) { 
