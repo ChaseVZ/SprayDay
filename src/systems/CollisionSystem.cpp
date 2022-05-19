@@ -281,6 +281,7 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 	if (cubes > ramps && ramps != 0) { localGround = 4.0; }
 
 	if (playerInRamp) { return false; }
+	if (ramps < 4) { return false; } //so you dont collide with corners
 	return res;
 }
 
