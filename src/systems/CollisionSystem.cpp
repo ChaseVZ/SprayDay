@@ -306,7 +306,7 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 
 
 bool CollisionSys::isCollisionPublic(vec3 pos) {
-	bool* unused = false;
+	//bool* unused = false;
 	float* unused2 = 0;
 	return checkCollisionsAlg(pos, 3, 3);
 }
