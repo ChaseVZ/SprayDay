@@ -506,10 +506,11 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 		cubeProg->addAttribute("vertTex");
+		cubeProg->addUniform("shadowDepth");
+		cubeProg->addUniform("LS");
 		cubeProg->addUniform("isGrey");
 
 		initShadow();
-
 	}
 
 	/* set up the FBO for storing the light's depth */
