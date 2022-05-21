@@ -312,3 +312,14 @@ void CollisionSys::addStaticCollisions()
 //	//colDir = vec3(1); // vel is multiplied by colDir so 1,1,1 means no collision block
 //	return res;
 //}
+
+
+float interpolate(float x1, float x2, float y1, float y2, float x)
+	{
+		float res = y1 + (x - x1) * ((y2 - y1) / (x2 - x1));
+		if (x > x1)
+			return y1;
+		if (x < x2)
+			return y2;
+		return res;
+	}

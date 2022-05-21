@@ -178,7 +178,7 @@ public:
 	"gray.png"
 	};
 
-	vector<std::string> greenFaces{
+	vector<std::string> redFaces{
 	"red.png",
 	"red.png",
 	"red.png",
@@ -241,9 +241,6 @@ public:
 	bool debugMode = false;
 	bool gameBegin = false;
 
-
-
-
 	/* =================== INPUT FUNCTIONS ================== */
 
 	void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -292,7 +289,6 @@ public:
 		player.d = false;
 		player.mvm_type = 1;
 	}
-	
 
 	void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 	{
@@ -351,7 +347,6 @@ public:
 	{
 		glViewport(0, 0, width, height);
 	}
-
 
 	/* =================== INIT FUNCTIONS ================== */
 
@@ -428,8 +423,38 @@ public:
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
-		
+		/*
+		GLuint partLocation0 = glGetUniformLocation(texProg->getPID(), "Texture0");
+		GLuint partLocation2 = glGetUniformLocation(texProg->getPID(), "cubeTex");
+		glUseProgram(texProg->getPID());
+		glUniform1i(partLocation0, 0); 
+		glUniform1i(partLocation2, 2);
+		*/
 
+		// unlit cube shader
+		cubeProg = make_shared<Program>();
+		cubeProg->setVerbose(true);
+		cubeProg->setShaderNames(resourceDirectory + "/cube_vert.glsl", resourceDirectory + "/cube_frag.glsl");
+		cubeProg->init();
+		cubeProg->addUniform("cubeTex");
+		cubeProg->addUniform("P");
+		cubeProg->addUniform("V");
+		cubeProg->addUniform("M");
+		cubeProg->addUniform("alpha");
+		cubeProg->addUniform("useCubeTex");
+
+		cubeProg->addUniform("lightPos");
+		cubeProg->addAttribute("vertPos");
+		cubeProg->addAttribute("vertNor");
+		cubeProg->addAttribute("vertTex");
+		cubeProg->addUniform("shadowDepth");
+		cubeProg->addUniform("LS");
+		cubeProg->addUniform("isGrey");
+		/*
+		partLocation2 = glGetUniformLocation(cubeProg->getPID(), "cubeTex");
+		glUseProgram(cubeProg->getPID());
+		glUniform1i(partLocation2, 2);
+		*/
 		cubeProg2 = make_shared<Program>();
 		cubeProg2->setVerbose(true);
 		cubeProg2->setShaderNames(resourceDirectory + "/tex_vert.glsl", resourceDirectory + "/cube2_frag.glsl");
@@ -450,7 +475,12 @@ public:
 		cubeProg2->addAttribute("vertPos");
 		cubeProg2->addAttribute("vertNor");
 		cubeProg2->addAttribute("vertTex");
-		
+
+		/*
+		partLocation2 = glGetUniformLocation(cubeProg2->getPID(), "cubeTex");
+		glUseProgram(cubeProg2->getPID());
+		glUniform1i(partLocation2, 2);
+		*/
 
 		// Initialize the GLSL program.
 		partProg = make_shared<Program>();
@@ -499,25 +529,6 @@ public:
 		particleTexture->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
 		numTextures += 2;
-
-		// SKYBOX
-		cubeProg = make_shared<Program>();
-		cubeProg->setVerbose(true);
-		cubeProg->setShaderNames(resourceDirectory + "/cube_vert.glsl", resourceDirectory + "/cube_frag.glsl");
-		cubeProg->init();
-		cubeProg->addUniform("skybox");
-		cubeProg->addUniform("P");
-		cubeProg->addUniform("V");
-		cubeProg->addUniform("M");
-		cubeProg->addUniform("alpha");
-		cubeProg->addUniform("useCubeTex");
-		cubeProg->addUniform("lightPos");
-		cubeProg->addAttribute("vertPos");
-		cubeProg->addAttribute("vertNor");
-		cubeProg->addAttribute("vertTex");
-		cubeProg->addUniform("shadowDepth");
-		cubeProg->addUniform("LS");
-		cubeProg->addUniform("isGrey");
 
 		initShadow();
 	}
@@ -585,26 +596,6 @@ public:
 			Transform{
 			vec3(0.0, 0.0, 0.0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0),     // vec3 rotation
-			vec3(2.0),		//vec3 scale;
-			});
-	}
-
-	void initBear() {
-		Entity bearEnt;
-		bearEnt = gCoordinator.CreateEntity();
-		gCoordinator.AddComponent(
-			bearEnt,
-			RenderComponent{
-				&bear,     //ShapeGroup * sg;
-				1.0,           //float transparency;
-				texProg,
-				GL_BACK,
-			});
-		gCoordinator.AddComponent(
-			bearEnt,
-			Transform{
-			vec3(0.0),		//vec3 pos;
-			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(2.0),		//vec3 scale;
 			});
 	}
@@ -906,7 +897,6 @@ public:
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
 
-		// SKUNKY YUCKY
 		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
@@ -938,8 +928,8 @@ public:
 
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
-		skyTexID = createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
-		redTexID = createSky(resourceDirectory + "/chase_resources/", greenFaces);
+		skyTexID =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		redTexID =  createSky(resourceDirectory + "/chase_resources/", redFaces);
 		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
 		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
 
@@ -973,6 +963,7 @@ public:
 	unsigned int createSky(string dir, vector<string> faces) {
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
+		cout << "texid: " << textureID << endl;
 		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 		int width, height, nrChannels;
 		stbi_set_flip_vertically_on_load(false);
@@ -1006,16 +997,6 @@ public:
 		return textureID;
 	}
 
-	float interpolate(float x1, float x2, float y1, float y2, float x)
-	{
-		float res = y1 + (x - x1) * ((y2 - y1) / (x2 - x1));
-		if (x > x1)
-			return y1;
-		if (x < x2)
-			return y2;
-		return res;
-	}
-
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
 		vec3 move = player.pos;
 		bool forward;
@@ -1047,15 +1028,12 @@ public:
 		*moveDir = move;
 		return player.pos + vec3(0, -0.5f, 0);
 	}
-
 	
 	void healPlayer(float frametime) {
 		if (player.mvm_type == 0) {
 			player.health = std::min(player.health + frametime*3, player.maxHP);
 		}
 	}
-
-	
 
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
 		vec3 camPos = moveDir;

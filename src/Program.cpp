@@ -95,6 +95,11 @@ bool Program::init()
 	return true;
 }
 
+GLuint Program::getPID()
+{
+	return pid;
+}
+
 void Program::bind()
 {
 	CHECKED_GL_CALL(glUseProgram(pid));

@@ -24,10 +24,6 @@ extern Coordinator gCoordinator;
 		return normalize(vec3(p1.x - p2.x, 0.0, p1.z - p2.z)* length(p1))*vec3(0.2);
 	}
 
-    // vec3 calcScareVel(vec3 ePos, vec3 pPos) {
-	// 	return normalize(vec3(ePos.x - pPos.x, 0.21, ePos.z - pPos.z));
-	// }
-
     bool PathingSys::checkCollisionsWithEnemies(Entity currentEnemy) {
 		set<Entity>::iterator itr;
 		Transform& currentTr = gCoordinator.GetComponent<Transform>(currentEnemy);
