@@ -233,7 +233,7 @@ public:
 	int third = 0;
 
 	GLuint depthMapFBO;
-	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
+	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
 	GLuint depthMap;
 	vec3 g_light = vec3(10, 10, 10);
 

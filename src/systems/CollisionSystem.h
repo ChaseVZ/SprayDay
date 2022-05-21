@@ -45,7 +45,7 @@ private:
 	/* HELPERS */
 	void setColDir(int i, int j);
 	void setRampInfo(CollisionComponent cc);
-	void interpRamp(vec3 pos, CollisionComponent cc);
+	bool interpRamp(vec3 pos, CollisionComponent cc);
 	bool collideOrIgnore(int i, int j, vec3 pos);
 	//bool isCollision(int i, int j, vec3 pos, bool* tempInRamp, float* tempLocalGround);
 	

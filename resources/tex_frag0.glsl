@@ -34,10 +34,19 @@ float TestShadow(vec4 LSfPos) {
 	// //3: compare to the current depth (.z) of the projected depth
 
 	// //4: return 1 if the point is shadowed
-  if (curD > lightDepth) {
-    return 0.5f;
-  }
-  return 0.0f;
+
+  vec2 texelScale = 1.0 / textureSize(shadowDepth, 0);  
+  //index into the texture using this scale to offset by 1-2 fragments: 
+  float percentShadow = 0.0;
+  for (int i=-2; i <= 2; i++) { 
+  	for (int j=-2; j <= 2; j++) { 
+    	lightDepth = texture(shadowDepth, projCoord.xy+vec2(i, j)*texelScale).r; 
+     	if (curD > lightDepth) 
+       		percentShadow += 0.5; 
+   } 
+  } 
+  return percentShadow/25.0;
+
 }
 
 void main() {
