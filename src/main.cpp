@@ -41,6 +41,7 @@
 #include <fstream>
 #include "systems/HudSystem.h"
 
+
 #ifndef COLL_SYS
     #define COLL_SYS
     #include "systems/CollisionSystem.h"
@@ -62,6 +63,7 @@ using namespace glm;
 using namespace chrono;
 
 Coordinator gCoordinator;
+
 
 std::shared_ptr<RenderSys> renderSys;
 std::shared_ptr<DamageSys> damageSys;
@@ -120,6 +122,8 @@ public:
 
 	//lighting depth shader
 	std::shared_ptr<Program> DepthProg;
+	//text shader
+	std::shared_ptr<Program> hudProg;
 
 
 	/* ================ GEOMETRY ================= */
@@ -368,27 +372,6 @@ public:
 
 		glEnable(GL_CULL_FACE);
 
-		// Initialize the GLSL program that we will use for local shading
-		prog = make_shared<Program>();
-		prog->setVerbose(true);
-		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
-		prog->init();
-		prog->addUniform("P");
-		prog->addUniform("V");
-		prog->addUniform("M");
-		prog->addUniform("MatAmb");
-		prog->addUniform("MatDif");
-		prog->addUniform("MatSpec");
-		prog->addUniform("MatShine");
-		prog->addUniform("lightPos");
-		prog->addUniform("alpha");
-		prog->addUniform("useCubeTex");
-		prog->addUniform("isGrey");
-
-		prog->addAttribute("vertPos");
-		prog->addAttribute("vertNor");
-		//prog->addAttribute("vertTex");	// unused on purpose
-
 		//Initialize the depth mapping program for lighting/shadows
 		DepthProg = make_shared<Program>();
 		DepthProg->setVerbose(true);
@@ -401,6 +384,15 @@ public:
 		//un-needed, better solution to modifying shape
 		DepthProg->addAttribute("vertNor");
 		DepthProg->addAttribute("vertTex");
+
+		//Initialize the program for text
+		hudProg = make_shared<Program>();
+		hudProg->setVerbose(true);
+		hudProg->setShaderNames(resourceDirectory + "/hud_vert.glsl", resourceDirectory + "/hud_frag.glsl");
+		hudProg->init();
+		hudProg->addUniform("projection");
+		hudProg->addUniform("text");
+		hudProg->addUniform("textColor");
 
 		// Initialize the GLSL program that we will use for texture mapping
 		texProg = make_shared<Program>();
@@ -482,6 +474,7 @@ public:
 		glUniform1i(partLocation2, 2);
 		*/
 
+		/*
 		// Initialize the GLSL program.
 		partProg = make_shared<Program>();
 		partProg->setVerbose(true);
@@ -499,6 +492,7 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
+		*/
 
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);
@@ -932,7 +926,7 @@ public:
 		redTexID =  createSky(resourceDirectory + "/chase_resources/", redFaces);
 		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
 		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
-
+		string cp = resourceDirectory + "/chase_resources/";
 		// RenderComponents
 		initSkunk();
 		initSkybox();
@@ -940,6 +934,8 @@ public:
 		// STATIC RenderComponents
 		readMap();
 	}
+
+	
 
 	/* =================== HELPER FUNCTIONS ================== */
 
@@ -1099,6 +1095,7 @@ public:
 			//TODO you will need to fix these
 		LO = SetOrthoMatrix(DepthProg);
 		LV = SetLightView(DepthProg, g_light, lightLA, lightUp);
+		
 		LSpace = LO*LV;
 		renderSys->drawDepth(DepthProg);
 		DepthProg->unbind();
@@ -1225,14 +1222,15 @@ public:
 		
 	}
 
-	void initSystems() {
-		hudSys->init(&cube, cubeProg, redTexID);
+	void initSystems(const std::string& resourceDirectory) {
+		hudSys->init(&cube, cubeProg, redTexID, resourceDirectory, hudProg);
 		collisionSys->init();
 		spawnSys = new SpawnSys();
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
 		spraySys->init(&sphere, texProg);
 	}
+
 };
 
 void initCoordinator() {
@@ -1255,16 +1253,23 @@ int main(int argc, char *argv[])
 		resourceDir = argv[1];
 	}
 
+	
 	Application *application = new Application();
 
 	// Your main will always include a similar set up to establish your window
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	windowManager->init(640, 480);
+	int windowX = 640;
+	int windowY = 480;
+	windowManager->init(windowX, windowY);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
-
+	/*
+	glutInit(&argc, argv);
+	glutInitWindowPosition(-1, -1);
+	glutInitWindowSize(windowX, windowY);
+	*/
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
 
@@ -1275,7 +1280,7 @@ int main(int argc, char *argv[])
 	cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
 	cout << "doing geom2" << endl;
-	application->initSystems();
+	application->initSystems(resourceDir);
 	
 	
 
