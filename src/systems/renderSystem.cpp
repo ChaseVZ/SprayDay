@@ -108,9 +108,27 @@ void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 RotX = glm::rotate(glm::mat4(1.0f), tr->rotation.x, vec3(1, 0, 0));
 	mat4 RotY = glm::rotate(glm::mat4(1.0f), tr->rotation.y, vec3(0, 1, 0));
 	mat4 RotZ = glm::rotate(glm::mat4(1.0f), tr->rotation.z, vec3(0, 0, 1));
-	mat4 ctm = Trans * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
+	mat4 RampRotX = glm::rotate(glm::mat4(1.0f), tr->rampRotation.x, vec3(1, 0, 0));
+	mat4 RampRotY = glm::rotate(glm::mat4(1.0f), tr->rampRotation.y, vec3(0, 1, 0));
+	mat4 RampRotZ = glm::rotate(glm::mat4(1.0f), tr->rampRotation.z, vec3(0, 0, 1));
+	//if (tr->rampRotation.x != 0 || tr->rampRotation.z != 0) {
+	//	cout << tr->rampRotation.x << endl;
+	//	cout << tr->rampRotation.z << endl << endl;
+	//}
+	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
+//
+//void setModelRC_Origin(shared_ptr<Program> curS, Transform* tr) {
+//
+//	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos);
+//	mat4 ScaleS = glm::scale(glm::mat4(1.0f), tr->scale);
+//	mat4 RotX = glm::rotate(glm::mat4(1.0f), tr->rotation.x, vec3(1, 0, 0));
+//	mat4 RotY = glm::rotate(glm::mat4(1.0f), tr->rotation.y, vec3(0, 1, 0));
+//	mat4 RotZ = glm::rotate(glm::mat4(1.0f), tr->rotation.z, vec3(0, 0, 1));
+//	mat4 ctm = Trans * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
+//	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+//}
 
 void setModelRC_Origin(shared_ptr<Program> curS, Transform* tr) {
 

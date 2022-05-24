@@ -40,6 +40,9 @@
 #include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/HudSystem.h"
+//#include <assimp-5.2.4/include/assimp/scene.h>
+//#include <assimp-5.2.4/include/assimp/Importer.hpp>
+//#include <assimp-5.2.4/include/assimp/postprocess.h>
 
 #ifndef COLL_SYS
     #define COLL_SYS
@@ -98,6 +101,7 @@ public:
 #define _CUBE '#'
 #define _NONE '.'
 #define _NEWLINE '\n'
+#define RAMP_OFFSET 1.76f
 
 
 
@@ -705,7 +709,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(0, 0, -1.5f),		//vec3 pos;
+			pos + vec3(0, 0, -RAMP_OFFSET),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0f), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale),		//vec3 scale;
 			vec3(0,0,0)
@@ -720,7 +724,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(0,0,1),
-				45,
+				radians(40.0f),
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
@@ -746,7 +750,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(0, 0, 1.5f),		//vec3 pos;
+			pos + vec3(0, 0, RAMP_OFFSET),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3.14159265f / 1.0f, 0)
@@ -761,7 +765,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(0,0,-1),
-				-45,
+				radians(40.0f),
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
@@ -787,7 +791,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(1.5f, 0, 0),		//vec3 pos;
+			pos + vec3(RAMP_OFFSET, 0, 0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3 * 3.14159265f / 2.0f, 0)
@@ -802,7 +806,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(-1,0,0),
-				45,
+				radians(40.0f),
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
@@ -828,7 +832,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(-1.5, 0, 0),		//vec3 pos;
+			pos + vec3(-RAMP_OFFSET, 0, 0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3.14159265f / 2.0f, 0)
@@ -843,7 +847,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(1,0,0),
-				45,
+				radians(40.0f),
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
@@ -1005,6 +1009,15 @@ public:
 			
 		// only move player if there was no collision
 		CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
+		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
+		skunkTR.rampRotation = vec3(0);
+		//skunkTR.rampRotation = co.slope;
+		if (co.slopeDir.x == 1) { skunkTR.rampRotation.z = co.slope; }
+		else if (co.slopeDir.x == -1) { skunkTR.rampRotation.z = -co.slope; }
+		else if (co.slopeDir.z == 1) { skunkTR.rampRotation.x = -co.slope; }
+		else if (co.slopeDir.z == -1) { skunkTR.rampRotation.x = co.slope; }
+		
+
 		//if (!co.isCollide) {
 		//	player.localGround = co.height;
 		//}

@@ -26,8 +26,9 @@ private:
 	vec3 colDir = vec3(1); // used with entityPos
 	bool playerInRamp = false;
 	vec2 ignoreDir = vec2(0);  // used to ignore cube in front of a ramp
-	//vec2 rampLoc = vec2(0); // used to determine which crate collisions need to be ignored (for that ramp)
 	vec3 entityPos = vec3(0); // used to determine direction at which collision is occurring 
+	float currSlope = 0;
+	vec3 currSlopeDir = vec3(0);
 	CollisionComponent colMap[MAP_SIZE + 1][MAP_SIZE + 1] = {};
 
 	float rampBase;

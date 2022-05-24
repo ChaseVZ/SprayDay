@@ -124,7 +124,6 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 		}
 	}
 
-
 	//init starting list
 	int x = object.pos.x;
 	int z = object.pos.z;
@@ -141,6 +140,7 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 
 	//cerr << "InCheckNodes: before whileloop\n";
 	bool destinationFound = false;
+	//cout << openList.size() << endl;
 	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
 		//cerr << "InCheckNodes: in whileloop\n";
 		float temp = FLT_MAX;
@@ -212,7 +212,7 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 				}
 			}
 		}
-
+		//cout << "next loop\n";
 		// cout << "MAP:\n";
 		// for (int i=0; i<IDX_SIZE; i++){
 		// 	for (int j = 0; j<IDX_SIZE; j++) {

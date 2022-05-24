@@ -102,6 +102,8 @@ void findInterpValue(float* x, CollisionComponent cc, vec3 pos)
 	else { cout << "invalid ramp dir: " << cc.dir.x << " " << cc.dir.y << " " << cc.dir.z << endl; }
 }
 
+float interpFunc(float x, float y1, float y2, float x1, float x2) { return y1 + (x - x1) * ((y2 - y1) / (x2 - x1)); }
+
 
 // return T if attempting to enter ramp from base
 bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
@@ -131,8 +133,21 @@ bool CollisionSys::interpRamp(vec3 pos, CollisionComponent cc)
 		if (interp > y2) { interp = y2; }
 	}
 
-	if (interp > pos.y && interp > pos.y + 1.2f) { setColDir(worldToMap(cc.center.x), worldToMap(cc.center.z)); return true; } // disallow teleporting up ramps
+	if (pos.y < 0.3f && interp > pos.y && interp > pos.y + 1.2f) { setColDir(worldToMap(cc.center.x), worldToMap(cc.center.z)); return true; } // disallow teleporting up ramps
 	localGround = interp;
+
+	currSlope = cc.slope;
+
+	//if (pos.y > 2.5f) { 
+	//	cout << "yup\n";
+	//	currSlope = interpFunc(x, cc.slope, 0, x1, x2); 
+	//	if (currSlope < 0) { currSlope = 0; }
+	//	if (currSlope > cc.slope) { currSlope = cc.slope; }
+	//}
+	//else { currSlope == cc.slope; }
+
+	currSlopeDir = cc.dir;
+
 	return false;
 }
 
@@ -157,6 +172,11 @@ bool CollisionSys::collideOrIgnore(int i, int j, vec3 pos)
 		//cout << "rampBase: " << rampBase << " bounds: " << rampOrthoBounds.x << " " << rampOrthoBounds.y << endl;
 		//cout << "ignoreDir: " << ignoreDir.x << " " << ignoreDir.y << endl;
 		//cout << "ignoring: " << i << " " << j << endl << endl;
+
+		// checks
+		if (rampOrthoBounds.x < 0) { rampOrthoBounds.x++; }
+		if (rampOrthoBounds.y >= MAP_SIZE) { rampOrthoBounds.y--; }
+
 		if (ignoreDir.x == 1 && i > rampBase && j >= rampOrthoBounds.x && j <= rampOrthoBounds.y) {  return false; }
 		if (ignoreDir.x == -1 && i < rampBase && j >= rampOrthoBounds.x && j <= rampOrthoBounds.y) { return false; }
 		if (ignoreDir.y == 1 && j > rampBase && i >= rampOrthoBounds.x && i <= rampOrthoBounds.y) { return false; }
@@ -224,8 +244,8 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos)
 	
 	else if (colMap[i][j].c == 2) // check map for ramps (let player move on them)
 	{ 
-		interpRamp(pos, colMap[i][j]); 
-		return false;
+		return interpRamp(pos, colMap[i][j]); 
+		//return false;
 	} 
 
 	return false;
@@ -279,8 +299,21 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 			}
 		}
 	}
-
+	//if (isP)
+	//	cout << playerInRamp << " " << cubes << " " << ramps << endl;
 	if (cubes > ramps && ramps != 0) { localGround = 4.0; } // avoids falling into ramps when you are mostly off the ramp
+	if ((playerInRamp && cubes > 3) || (!playerInRamp && ramps != 0) || (playerInRamp && ramps < 8 && cubes == 0)) {  // slight change when skunk reaches ends of a ramp
+		//if (nextPos.y > 2.5f) {
+		//	currSlopeDir.x = (interp(cubes, currSlopeDir.x, 0, 0, cubes + ramps));
+		//	currSlopeDir.z = (interp(cubes, currSlopeDir.z, 0, 0, cubes + ramps));
+		//}
+		//else {
+		//	currSlopeDir.x = (interp(cubes, 0, currSlopeDir.x, 0, cubes + ramps));
+		//	currSlopeDir.z = (interp(cubes, 0, currSlopeDir.z, 0, cubes + ramps));
+		//}
+		//cout << "here\n";
+		currSlope = radians(20.0f);
+	}
 
 	if (playerInRamp) { return false; }
 	if (cubes < 6) { localGround = 0; return false; } //so you dont collide with corners & so you fall off cubes if you are partway off
@@ -296,12 +329,14 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 	colDir = vec3(1);
 	ignoreDir = vec2(0);
 	localGround = 0;
+	currSlope = 0;
+	currSlopeDir = vec3(0);
 
 	bool res;
 
 	if (isP) { res = checkCollisionsAlg(nextPos, 3, 3); } // player l x w hardcoded for now}
 	else { res = checkCollisionsAlg(nextPos, 3, 3); } // enemy ; x w hardcoded for now}
-	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y) };
+	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y), currSlope, currSlopeDir };
 }
 
 
