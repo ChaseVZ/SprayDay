@@ -55,22 +55,22 @@ static float calcH(vec3 newPos, Node dest) {
 	return euclideanDist(newPos, dest.pos);
 }
 
-static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE> map, Node player) {
+static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE>* map, Node player) {
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
 	
-	while ( (map[x][z].parentPos.x != x || map[x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
+	while ( ((*map)[x][z].parentPos.x != x || (*map)[x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
 
-		path.push(map[x][z]);
+		path.push((*map)[x][z]);
 		int tempX = x;
-		x = map[x][z].parentPos.x;
-		z = map[tempX][z].parentPos.z;
+		x = (*map)[x][z].parentPos.x;
+		z = (*map)[tempX][z].parentPos.z;
 		
 		
 	}
-	path.push(map[x][z]);
+	path.push((*map)[x][z]);
 	while (!path.empty()) {
 		Node top = path.top();
 		path.pop();
@@ -109,16 +109,17 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 	bool visitedList[IDX_SIZE][IDX_SIZE];
 
 	//initialize map array to be filled in later
-	array<array<Node, IDX_SIZE>, IDX_SIZE> map;
+	array<array<Node, IDX_SIZE>, IDX_SIZE> * map = new array<array<Node, IDX_SIZE>, IDX_SIZE>;
+
 	for (int x=0; x<IDX_SIZE; x++) {
 		for (int z=0; z<IDX_SIZE; z++) {
-			map[x][z].fCost = FLT_MAX;
-			map[x][z].gCost = FLT_MAX;
-			map[x][z].hCost = FLT_MAX;
-			map[x][z].parentPos.x = -1;
-			map[x][z].parentPos.z = -1;
-			map[x][z].pos.x = x;
-			map[x][z].pos.z = z;
+			(*map)[x][z].fCost = FLT_MAX;
+			(*map)[x][z].gCost = FLT_MAX;
+			(*map)[x][z].hCost = FLT_MAX;
+			(*map)[x][z].parentPos.x = -1;
+			(*map)[x][z].parentPos.z = -1;
+			(*map)[x][z].pos.x = x;
+			(*map)[x][z].pos.z = z;
 			visitedList[x][z] = false;
 		}
 	}
@@ -127,15 +128,15 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 	//init starting list
 	int x = object.pos.x;
 	int z = object.pos.z;
-	map[x][z].fCost = 0.0;
-	map[x][z].gCost = 0.0;
-	map[x][z].hCost = 0.0;
-	map[x][z].parentPos.x = x;
-	map[x][z].parentPos.z = z;
+	(*map)[x][z].fCost = 0.0;
+	(*map)[x][z].gCost = 0.0;
+	(*map)[x][z].hCost = 0.0;
+	(*map)[x][z].parentPos.x = x;
+	(*map)[x][z].parentPos.z = z;
 	//cout << "wolf pos: " << x << " " << z << "\n";
 
 	vector<Node> openList;
-	openList.push_back(map[x][z]);
+	openList.push_back((*map)[x][z]);
 	std::make_heap(openList.begin(), openList.end(), isLessThan);
 
 	//cerr << "InCheckNodes: before whileloop\n";
@@ -186,25 +187,25 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 					hNew = calcH(vec3(x+newX, 0, z+newZ), player);
 					fNew = gNew + hNew;
 					// cerr << "fNew :                      "<<fNew<<"\n";
-					// cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << map[x+newX][z+newZ].fCost<<"\n";
-					// cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << map[x][z].fCost<<"\n";
+					// cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << (*map)[x+newX][z+newZ].fCost<<"\n";
+					// cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << (*map)[x][z].fCost<<"\n";
 					//compare costs to current path
-					if (map[x+newX][z+newZ].fCost >= 10000) { //not on openList
-						map[x+newX][z+newZ].fCost = fNew;
-						map[x+newX][z+newZ].gCost = gNew;
-						map[x+newX][z+newZ].hCost = hNew;
-						map[x+newX][z+newZ].parentPos.x = x;
-						map[x+newX][z+newZ].parentPos.z = z;
-						openList.push_back(map[x+newX][z+newZ]);
+					if ((*map)[x+newX][z+newZ].fCost >= 10000) { //not on openList
+						(*map)[x+newX][z+newZ].fCost = fNew;
+						(*map)[x+newX][z+newZ].gCost = gNew;
+						(*map)[x+newX][z+newZ].hCost = hNew;
+						(*map)[x+newX][z+newZ].parentPos.x = x;
+						(*map)[x+newX][z+newZ].parentPos.z = z;
+						openList.push_back((*map)[x+newX][z+newZ]);
 						std::push_heap(openList.begin(), openList.end(), isLessThan);
 						//cerr << "adding tile " << x+newX << " " << z + newZ << " to open List\n";
 					}
-					else if (map[x][z].gCost > gNew) { //already on openList
-						map[x+newX][z+newZ].parentPos.x = x;
-						map[x+newX][z+newZ].parentPos.z = z;
-						map[x+newX][z+newZ].gCost = node.gCost + 1.0;
-						map[x+newX][z+newZ].hCost = calcH(vec3(x+newX, 0, z+newZ), player);
-						map[x+newX][z+newZ].fCost = gNew + hNew;
+					else if ((*map)[x][z].gCost > gNew) { //already on openList
+						(*map)[x+newX][z+newZ].parentPos.x = x;
+						(*map)[x+newX][z+newZ].parentPos.z = z;
+						(*map)[x+newX][z+newZ].gCost = node.gCost + 1.0;
+						(*map)[x+newX][z+newZ].hCost = calcH(vec3(x+newX, 0, z+newZ), player);
+						(*map)[x+newX][z+newZ].fCost = gNew + hNew;
 						//cerr << "Tile is already in openList\n";
 
 					}
@@ -223,6 +224,7 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 	}
 	//if (destinationFound == false) {
 			//cout << "Did not find player: " << openList.size() << " nodes left to search\n";
+	delete map;
 	return empty;
 	//}
 }
@@ -283,7 +285,7 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//}
 		//return retMove;
 	}
-	//cerr << "outof Astar\n";
+	//cout << "astar fail" << endl;
 	return tr->pos;
 }
 

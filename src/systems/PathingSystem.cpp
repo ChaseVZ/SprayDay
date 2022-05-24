@@ -72,19 +72,20 @@ extern Coordinator gCoordinator;
         return false;
     }
 
-	bool vecEpsilonEqual(vec3 a, vec3 b, float epsilon) {
+	bool useOldDest(vec3 a, vec3 b, float epsilon) {
 		if (abs(a.x - b.x) <= epsilon && abs(a.y - b.y) <= epsilon && abs(a.z - b.z) <= epsilon) {
-			return true;
+			return false;
 		}
-		return false;
+		return true;
 	}
 
-    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys, bool* isGrey) {
+    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys, bool* isGrey, float frametime) {
        if (!collideWithPlayer(tr->pos, p, e, dt, isGrey))
        {
-			if (vecEpsilonEqual(e->nextTile, tr->pos, e->baseSpeed/4.0f)) {
+			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 			}
+
 			e->vel = (e->nextTile - tr->pos);
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
@@ -98,15 +99,15 @@ extern Coordinator gCoordinator;
     }
 
 void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys> collSys, bool* isGrey) {
-
+	/*
 	for (Entity const& entity : mEntities) {
 		this->checkCollisionsWithEnemies(entity);
-	}
+	}*/
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
 
-		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys, isGrey);
+		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys, isGrey, entity);
 
 	}
 }
