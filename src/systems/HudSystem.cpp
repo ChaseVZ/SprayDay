@@ -77,9 +77,6 @@ void initText(const std::string& resourceDirectory) {
 			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
 			continue;
 		}
-		else {
-			cout << "loaded" << c << endl;
-		}
 		// generate texture
 		unsigned int texture;
 		glGenTextures(1, &texture);
@@ -129,6 +126,7 @@ void initVertexData() {
 void initProjection() {
 	glm::mat4 projection = glm::ortho(0.0f, 640.0f, 0.0f, 480.0f);
 	glUniformMatrix4fv(hudProg->getUniform("projection"), 1, GL_FALSE, value_ptr(projection));
+	glUseProgram(hudProg->getPID());
 }
 void HudSys::init(ShapeGroup* cube, std::shared_ptr<Program> cubeProg, unsigned int redTexID, const std::string& resourceDirectory, std::shared_ptr<Program> hud_prog)
 {
@@ -148,7 +146,7 @@ void renderText(std::string text, float x, float y, float scale, glm::vec3 color
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	// activate corresponding render state	
-	hudProg->bind();
+	glUseProgram(hudProg->getPID());
 	glUniform3f(glGetUniformLocation(hudProg->getPID(), "textColor"), color.x, color.y, color.z);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(VAO);
@@ -187,7 +185,6 @@ void renderText(std::string text, float x, float y, float scale, glm::vec3 color
 	}
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	hudProg->unbind();
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 }
