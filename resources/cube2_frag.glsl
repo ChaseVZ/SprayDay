@@ -66,7 +66,7 @@ void main() {
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
 	float Shade = TestShadow(in_struct.fPosLS);
-
+	//Shade = 0.0;
 	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, alpha);
 	//vec4 color = vec4(matSpec*Sc, 1.0);
 

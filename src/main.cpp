@@ -235,7 +235,7 @@ public:
 	GLuint depthMapFBO;
 	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
 	GLuint depthMap;
-	vec3 g_light = vec3(10, 10, 10);
+	vec3 g_light = vec3(8, 10, 8);
 
 	/* ================ DEBUG ================= */
 	bool debugMode = false;

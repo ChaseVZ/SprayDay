@@ -33,8 +33,8 @@ void main() {
   gl_Position = P * V * M * vec4(vertPos.xyz, 1.0);
 
   fragNor = (V*M * vec4(vertNor, 0.0)).xyz;
-  //lightDir = (V*(vec4(lightPos - wPos, 0.0))).xyz;
-  lightDir = (V*vec4(1.0*lightDist, 2.0*lightDist, 2.0*lightDist, 0.0)).xyz;
+  lightDir = (V*(vec4(lightPos - wPos, 0.0))).xyz;
+  //lightDir = (V*vec4(1.0*lightDist, 2.0*lightDist, 2.0*lightDist, 0.0)).xyz;
   EPos = (V * vec4(wPos, 1.0)).xyz;
 
    /* the position in world coordinates */

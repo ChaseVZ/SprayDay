@@ -46,19 +46,13 @@ float TestShadow(vec4 LSfPos) {
    } 
   } 
   return percentShadow/25.0;
-
 }
 
 void main() {
 	vec4 texColor0;
-	/*
-	if (useCubeTex){
-		texColor0 = texture(cubeTex, texCoords);
-	}
-	else{
-		texColor0 = texture(Texture0, vTexCoord);
-	}
-	*/
+	// if (useCubeTex){
+	// 	texColor0 = texture(cubeTex, texCoords);
+	// }
 	texColor0 = texture(Texture0, vTexCoord);
 
 	vec3 matDif = texColor0.xyz;
@@ -74,7 +68,7 @@ void main() {
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
 	float Shade = TestShadow(in_struct.fPosLS);
-
+	//Shade = 0.0;
 	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, alpha);
 	//vec4 color = vec4(matSpec*Sc, 1.0);
 
