@@ -21,6 +21,9 @@ public:
 	void init(float grndSize);
 	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawDepth(shared_ptr<Program> curS);
+	int ViewFrustCull(vec3 center, float radius);
+	float DistToPlane(float A, float B, float C, float D, vec3 point);
+	void ExtractVFPlanes(mat4 P, mat4 V);
 private:
 	Entity mCamera;
 	GLuint mVao{};
