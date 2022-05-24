@@ -944,7 +944,7 @@ public:
 	/* =================== HELPER FUNCTIONS ================== */
 
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
-		mat4 ortho = glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, -120.0f, 120.0f);
+		mat4 ortho = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -100.0f, 100.0f);
 
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 			return ortho;
@@ -1092,7 +1092,7 @@ public:
 		//sets up the output to be out FBO
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		glCullFace(GL_FRONT);
+		glCullFace(GL_BACK);
 
 			//set up shadow shader and render the scene
 		DepthProg->bind();
