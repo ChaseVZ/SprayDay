@@ -8,7 +8,6 @@ uniform mat4 V;
 uniform mat4 LS;
 uniform vec3 lightPos;
 uniform float alpha;
-uniform bool useCubeTex;
 
 out vec3 fragNor;
 out vec3 lightDir;
