@@ -27,7 +27,7 @@ float TestShadow(vec4 LSfPos) {
 
 	// //1: shift the coordinates from -1, 1 to 0 ,1
   vec3 projCoord = 0.5*(LSfPos.xyz + vec3(1.0));
-  float curD = projCoord.z - 0.001;
+  float curD = projCoord.z - 0.005;
 	// //2: read off the stored depth (.) from the ShadowDepth, using the shifted.xy 
   float lightDepth = texture(shadowDepth, projCoord.xy).r;
 	// //3: compare to the current depth (.z) of the projected depth
