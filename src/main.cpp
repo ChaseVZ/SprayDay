@@ -1036,9 +1036,9 @@ public:
 	}
 	
 	void healPlayer(float frametime) {
-		if (player.mvm_type == 0) {
-			player.health = std::min(player.health + frametime*3, player.maxHP);
-		}
+		//if (player.mvm_type == 0) {
+			player.health = std::min(player.health + frametime*5, player.maxHP);
+		//}
 	}
 
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){

@@ -15,6 +15,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
+float PLAYER_DAMAGE_CAP = 45.0; // maximum damage per second (player has 100 hp)
+
 using namespace glm;
 using namespace std;
 
@@ -44,7 +46,7 @@ extern Coordinator gCoordinator;
 	}
 
 
-    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime, bool* isGrey) {
+    bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime, float* damageFromEnemies) {
         // if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
         // {
         //     e->vel = vec3(-1*(e->vel.x), e->vel.y, e->vel.z);
@@ -58,15 +60,7 @@ extern Coordinator gCoordinator;
 
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
-            e->exploding = true;
-			p->health -= frameTime;
-			p->health = (std::max)(p->health, 0.0f);
-			if (p->health == 0.0) {
-				*isGrey = true;
-				//cout << "YOU LOSE :(" << endl;
-				//exit(EXIT_SUCCESS);
-			}
-
+			*damageFromEnemies += 20.0;
             return true;
         }
         return false;
@@ -79,8 +73,9 @@ extern Coordinator gCoordinator;
 		return true;
 	}
 
-    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys, bool* isGrey, float frametime) {
-       if (!collideWithPlayer(tr->pos, p, e, dt, isGrey))
+    void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys,
+		float frametime, float* damageFromEnemies) {
+       if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
@@ -98,18 +93,34 @@ extern Coordinator gCoordinator;
         }
     }
 
-void PathingSys::update(float frametime, Player* player, shared_ptr<CollisionSys> collSys, bool* isGrey) {
+
+void applyDamageToPlayer(Player* p,  float damageFromEnemies, float frameTime, bool* gameOver) {
+	float rawDamageToPlayer = (std::min)(damageFromEnemies, PLAYER_DAMAGE_CAP);
+	p->health -= rawDamageToPlayer * frameTime;
+	p->health = (std::max)(p->health, 0.0f);
+	if (p->health == 0.0) {
+		*gameOver = true;
+		//cout << "YOU LOSE :(" << endl;
+		//exit(EXIT_SUCCESS);
+	}
+}
+
+void PathingSys::update(float frameTime, Player* player, shared_ptr<CollisionSys> collSys, bool* gameOver) {
 	/*
 	for (Entity const& entity : mEntities) {
 		this->checkCollisionsWithEnemies(entity);
 	}*/
+
+	float damageFromEnemies = 0.0;
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
 
-		move(player, frametime*50, &entityEnemyComp, &entityTransComp, collSys, isGrey, entity);
-
+		move(player, frameTime*50, &entityEnemyComp, &entityTransComp, collSys, entity, &damageFromEnemies);
 	}
+	
+	applyDamageToPlayer(player, damageFromEnemies, frameTime, gameOver);
+	
 }
 
 void PathingSys::init() {
