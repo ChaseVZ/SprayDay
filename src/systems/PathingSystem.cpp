@@ -4,6 +4,7 @@
 #include "../Program.h"
 #include "../GameManager.h"
 #include "../MatrixStack.h"
+#include "../MatrixStack.h"
 
 
 #include <iostream>
@@ -78,7 +79,9 @@ extern Coordinator gCoordinator;
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
+				//cout << "finding next pos" << endl;
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
+				//cout << "found   next pos" << endl;
 			}
 
 			e->vel = (e->nextTile - tr->pos);

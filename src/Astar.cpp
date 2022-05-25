@@ -159,8 +159,8 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 		openList.pop_back();
 
 		
-		assert(node.pos.x <= IDX_SIZE && node.pos.z <= IDX_SIZE);
-		assert(node.pos.z >= 0 || node.pos.x >= 0);
+		assert(node.pos.x < IDX_SIZE && node.pos.z < IDX_SIZE);
+		assert(node.pos.x >= 0 && node.pos.z >= 0);
 		assert(node.fCost < 10000);
 		//cerr << "InCheckNodes: in whileloop 3\n";
 		x = node.pos.x;
@@ -180,15 +180,18 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 		//loop over all neighboring tiles
 		for (int newX=-1; newX <= 1;  newX++) {
 			for (int newZ = -1; newZ<=1; newZ++){
+				// don't add tiles out of range
+				if (x + newX < 0 || z + newZ < 0 || x + newX >= IDX_SIZE || z + newZ >= IDX_SIZE) {
+					break;
+				}
 				double gNew, hNew, fNew;
 				//cout << "Checking neighboring tile: " << x+newX << " " << z+newZ <<"\n";
 				if (visitedList[x+newX][z+newZ] == false && isValid(vec3(x + newX, 0, z + newZ), collSys)) { //not blocked and unvisited tile
-					//cout << "...it is valid\n";
+					//cerr << "...it is valid\n";
 					//calc new costs
 					gNew = node.gCost + 1.0;
 					hNew = calcH(vec3(x+newX, 0, z+newZ), player);
 					fNew = gNew + hNew;
-					// cerr << "fNew :                      "<<fNew<<"\n";
 					// cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << (*map)[x+newX][z+newZ].fCost<<"\n";
 					// cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << (*map)[x][z].fCost<<"\n";
 					//compare costs to current path
@@ -208,8 +211,6 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 						(*map)[x+newX][z+newZ].gCost = node.gCost + 1.0;
 						(*map)[x+newX][z+newZ].hCost = calcH(vec3(x+newX, 0, z+newZ), player);
 						(*map)[x+newX][z+newZ].fCost = gNew + hNew;
-						//cerr << "Tile is already in openList\n";
-
 					}
 				}
 			}
@@ -269,7 +270,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	assert(!(object.pos.x >= IDX_SIZE || object.pos.z >= IDX_SIZE));
 	assert(!(object.pos.z <= 0 || object.pos.x <= 0));
 	moves = checkNodes(object, player, collSys);
-
 	if (!moves.empty()){
 		glm::vec3 retMove = collSys->mapToWorldVec(moves.front().pos);
 		//glm::vec3 retMove = vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2); //convert map coords back to world coords

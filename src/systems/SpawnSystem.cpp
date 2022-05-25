@@ -5,8 +5,8 @@
 extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 2.0; // seconds of spraying until death (if divisible by tick time)
 float BEAR_BASE_HP = 4.0;
-float STARTING_SPAWN_TIME = 4.0;
-float TIME_TO_FIRST_SPAWN =  1.0;
+float STARTING_SPAWN_TIME = 6.0;
+float TIME_TO_FIRST_SPAWN =  2.0;
 float MIN_SPAWN_TIME = 0.5;
 float SPAWN_TIME_DECREASE = .002; // every 1000 seconds, increase spawn time by 1 sec
 float spawnTime;
