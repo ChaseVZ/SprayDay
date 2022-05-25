@@ -5,8 +5,8 @@
 extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 2.0; // seconds of spraying until death (if divisible by tick time)
 float BEAR_BASE_HP = 4.0;
-float STARTING_SPAWN_TIME = 5.0;
-float TIME_TO_FIRST_SPAWN = 0.1;
+float STARTING_SPAWN_TIME = 4.0;
+float TIME_TO_FIRST_SPAWN =  1.0;
 float MIN_SPAWN_TIME = 0.5;
 float SPAWN_TIME_DECREASE = .002; // every 1000 seconds, increase spawn time by 1 sec
 float spawnTime;
@@ -116,17 +116,14 @@ void SpawnSys::initWolf() {
 		});
 }
 
-void SpawnSys::spawnEnemies(float frametime) {
-	spawnTimer += frametime;
-	if (spawnTimer > spawnTime) {
-		spawnTimer -= spawnTime;
-		int randEnemySpawn = rand() % 2;
-		if (randEnemySpawn == 1) {
-			initBear();
-		}
-		else {
-			initWolf();
-		}
+void SpawnSys::spawnEnemy() {
+	spawnTimer -= spawnTime;
+	int randEnemySpawn = rand() % 2;
+	if (randEnemySpawn == 1) {
+		initBear();
+	}
+	else {
+		initWolf();
 	}
 }
 void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, ShapeGroup* bearPtr, shared_ptr<Program> texProgPtr){
@@ -138,8 +135,11 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	POISON_TICK_TIME = poisonTickTime;
 }
 void SpawnSys::update(float frameTime){
-	spawnTime = (std::max)(spawnTime - spawnTime * SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
-	spawnEnemies(frameTime);
+	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
+	spawnTimer += frameTime;
+	if (spawnTimer > spawnTime) {
+		spawnEnemy();
+	}
 }
 
 void SpawnSys::reset() {

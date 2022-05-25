@@ -172,7 +172,9 @@ static vector<Node> checkNodes(Node object, Node player, shared_ptr<CollisionSys
 		if (isDestination(node.pos, player.pos)) {
 			destinationFound = true;
 			//cerr << "FOUND PLAYER\n";
-			return makePath(map, player);
+			vector<Node> returnVal = makePath(map, player);
+			delete map;
+			return returnVal;
 		}
 		//cerr << "InCheckNodes: in whileloop: before forloop\n\n";
 		//loop over all neighboring tiles
@@ -285,7 +287,10 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//}
 		//return retMove;
 	}
-	//cout << "astar fail" << endl;
+	/*
+	cout << "astar fail" << endl;
+	cout << "player y " << player.pos.y << endl;
+	*/
 	return tr->pos;
 }
 

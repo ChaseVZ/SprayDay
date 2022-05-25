@@ -5,7 +5,6 @@
  * Xander Wallace
  * Alex Burke
  */
-
 #include <iostream>
 #include <vector>
 #include <list>
@@ -44,6 +43,12 @@
 #ifndef COLL_SYS
     #define COLL_SYS
     #include "systems/CollisionSystem.h"
+#endif
+
+#ifdef _DEBUG
+#define memchk_break() { auto& _ab = _crtBreakAlloc; __debugbreak(); }
+#else
+#define memchk_break() 0;
 #endif
 
 
@@ -499,10 +504,11 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-
+		/*
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);
 		winParticleSys->gpuSetup();
+		*/
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -1246,6 +1252,11 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<HudComponent>();
 }
 
+void freeSystems() {
+	delete spawnSys;
+	delete spraySys;
+}
+
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
@@ -1254,7 +1265,7 @@ int main(int argc, char *argv[])
 	{
 		resourceDir = argv[1];
 	}
-
+	int test;
 	Application *application = new Application();
 
 	// Your main will always include a similar set up to establish your window
@@ -1305,8 +1316,10 @@ int main(int argc, char *argv[])
 		// Poll for and process events.
 		glfwPollEvents();
 	}
-
 	// Quit program.
 	windowManager->shutdown();
+	freeSystems();
+	delete windowManager;
+	delete application;
 	return 0;
 }

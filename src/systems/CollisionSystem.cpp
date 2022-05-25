@@ -4,7 +4,6 @@ using namespace std;
 extern Coordinator gCoordinator;
 
 
-
 // covert world coordinate to collision map index
 int worldToMap(float val)
 {
@@ -26,7 +25,7 @@ int mapToWorld(float val)
 }
 
 vec3 CollisionSys::worldToMapVec(vec3 val) {
-	return vec3(worldToMap(val.x), 0, worldToMap(val.z));
+	return vec3(worldToMap(val.x), val.y, worldToMap(val.z));
 }
 
 vec3 CollisionSys::mapToWorldVec(vec3 val) {
