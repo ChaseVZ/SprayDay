@@ -137,6 +137,9 @@ public:
 	//lighting depth shader
 	std::shared_ptr<Program> DepthProg;
 
+	//Damage Animation shader
+	std::shared_ptr<Program> redProg;
+
 
 	/* ================ GEOMETRY ================= */
 
@@ -497,6 +500,30 @@ public:
 		glUseProgram(cubeProg2->getPID());
 		glUniform1i(partLocation2, 2);
 		*/
+
+		// Initialize the GLSL program that we will use for damage animation
+		redProg = make_shared<Program>();
+		redProg->setVerbose(true);
+		redProg->setShaderNames(resourceDirectory + "/tex_vert.glsl", resourceDirectory + "/red_frag.glsl");
+		redProg->init();
+		redProg->addUniform("P");
+		redProg->addUniform("V");
+		redProg->addUniform("M");
+		redProg->addUniform("Texture0");
+		redProg->addUniform("MatShine");
+		redProg->addUniform("lightPos");
+		redProg->addUniform("alpha");
+		redProg->addUniform("cubeTex");
+		redProg->addUniform("useCubeTex");
+		redProg->addUniform("isGrey");
+ 	 	redProg->addUniform("shadowDepth");
+		redProg->addUniform("LS");
+
+		redProg->addAttribute("vertPos");
+		redProg->addAttribute("vertNor");
+		redProg->addAttribute("vertTex");
+		cerr << "in init1: " << endl;
+		cerr << "init red to named: " << redProg->getFShaderName() << "\n";
 
 		// Initialize the GLSL program.
 		partProg = make_shared<Program>();
@@ -1222,8 +1249,7 @@ public:
 		signature.set(gCoordinator.GetComponentType<AnimationComponent>());
 		signature.set(gCoordinator.GetComponentType<Enemy>());
 		gCoordinator.SetSystemSignature<DamageSys>(signature);
-
-		damageSys->init(POISON_TICK_TIME);
+		damageSys->init(POISON_TICK_TIME, redProg, texProg);
 
 		pathingSys = gCoordinator.RegisterSystem<PathingSys>();
 		{
@@ -1315,8 +1341,8 @@ int main(int argc, char *argv[])
 
 	initCoordinator();
 
-	application->registerSystems();
 	application->init(resourceDir);
+	application->registerSystems();
 	//cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
 	//cout << "doing geom2" << endl;

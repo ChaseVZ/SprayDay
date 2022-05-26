@@ -40,17 +40,21 @@ bool checkPoisonCollision(Transform enemyTr, Enemy enemy, vector<Entity>* trail)
 	return false;
 }
 
-void animatePoison(Entity entity) {
+void DamageSys::animatePoison(Entity entity) {
 	AnimationComponent& enemyAC = gCoordinator.GetComponent<AnimationComponent>(entity);
 	Transform& enemyTr = gCoordinator.GetComponent<Transform>(entity);
+	RenderComponent& enemyRC = gCoordinator.GetComponent<RenderComponent>(entity);
 	int pFrame = enemyAC.poisonDamageFrame;
 	if (pFrame > 0) {
-		enemyTr.scale = vec3(5.3);
+		enemyTr.scale = vec3(5.8);
 		enemyAC.poisonDamageFrame += 1;
+		//cout << "new shader: " << redShader->getFShaderName() << endl;
+		enemyRC.shader = redShader;
 	}
 	if (pFrame > 4) {
 		enemyAC.poisonDamageFrame = 0;
 		enemyTr.scale = vec3(5.0);
+		enemyRC.shader = texShader;
 	}
 }
 void DamageSys :: update(vector<Entity>* trail, float frameTime)
@@ -78,6 +82,8 @@ void DamageSys :: update(vector<Entity>* trail, float frameTime)
 		}
 	}	
 }
-void DamageSys::init(float poisonTickTime){
+void DamageSys::init(float poisonTickTime, shared_ptr<Program> redProg, shared_ptr<Program> texProg){
 	POISON_TICK_TIME = poisonTickTime;
+	redShader = redProg;
+	texShader = texProg;
 }

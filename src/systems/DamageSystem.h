@@ -19,8 +19,11 @@ class DamageSys : public System
 {
 public:
 	float POISON_TICK_TIME;
-	void init(float enemyPoisonTimer);
+	shared_ptr<Program> redShader;
+	shared_ptr<Program> texShader;
+	void init(float enemyPoisonTimer, shared_ptr<Program> redProg, shared_ptr<Program> texProg);
 	void update(vector<Entity>* trail, float frameTime);
 private:
 	void simulatePoisonCollision(Entity entity, float frameTime);
+	void animatePoison(Entity entity);
 };
