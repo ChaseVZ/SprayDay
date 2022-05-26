@@ -79,12 +79,15 @@ extern Coordinator gCoordinator;
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
-				//cout << "finding next pos" << endl;
+				cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.z + 79 << endl;
+				cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.z + 79 << endl;
+				cout << "player pos: " << p->pos.x + 79 << " " << p->pos.z + 79 << endl;
+				cout << endl;
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
-				//cout << "found   next pos" << endl;
+				
 			}
 
-			e->vel = (e->nextTile - tr->pos);
+			e->vel = (e->nextTile +vec3(0.5, 0.0, 0.5) - tr->pos);
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";

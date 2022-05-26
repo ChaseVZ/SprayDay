@@ -8,20 +8,12 @@ extern Coordinator gCoordinator;
 int worldToMap(float val)
 {
 	/* val / TileSize; then truncate to an int */
-	int s = MAP_SIZE;
-	int res = static_cast<int> (val) + (s / 2) - 1;
-
-	// Error checks
-	// UPDATE: dont check here because world coords are used for math
-	// checks are done in verifyCollisionAddition() and isCollision() 
-	if (s % 2 == 1) { cout << "ERROR: Map size is not even!!" << endl; }
-
-	return res;
+	return floor(val + (MAP_SIZE / 2) - 1);
 }
 
 int mapToWorld(float val)
 {
-	return val - (MAP_SIZE / 2) + 1;
+	return floor(val - ((MAP_SIZE / 2) -1));
 }
 
 vec3 CollisionSys::worldToMapVec(vec3 val) {
@@ -75,6 +67,7 @@ void CollisionSys::fillEmpty() {
 
 void CollisionSys::init()
 {
+	if (MAP_SIZE % 2 == 1) { cout << "ERROR: Map size is not even!!" << endl; }
 	addStaticCollisions();
 }
 
