@@ -40,6 +40,11 @@
 #include <fstream>
 #include "systems/HudSystem.h"
 
+#ifdef WIN32
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
 #ifndef COLL_SYS
     #define COLL_SYS
     #include "systems/CollisionSystem.h"
@@ -1275,6 +1280,8 @@ int main(int argc, char *argv[])
 	windowManager->init(640, 480);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
+
+	PlaySound(TEXT("C:\\Documents\\GitHub\\SprayDay\\resources\\feel_good_x.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
