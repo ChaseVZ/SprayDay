@@ -16,7 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
-float PLAYER_DAMAGE_CAP = 45.0; // maximum damage per second (player has 100 hp)
+float PLAYER_DAMAGE_CAP = 55.0; // maximum damage per second (player has 100 hp)
 
 using namespace glm;
 using namespace std;
@@ -60,7 +60,7 @@ extern Coordinator gCoordinator;
         // }
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
-			*damageFromEnemies += 20.0;
+			*damageFromEnemies += 30.0;
             return true;
         }
         return false;
@@ -77,6 +77,7 @@ extern Coordinator gCoordinator;
 		float frametime, float* damageFromEnemies) {
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
+		   //cout << e->baseSpeed << endl;
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
 				/*
 				cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.z + 79 << endl;

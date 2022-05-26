@@ -4,7 +4,7 @@
 
 extern Coordinator gCoordinator;
 float WOLF_BASE_HP = 2.0; // seconds of spraying until death (if divisible by tick time)
-float BEAR_BASE_HP = 4.0;
+float BEAR_BASE_HP = 6.0;
 float STARTING_SPAWN_TIME = 6.0;
 float TIME_TO_FIRST_SPAWN =  2.0;
 float MIN_SPAWN_TIME = 0.5;
@@ -18,7 +18,7 @@ float randFloat() {
 	return r;
 }
 vec3 SpawnSys::getRandStart() {
-	return vec3((rand() % 2) * 2 - 1, 0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
+	return vec3((rand() % 2) * 2 - 1, 0.0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
 }
 
 void SpawnSys::initBear() {
@@ -41,7 +41,7 @@ void SpawnSys::initBear() {
 			startPos, //vec3 nextTile
 			false, // bool exploding;
 			0, // int explodeFrame;
-			0.8
+			0.6 // speed
 		});
 
 	gCoordinator.AddComponent(
@@ -88,7 +88,7 @@ void SpawnSys::initWolf() {
 			startPos, //start poosition (nextTile)
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.0 //SPEED
+			1.1 //SPEED
 		});
 
 	gCoordinator.AddComponent(

@@ -13,6 +13,10 @@
 using namespace std;
 using namespace glm;
 
+const int EMPTY_BLOCK = 0;
+const int CRATE_BLOCK = 1;
+const int RAMP_BLOCK = 2;
+
 //Developed with lots of help from https://dev.to/jansonsa/a-star-a-path-finding-c-4a4h and
 // https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 
@@ -32,15 +36,24 @@ inline bool operator < (const Node& lhs, const Node& rhs) {
 
 std::shared_ptr<CollisionSys> collisionSysAstar;
 
-static bool isValid(vec3 newPos, shared_ptr<CollisionSys> collSys) {
-	//cout << "isValid\n";
-
-	return !(collisionSysAstar->checkCollisions(collSys->mapToWorldVec(newPos), false, vec3(-1)).isCollide);
+static int getBlockType(vec3 newPos, shared_ptr<CollisionSys> collSys) {
+	// 0 = empty space
+	// 1 = crate
+	// 2 = ramp
+	CollisionOutput colOut;
+	colOut = collisionSysAstar->checkCollisions(collSys->mapToWorldVec(newPos), false, vec3(-1));
+	if (colOut.isCollide) {
+		return CRATE_BLOCK;
+	}
+	else if (colOut.inRamp) {
+		return RAMP_BLOCK;
+	}
+	else 
+		return EMPTY_BLOCK;
 	//return !(collisionSysAstar->checkCollisions(newPos - vec3(MAP_SIZE/2 + 1, 0, MAP_SIZE/2 + 1), false, vec3(-1)).isCollide);
 }
 
 static bool isDestination(vec3 newPos, vec3 destPos) {
-	//cout << "isDestination\n";
 	if (newPos.x == destPos.x && newPos.z == destPos.z) {
 		return true;
 	}
@@ -91,8 +104,8 @@ void addNeighbors(int x, int z, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>
 				break;
 			}
 			double gNew, hNew, fNew;
-			//cout << "Checking neighboring tile: " << x+newX << " " << z+newZ <<"\n";
-			if (visitedList[x + newX][z + newZ] == false && isValid(vec3(x + newX, 0, z + newZ), collSys)) { //not blocked and unvisited tile
+			int blockType = getBlockType(vec3(x + newX, 0, z + newZ), collSys);
+			if (visitedList[x + newX][z + newZ] == false && blockType == EMPTY_BLOCK) { //not blocked and unvisited tile
 				//cerr << "...it is valid\n";
 				//calc new costs
 				double gPrice = 1.0;
@@ -130,11 +143,7 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	vector<Node> empty;
 	//Node zeroNode;
 	//zeroNode.pos = vec3(0, 0, 0);
-
-	//bool isV = isValid(player.pos);
-	//cout << std::boolalpha;
-	//cout << "skunk pos is valid? " << isV << "\n";
-	if (!isValid(player.pos, collSys)) { //player is unreachable and is in an obstacle
+	if (!(getBlockType(player.pos, collSys) == EMPTY_BLOCK)) { //player is unreachable and is in an obstacle
 		//cerr << "Player is in obstacle!\n";
 		return empty;
 	}
