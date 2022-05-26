@@ -66,6 +66,14 @@ void Player::checkCollision()
 	//else { pos = nextPos; }
 }
 
+vec3 Player::approxIntegrateAccel() {
+	if (jumping || falling) {
+		return vec3(0.5) * (acc)*vec3(lastFrametime) * vec3(lastFrametime);
+	}
+	else
+		return vec3(0);
+}
+
 vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMovingForward)
 {
 	vec3 tempw;
@@ -137,7 +145,7 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 	
 	//vec3 temp = vel * colDir;
 	//cout << " updating vel: " << vel.x << " " << vel.y << " " << vel.z << " to: " << temp.x << " " << temp.y << " " << temp.z << endl;
-	nextPos = pos + (vel) * frametime;
+	nextPos = pos + (vel) * frametime + approxIntegrateAccel();
 	lastFrametime = frametime;
 
 	//cout << std::boolalpha;
@@ -159,7 +167,7 @@ void Player::updatePos(vec3 dirMask, bool isCollide, shared_ptr<CollisionSys> cs
 	//cout << "dirMask: " << dirMask.x << " " << dirMask.y << " " << dirMask.z << endl;
 	colDir = dirMask;
 
-	vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir);
+	vec3 maskedNextPos = pos + ((vel * lastFrametime) * colDir + approxIntegrateAccel());
 	if (maskedNextPos.y < localGround) { maskedNextPos.y = localGround; }
 
 	if (!cs->isCollisionPublic(maskedNextPos)) {
