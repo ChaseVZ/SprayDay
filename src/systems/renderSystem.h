@@ -30,7 +30,7 @@ private:
 	GLuint mVao{};
 	GLuint mVboVertices{};
 	GLuint mVboNormals{};
-	vec3 lightPos = vec3(100, 100, 100);
+	vec3 lightPos = vec3(5, 3, 5);
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc);

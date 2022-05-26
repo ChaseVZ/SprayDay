@@ -5,7 +5,6 @@
  * Xander Wallace
  * Alex Burke
  */
-
 #include <iostream>
 #include <vector>
 #include <list>
@@ -45,9 +44,20 @@
 //#include <assimp-5.2.4/include/assimp/Importer.hpp>
 //#include <assimp-5.2.4/include/assimp/postprocess.h>
 
+#ifdef WIN32
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
 #ifndef COLL_SYS
     #define COLL_SYS
     #include "systems/CollisionSystem.h"
+#endif
+
+#ifdef _DEBUG
+#define memchk_break() { auto& _ab = _crtBreakAlloc; __debugbreak(); }
+#else
+#define memchk_break() 0;
 #endif
 
 
@@ -241,7 +251,7 @@ public:
 	GLuint depthMapFBO;
 	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
 	GLuint depthMap;
-	vec3 g_light = vec3(8, 10, 8);
+	vec3 g_light = vec3(5, 3, 5);
 
 	/* ================ DEBUG ================= */
 	bool debugMode = false;
@@ -505,10 +515,11 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-
+		/*
 		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 		winParticleSys->setnumP(90);
 		winParticleSys->gpuSetup();
+		*/
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -951,7 +962,7 @@ public:
 	/* =================== HELPER FUNCTIONS ================== */
 
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
-		mat4 ortho = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -100.0f, 100.0f);
+		mat4 ortho = glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, -120.0f, 120.0f);
 
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 			return ortho;
@@ -1046,9 +1057,9 @@ public:
 	}
 	
 	void healPlayer(float frametime) {
-		if (player.mvm_type == 0) {
-			player.health = std::min(player.health + frametime*3, player.maxHP);
-		}
+		//if (player.mvm_type == 0) {
+			player.health = std::min(player.health + frametime*5, player.maxHP);
+		//}
 	}
 
 	vec3 makeCameraPos(vec3 moveDir, bool movingForward){
@@ -1273,6 +1284,11 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<SkeletalComponent>();
 }
 
+void freeSystems() {
+	delete spawnSys;
+	delete spraySys;
+}
+
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
@@ -1281,7 +1297,7 @@ int main(int argc, char *argv[])
 	{
 		resourceDir = argv[1];
 	}
-
+	int test;
 	Application *application = new Application();
 
 	// Your main will always include a similar set up to establish your window
@@ -1291,6 +1307,8 @@ int main(int argc, char *argv[])
 	windowManager->init(640, 480);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
+
+	//PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/worldCup.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
@@ -1332,8 +1350,10 @@ int main(int argc, char *argv[])
 		// Poll for and process events.
 		glfwPollEvents();
 	}
-
 	// Quit program.
 	windowManager->shutdown();
+	freeSystems();
+	delete windowManager;
+	delete application;
 	return 0;
 }
