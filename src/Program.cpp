@@ -6,6 +6,9 @@
 
 #include "GLSL.h"
 
+std::string Program::getFShaderName() {
+	return fShaderName;
+}
 
 std::string readFileAsString(const std::string &fileName)
 {
