@@ -48,7 +48,7 @@ static bool isDestination(vec3 newPos, vec3 destPos) {
 }
 
 static float euclideanDist(vec3 a, vec3 b) {
-	return sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z));
+	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
 
 static float calcH(vec3 newPos, Node dest) {
@@ -60,7 +60,6 @@ static vector<Node> makePath(array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* m
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
-	
 	while ( ((*map)[0][x][z].parentPos.x != x || (*map)[0][x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
 
 		path.push((*map)[0][x][z]);
@@ -137,6 +136,7 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 		return empty;
 	}
 
+
 	if (isDestination(startNode.pos, player.pos)) { 
 		//cout << "Reached destination! You were already there :)\n";
 		return empty;
@@ -176,7 +176,7 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	openList.push_back((*map)[0][x][z]);
 	std::make_heap(openList.begin(), openList.end(), isLessThan);
 	bool destinationFound = false;
-	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
+	while (!openList.empty() && openList.size() < IDX_SIZE * IDX_SIZE) {
 		float temp = FLT_MAX;
 		Node node;
 
@@ -189,7 +189,6 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 		node = openList.front();
 		std::pop_heap(openList.begin(), openList.end(), isLessThan);
 		openList.pop_back();
-
 		assert(node.pos.x < IDX_SIZE && node.pos.z < IDX_SIZE);
 		assert(node.pos.x >= 0 && node.pos.z >= 0);
 		assert(node.fCost < 10000);
@@ -210,19 +209,19 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	return empty;
 }
 
-bool vecIsLessThanOrEqual( vec3 a, vec3 b) {
+bool vecIsLessThanOrEqual(vec3 a, vec3 b) {
 	return euclideanDist(a, vec3(0, 0, 0)) <= euclideanDist(b, vec3(0, 0, 0));
 }
 
-bool vecIsGreaterThanOrEqual( vec3 a, vec3 b) {
+bool vecIsGreaterThanOrEqual(vec3 a, vec3 b) {
 	return euclideanDist(a, vec3(0, 0, 0)) > euclideanDist(b, vec3(0, 0, 0));
 }
 
 bool vecEpsilonEqual2(vec3 a, vec3 b, float epsilon) {
-		if (abs(a.x - b.x) <= epsilon && abs(a.y - b.y) <= epsilon && abs(a.z - b.z) <= epsilon) {
-			return true;
-		}
-		return false;
+	if (abs(a.x - b.x) <= epsilon && abs(a.y - b.y) <= epsilon && abs(a.z - b.z) <= epsilon) {
+		return true;
+	}
+	return false;
 }
 vec3 truncateVec(vec3 inputVec) {
 	return vec3(floor(inputVec.x), floor(inputVec.y), floor(inputVec.z));
@@ -240,7 +239,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	Node startNode; // startingPos
 	startNode.pos = collSys->worldToMapVec(tr->pos);
 	vector<Node> moves;
-
 	assert(!(startNode.pos.x >= IDX_SIZE || startNode.pos.z >= IDX_SIZE));
 	assert(!(startNode.pos.z <= 0 || startNode.pos.x <= 0));
 	moves = checkNodes(startNode, player, collSys);
