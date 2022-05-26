@@ -143,6 +143,8 @@ namespace initShapes {
 		}
 		(sg.textures).push_back(tex);
 
+		sg.filename = obj_dir;
+
 		return sg;
 	}
 }

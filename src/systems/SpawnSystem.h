@@ -28,7 +28,7 @@ private:
 	ShapeGroup* wolf;
 	ShapeGroup* bear;
 
-	void spawnEnemies(float frametime);
+	void spawnEnemy();
 	void initWolf();
 	void initBear();
 	vec3 getRandStart();

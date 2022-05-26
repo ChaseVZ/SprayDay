@@ -37,9 +37,10 @@
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include "Components/HudComponent.h"
-#include "Components/AnimationComponent.h"
+//#include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/HudSystem.h"
+#include "systems/AnimationSystem.h"
 //#include <assimp-5.2.4/include/assimp/scene.h>
 //#include <assimp-5.2.4/include/assimp/Importer.hpp>
 //#include <assimp-5.2.4/include/assimp/postprocess.h>
@@ -73,6 +74,7 @@ SpraySys* spraySys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
 std::shared_ptr<HudSys> hudSys;
+std::shared_ptr<AnimationSys> animationSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -1170,7 +1172,7 @@ public:
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		hudSys->update(Projection, player);
 			
 		if (!debugMode && !gameOver) { 
@@ -1235,6 +1237,15 @@ public:
 			signature.set(gCoordinator.GetComponentType<HudComponent>());
 			gCoordinator.SetSystemSignature<HudSys>(signature);
 		}
+
+		animationSys = gCoordinator.RegisterSystem<AnimationSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<SkeletalComponent>());
+			gCoordinator.SetSystemSignature<AnimationSys>(signature);
+		}
+
+		//animationSys->init();
 		
 	}
 
@@ -1245,6 +1256,7 @@ public:
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
 		spraySys->init(&sphere, texProg);
+		animationSys->init();
 	}
 };
 
@@ -1257,6 +1269,7 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<Enemy>();
 	gCoordinator.RegisterComponent<CollisionComponent>();
 	gCoordinator.RegisterComponent<HudComponent>();
+	gCoordinator.RegisterComponent<SkeletalComponent>();
 }
 
 int main(int argc, char *argv[])
@@ -1285,9 +1298,9 @@ int main(int argc, char *argv[])
 
 	application->registerSystems();
 	application->init(resourceDir);
-	cout << "doing geom" << endl;
+	//cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
-	cout << "doing geom2" << endl;
+	//cout << "doing geom2" << endl;
 	application->initSystems();
 	
 	

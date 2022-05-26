@@ -1,4 +1,5 @@
 #include "renderSystem.h"
+//#include "AnimationSystem.h"
 #include "../GameManager.h"
 #include "../EcsCore/Coordinator.h"
 
@@ -211,14 +212,212 @@ void RenderSys::init(float grndSize)
 // 	return Cam;
 // }
 
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey)
+#pragma region Animation
+const char* vertexShaderSource = R"(
+	#version 440 core
+	layout (location = 0) in vec3 position; 
+	layout (location = 1) in vec3 normal;
+	layout (location = 2) in vec2 uv;
+	layout (location = 3) in vec4 boneIds;
+	layout (location = 4) in vec4 boneWeights;
+	out vec2 tex_cord;
+	out vec3 v_normal;
+	out vec3 v_pos;
+	out vec4 bw;
+	uniform mat4 bone_transforms[50];
+	uniform mat4 view_projection_matrix;
+	uniform mat4 model_matrix;
+	void main()
+	{
+		bw = vec4(0);
+		if(int(boneIds.x) == 1)
+		bw.z = boneIds.x;
+		//boneWeights = normalize(boneWeights);
+		mat4 boneTransform  =  mat4(0.0);
+		boneTransform  +=    bone_transforms[int(boneIds.x)] * boneWeights.x;
+		boneTransform  +=    bone_transforms[int(boneIds.y)] * boneWeights.y;
+		boneTransform  +=    bone_transforms[int(boneIds.z)] * boneWeights.z;
+		boneTransform  +=    bone_transforms[int(boneIds.w)] * boneWeights.w;
+		vec4 pos =boneTransform * vec4(position, 1.0);
+		gl_Position = view_projection_matrix * model_matrix * pos;
+		v_pos = vec3(model_matrix * boneTransform * pos);
+		tex_cord = uv;
+		v_normal = mat3(transpose(inverse(model_matrix * boneTransform))) * normal;
+		v_normal = normalize(v_normal);
+	}
+	)";
+
+const char* fragmentShaderSource = R"(
+	#version 440 core
+	in vec2 tex_cord;
+	in vec3 v_normal;
+	in vec3 v_pos;
+	in vec4 bw;
+	out vec4 color;
+	uniform sampler2D diff_texture;
+	vec3 lightPos = vec3(0.2, 1.0, -3.0);
+	
+	void main()
+	{
+		vec3 lightDir = normalize(lightPos - v_pos);
+		float diff = max(dot(v_normal, lightDir), 0.2);
+		vec3 dCol = diff * texture(diff_texture, tex_cord).rgb; 
+		color = vec4(dCol, 1);
+	}
+	)";
+
+std::pair<uint, float> getTimeFraction(std::vector<float>& times, float& dt) {
+	uint segment = 0;
+	while (dt > times[segment])
+		segment++;
+	float start = times[segment - 1];
+	float end = times[segment];
+	float frac = (dt - start) / (end - start);
+	return { segment, frac };
+}
+
+
+glm::mat4 convertMatrix(const aiMatrix4x4& aiMat)
+{
+	return {
+	aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1,
+	aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2,
+	aiMat.a3, aiMat.b3, aiMat.c3, aiMat.d3,
+	aiMat.a4, aiMat.b4, aiMat.c4, aiMat.d4
+	};
+}
+
+void getPose(Animation& animation, Bone& skeletion, float dt, std::vector<glm::mat4>& output, glm::mat4& parentTransform, glm::mat4& globalInverseTransform) {
+	BoneTransformTrack& btt = animation.boneTransforms[skeletion.name];
+	dt = fmod(dt, animation.duration);
+	std::pair<uint, float> fp;
+	//calculate interpolated position
+	fp = getTimeFraction(btt.positionTimestamps, dt);
+
+	glm::vec3 position1 = btt.positions[fp.first - 1];
+	glm::vec3 position2 = btt.positions[fp.first];
+
+	glm::vec3 position = glm::mix(position1, position2, fp.second);
+
+	//calculate interpolated rotation
+	fp = getTimeFraction(btt.rotationTimestamps, dt);
+	glm::quat rotation1 = btt.rotations[fp.first - 1];
+	glm::quat rotation2 = btt.rotations[fp.first];
+
+	glm::quat rotation = glm::slerp(rotation1, rotation2, fp.second);
+
+	//calculate interpolated scale
+	fp = getTimeFraction(btt.scaleTimestamps, dt);
+	glm::vec3 scale1 = btt.scales[fp.first - 1];
+	glm::vec3 scale2 = btt.scales[fp.first];
+
+	glm::vec3 scale = glm::mix(scale1, scale2, fp.second);
+
+	glm::mat4 positionMat = glm::mat4(1.0),
+		scaleMat = glm::mat4(1.0);
+
+
+	// calculate localTransform
+	positionMat = glm::translate(positionMat, position);
+	glm::mat4 rotationMat = toMat4(rotation); // toMat4 >> mat4_cast
+	scaleMat = glm::scale(scaleMat, scale);
+	glm::mat4 localTransform = positionMat * rotationMat * scaleMat;
+	glm::mat4 globalTransform = parentTransform * localTransform;
+
+	output[skeletion.id] = globalInverseTransform * globalTransform * skeletion.offset;
+	//update values for children bones
+	for (Bone& child : skeletion.children) {
+		getPose(animation, child, dt, output, globalTransform, globalInverseTransform);
+	}
+	//std::cout << dt << " => " << position.x << ":" << position.y << ":" << position.z << ":" << std::endl;
+}
+
+void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc) {
+	//for (Entity const& entity : mEntities) {
+	//	SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
+	uint shader = createShader(vertexShaderSource, fragmentShaderSource);
+
+	// get all shader uniform locations
+	uint viewProjectionMatrixLocation = glGetUniformLocation(shader, "view_projection_matrix");
+	uint modelMatrixLocation = glGetUniformLocation(shader, "model_matrix");
+	uint boneMatricesLocation = glGetUniformLocation(shader, "bone_transforms");
+	uint textureLocation = glGetUniformLocation(shader, "diff_texture");
+
+	// initialize projection view and model matrix
+	//glm::mat4 projectionMatrix = glm::perspective(75.0f, (float)windowWidth / windowHeight, 0.01f, 100.0f);
+
+	//glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.2f, -5.0f)
+	//	, glm::vec3(0.0f, .0f, 0.0f),
+	//	glm::vec3(0, 1, 0));
+	//glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+
+	glm::mat4 modelMatrix(1.0f);
+	modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
+	modelMatrix = glm::scale(modelMatrix, glm::vec3(.2f, .2f, .2f));
+
+
+	//update loop
+	//while (true) { // render loop call
+		//SDL_Event ev;
+		//while (SDL_PollEvent(&ev)) {
+		//	if (ev.type == SDL_QUIT)
+		//		isRunning = false;
+		//}
+
+		//float elapsedTime = (float)SDL_GetTicks() / 1000;
+
+	float dAngle = elapsedTime * 0.002;
+	modelMatrix = glm::rotate(modelMatrix, dAngle, glm::vec3(0, 1, 0));
+	glm::mat4 identity(1.0);
+	getPose(sc.animation, sc.skeleton, elapsedTime, sc.currentPose, identity, sc.globalInverseTransform);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shader);
+	glUniformMatrix4fv(viewProjectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix * viewMatrix));
+	glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(boneMatricesLocation, sc.boneCount, GL_FALSE, glm::value_ptr(sc.currentPose[0]));
+
+	glBindVertexArray(sc.vao);
+	glActiveTexture(GL_TEXTURE0);
+	uint diffuseTexture = tex->getUnit(); // chase added
+	glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+	glUniform1i(textureLocation, 0);
+
+	glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
+
+	//SDL_GL_SwapWindow(window);
+//	}
+
+	//cleanup
+	//SDL_GLContext context = SDL_GL_GetCurrentContext();
+	//SDL_GL_DeleteContext(context);
+	//SDL_DestroyWindow(window);
+	//SDL_Quit();
+
+
+	//return 0;
+//	}
+}
+#pragma endregion
+
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime)
 {
 	cullCount = 0;
 	objCount = 0;
 	vector<Entity> transparentEnts;
+
 	for (Entity const& entity : mEntities) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
+		if (rc.isSkeletal) {
+			cout << "grabbing skeletal\n";
+			SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
+			cout << "drawing skeletal\n";
+			drawSkeletal(Projection->topMatrix(), View, rc.sg->textures[0], gameTime, sc);
+			cout << "skeletal produced\n";
+			continue;
+		}
+
 		if (rc.transparency < 1.0) {
 			transparentEnts.push_back(entity);
 		}
