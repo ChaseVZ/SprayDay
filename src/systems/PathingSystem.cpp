@@ -58,7 +58,6 @@ extern Coordinator gCoordinator;
         //     e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
         //     return true;
         // }
-
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
 			*damageFromEnemies += 20.0;
@@ -98,7 +97,7 @@ extern Coordinator gCoordinator;
 				tr->lookDir = normalize(e->vel);
 			}
 			tr->pos += e->vel*dt;
-        }
+       }
     }
 
 

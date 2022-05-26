@@ -13,6 +13,7 @@ using namespace glm;
 struct ShapeGroup {
 	vector<shared_ptr<Shape>> shapes;
 	vector<shared_ptr<Texture>> textures;
+	string filename = "";
 };
 
 
@@ -22,4 +23,5 @@ struct RenderComponent {
 	shared_ptr<Program> shader;
 	int cullDir;
 	unsigned int texID = 999;
+	bool isSkeletal = false;
 };

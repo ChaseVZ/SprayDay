@@ -28,4 +28,7 @@ struct CollisionOutput {
 	vec3 dir;
 	bool isCollide;
 	vec2 colPos;
+	float slope;
+	vec3 slopeDir;
+	bool inRamp;
 };

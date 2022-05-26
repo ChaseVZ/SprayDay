@@ -113,10 +113,19 @@ void SpawnSys::initWolf() {
 			1.0,
 			texProg,
 			GL_BACK,
+			999,
+			true // isSkeletal
+		});
+
+	cout << "adding skeletal comp\n";
+	gCoordinator.AddComponent(
+		wolfEnt,
+		SkeletalComponent{
+			wolf->filename.c_str()
 		});
 }
 
-void SpawnSys::spawnEnemy() {
+void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys) {
 	spawnTimer -= spawnTime;
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
@@ -124,9 +133,11 @@ void SpawnSys::spawnEnemy() {
 	}
 	else {
 		initWolf();
+		//animationSys->init();
 	}
 }
-void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, ShapeGroup* bearPtr, shared_ptr<Program> texProgPtr){
+
+void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, ShapeGroup* bearPtr, shared_ptr<Program> texProgPtr) {
 	reset();
 	MAP_SIZE = mapSize;
 	wolf = wolfPtr;
@@ -134,11 +145,12 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	texProg = texProgPtr;
 	POISON_TICK_TIME = poisonTickTime;
 }
-void SpawnSys::update(float frameTime){
-	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE*frameTime, MIN_SPAWN_TIME);
+
+void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys) {
+	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE * frameTime, MIN_SPAWN_TIME);
 	spawnTimer += frameTime;
 	if (spawnTimer > spawnTime) {
-		spawnEnemy();
+		spawnEnemy(animationSys);
 	}
 }
 
