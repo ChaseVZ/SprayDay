@@ -159,7 +159,7 @@ bool CollisionSys::collideOrIgnore(int i, int j, vec3 pos)
 	if (pos.y >= colMap[i][j].height - epsilon) // allow player to walk on top of objects
 	{ 
 		// if player is in a ramp, we want to ignore setting localGround
-		if (!playerInRamp)
+		if (!InRamp)
 			localGround = colMap[i][j].height;
 		return false; 
 	} 
@@ -274,7 +274,7 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 			if (i3 + _i < 0 || j3 + _j < 0 || i3 + _i >= MAP_SIZE || j3 + _j >= MAP_SIZE) { continue; }
 			if (colMap[i3 + _i][j3 + _j].c == 2) { 
 				ramps++;
-				playerInRamp = true; 
+				InRamp = true;
 				setRampInfo(colMap[i3 + _i][j3 + _j]); 
 				ignoreDir = vec2(colMap[i3 + _i][j3 + _j].dir.x, colMap[i3 + _i][j3 + _j].dir.z);
 			}
@@ -290,7 +290,7 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 
 	//cout << k << endl;
 	//if (k < 5 && playerInRamp) { playerInRamp = false; cout << "false\n\n"; }
-	if (cubes > ramps && ramps != 0) { playerInRamp = false; localGround = 4.0; }
+	if (cubes > ramps && ramps != 0) { InRamp = false; localGround = 4.0; }
 
 	for (int _i = 0; _i <= i_extent; _i++) {
 		for (int _j = 0; _j <= j_extent; _j++) {
@@ -302,7 +302,7 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 	//if (isP)
 	//	cout << playerInRamp << " " << cubes << " " << ramps << endl;
 	if (cubes > ramps && ramps != 0) { localGround = 4.0; } // avoids falling into ramps when you are mostly off the ramp
-	if ((playerInRamp && cubes > 3) || (!playerInRamp && ramps != 0) || (playerInRamp && ramps < 8 && cubes == 0)) {  // slight change when skunk reaches ends of a ramp
+	if ((InRamp && cubes > 3) || (!InRamp && ramps != 0) || (InRamp && ramps < 8 && cubes == 0)) {  // slight change when skunk reaches ends of a ramp
 		//if (nextPos.y > 2.5f) {
 		//	currSlopeDir.x = (interp(cubes, currSlopeDir.x, 0, 0, cubes + ramps));
 		//	currSlopeDir.z = (interp(cubes, currSlopeDir.z, 0, 0, cubes + ramps));
@@ -315,7 +315,7 @@ bool CollisionSys::checkCollisionsAlg(vec3 nextPos, float length, float width)
 		currSlope = radians(20.0f);
 	}
 
-	if (playerInRamp) { return false; }
+	if (InRamp) { return false; }
 	if (cubes < 6) { localGround = 0; return false; } //so you dont collide with corners & so you fall off cubes if you are partway off
 	return res;
 }
@@ -325,7 +325,7 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 {
 	isP = isPlayer;
 	entityPos = curPos;
-	playerInRamp = false;
+	InRamp = false;
 	colDir = vec3(1);
 	ignoreDir = vec2(0);
 	localGround = 0;
@@ -336,7 +336,7 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 
 	if (isP) { res = checkCollisionsAlg(nextPos, 3, 3); } // player l x w hardcoded for now}
 	else { res = checkCollisionsAlg(nextPos, 3, 3); } // enemy ; x w hardcoded for now}
-	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y), currSlope, currSlopeDir };
+	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y), currSlope, currSlopeDir, InRamp };
 }
 
 

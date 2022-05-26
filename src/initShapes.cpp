@@ -90,6 +90,39 @@ void setTexVector(ShapeGroup* sg, const std::string& textureDir, int* numTexture
 }
 
 namespace initShapes {
+	// for skeletal, textured obj's
+	ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, bool reverse_norms, int* tex_idx, string fbx_dir)
+	{
+		vector<tinyobj::shape_t> TOshapes;
+		vector<tinyobj::material_t> objMaterials;
+
+		ShapeGroup sg; // return value
+
+		string errStr;
+		bool rc;
+
+		if (textured) {
+			rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str(), (mtl_dir).c_str());
+			setTexVector(&sg, tex_dir, tex_idx, objMaterials);
+		}
+		else {
+			rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (obj_dir).c_str());
+		}
+
+		resize_obj(TOshapes);
+
+		if (!rc) {
+			cerr << errStr << endl;
+		}
+		else {
+			initTOShapes(&sg, rc, TOshapes, reverse_norms);
+		}
+
+		sg.filename = fbx_dir;
+
+		return sg;
+	}
+
 	// returns a ShapeGroup and tex_idx (output parameter)
 	ShapeGroup load(string obj_dir, string mtl_dir, string tex_dir, bool textured, bool reverse_norms, int* tex_idx)
 	{
@@ -117,6 +150,8 @@ namespace initShapes {
 		else {
 			initTOShapes(&sg, rc, TOshapes, reverse_norms);
 		}
+
+		sg.filename = obj_dir;
 
 		return sg;
 	}

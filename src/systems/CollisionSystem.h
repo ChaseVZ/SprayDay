@@ -24,7 +24,7 @@ public:
 private:
 	float localGround; // output param of checkCollide()
 	vec3 colDir = vec3(1); // used with entityPos
-	bool playerInRamp = false;
+	bool InRamp = false;
 	vec2 ignoreDir = vec2(0);  // used to ignore cube in front of a ramp
 	vec3 entityPos = vec3(0); // used to determine direction at which collision is occurring 
 	float currSlope = 0;

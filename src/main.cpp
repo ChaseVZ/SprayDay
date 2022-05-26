@@ -919,7 +919,8 @@ public:
 		wolf = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/wolf.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-			true, false, &numTextures);
+			true, false, &numTextures,
+			resourceDirectory + "/chase_resources/low-poly-animals/wolf.dae");
 
 		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate_small.obj",
 			resourceDirectory + "/chase_resources/crate/",
@@ -1179,7 +1180,7 @@ public:
 			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
 			
-			spawnSys->update(frametime);
+			spawnSys->update(frametime, animationSys);
 			damageSys->update(&trail, frametime);
 		}
 	}
@@ -1256,7 +1257,7 @@ public:
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
 		spraySys->init(&sphere, texProg);
-		animationSys->init();
+		//animationSys->init();
 	}
 };
 

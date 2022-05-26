@@ -92,6 +92,7 @@ void loadModel(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& vertices
 
 	verticesOutput = {};
 	indicesOutput = {};
+
 	//load position, normal, uv
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		//process position 
@@ -190,7 +191,9 @@ void loadModel(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& vertices
 
 void loadAnimation(const aiScene* scene, Animation& animation) {
 	//loading  first Animation
+	if (scene->mNumAnimations == 0) { cout << "zero animations found\n"; return; }
 	aiAnimation* anim = scene->mAnimations[0];
+	
 
 	if (anim->mTicksPerSecond != 0.0f)
 		animation.ticksPerSecond = anim->mTicksPerSecond;
@@ -392,7 +395,9 @@ unsigned int createVertexArray(std::vector<Vertex>& vertices, std::vector<uint> 
 void AnimationSys::init() {
 	Assimp::Importer importer;
 
+	cout << "init\n";
 	for (Entity const& entity : mEntities) {
+		cout << "checking thing\n";
 		SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
 
 		//load model file
@@ -418,6 +423,10 @@ void AnimationSys::init() {
 		globalInverseTransform = glm::inverse(globalInverseTransform);
 
 		loadModel(scene, mesh, vertices, indices, skeleton, boneCount);
+		cout << "num bones: " << boneCount << endl;
+		cout << "indicies size: " << indices.size();
+		cout << "\nvertices size: " << vertices.size();
+		cout << "\nskeley: " << skeleton.name << endl;
 		loadAnimation(scene, animation);
 
 		vao = createVertexArray(vertices, indices);
@@ -429,6 +438,7 @@ void AnimationSys::init() {
 		std::vector<glm::mat4> currentPose = {};
 		currentPose.resize(boneCount, identity); // use this for no animation
 
+		sc.animation = animation;
 		sc.skeleton = skeleton;
 		sc.boneCount = boneCount;
 		sc.indices = indices;
