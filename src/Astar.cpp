@@ -64,8 +64,11 @@ static float euclideanDist(vec3 a, vec3 b) {
 	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
 
+static float euclidApprox(vec3 a, vec3 b) {
+	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z);
+}
 static float calcH(vec3 newPos, Node dest) {
-	return euclideanDist(newPos, dest.pos);
+	return euclidApprox(newPos, dest.pos);
 }
 
 static vector<Node> makePath(array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map, Node player) {
@@ -203,7 +206,7 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 		openList.pop_back();
 		assert(node.pos.x < IDX_SIZE && node.pos.z < IDX_SIZE);
 		assert(node.pos.x >= 0 && node.pos.z >= 0);
-		assert(node.fCost < 10000);
+		assert(node.fCost < 100000);
 		x = node.pos.x;
 		z = node.pos.z;
 		visitedList[x][z] = true;

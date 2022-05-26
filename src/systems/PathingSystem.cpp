@@ -88,14 +88,17 @@ extern Coordinator gCoordinator;
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 				
 			}
-
+			e->prevVel = e->vel;
 			e->vel = (e->nextTile +vec3(0.5, 0.0, 0.5) - tr->pos);
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			if (e->vel != vec3(0)) {
 				e->vel = normalize(e->vel)*vec3(e->baseSpeed) / vec3(4.0f) ;
-				tr->lookDir = normalize(e->vel);
+				if (e->vel+ e->prevVel == vec3(0))
+					tr->lookDir = normalize(e->vel);
+				else
+					tr->lookDir = normalize(e->vel + e->prevVel);
 			}
 			tr->pos += e->vel*dt;
        }
