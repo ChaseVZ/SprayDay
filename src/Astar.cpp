@@ -55,22 +55,20 @@ static float calcH(vec3 newPos, Node dest) {
 	return euclideanDist(newPos, dest.pos);
 }
 
-static vector<Node> makePath(array<array<Node, IDX_SIZE>, IDX_SIZE>* map, Node player) {
+static vector<Node> makePath(array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map, Node player) {
 	int x = player.pos.x;
 	int z = player.pos.z;
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
 	
-	while ( ((*map)[x][z].parentPos.x != x || (*map)[x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
+	while ( ((*map)[0][x][z].parentPos.x != x || (*map)[0][x][z].parentPos.z != z) && (x != -1) && (z != -1)) {
 
-		path.push((*map)[x][z]);
+		path.push((*map)[0][x][z]);
 		int tempX = x;
-		x = (*map)[x][z].parentPos.x;
-		z = (*map)[tempX][z].parentPos.z;
-		
-		
+		x = (*map)[0][x][z].parentPos.x;
+		z = (*map)[0][tempX][z].parentPos.z;
 	}
-	path.push((*map)[x][z]);
+	path.push((*map)[0][x][z]);
 	while (!path.empty()) {
 		Node top = path.top();
 		path.pop();
@@ -83,7 +81,7 @@ bool isLessThan(Node a, Node b) {
 	return a.fCost > b.fCost;
 }
 
-void addNeighbors(int x, int z, array<array<Node, IDX_SIZE>, IDX_SIZE>* map, 
+void addNeighbors(int x, int z, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map, 
 	std::shared_ptr<CollisionSys> collSys, bool visitedList[IDX_SIZE][IDX_SIZE], vector<Node>* openList,
 	Node* node, Node* player) {
 	for (int newX = -1; newX <= 1; newX++) {
@@ -100,25 +98,22 @@ void addNeighbors(int x, int z, array<array<Node, IDX_SIZE>, IDX_SIZE>* map,
 				gNew = node->gCost + 1.0;
 				hNew = calcH(vec3(x + newX, 0, z + newZ), *player);
 				fNew = gNew + hNew;
-				// cerr << "fCost new tile["<<x+newX<<"]["<<z+newZ<<"]:     " << (*map)[x+newX][z+newZ].fCost<<"\n";
-				// cerr << "fcost current tile["<<x<<"]["<<z<<"]: " << (*map)[x][z].fCost<<"\n";
-				//compare costs to current path
-				if ((*map)[x + newX][z + newZ].fCost >= 10000) { //not on openList
-					(*map)[x + newX][z + newZ].fCost = fNew;
-					(*map)[x + newX][z + newZ].gCost = gNew;
-					(*map)[x + newX][z + newZ].hCost = hNew;
-					(*map)[x + newX][z + newZ].parentPos.x = x;
-					(*map)[x + newX][z + newZ].parentPos.z = z;
-					openList->push_back((*map)[x + newX][z + newZ]);
+				if ((*map)[0][x + newX][z + newZ].fCost >= 10000) { //not on openList
+					(*map)[0][x + newX][z + newZ].fCost = fNew;
+					(*map)[0][x + newX][z + newZ].gCost = gNew;
+					(*map)[0][x + newX][z + newZ].hCost = hNew;
+					(*map)[0][x + newX][z + newZ].parentPos.x = x;
+					(*map)[0][x + newX][z + newZ].parentPos.z = z;
+					openList->push_back((*map)[0][x + newX][z + newZ]);
 					std::push_heap(openList->begin(), openList->end(), isLessThan);
 					//cerr << "adding tile " << x+newX << " " << z + newZ << " to open List\n";
 				}
-				else if ((*map)[x][z].gCost > gNew) { //already on openList
-					(*map)[x + newX][z + newZ].parentPos.x = x;
-					(*map)[x + newX][z + newZ].parentPos.z = z;
-					(*map)[x + newX][z + newZ].gCost = node->gCost + 1.0;
-					(*map)[x + newX][z + newZ].hCost = calcH(vec3(x + newX, 0, z + newZ), *player);
-					(*map)[x + newX][z + newZ].fCost = gNew + hNew;
+				else if ((*map)[0][x][z].gCost > gNew) { //already on openList
+					(*map)[0][x + newX][z + newZ].parentPos.x = x;
+					(*map)[0][x + newX][z + newZ].parentPos.z = z;
+					(*map)[0][x + newX][z + newZ].gCost = node->gCost + 1.0;
+					(*map)[0][x + newX][z + newZ].hCost = calcH(vec3(x + newX, 0, z + newZ), *player);
+					(*map)[0][x + newX][z + newZ].fCost = gNew + hNew;
 				}
 			}
 		}
@@ -152,17 +147,17 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	bool visitedList[IDX_SIZE][IDX_SIZE];
 
 	//initialize map array to be filled in later
-	array<array<Node, IDX_SIZE>, IDX_SIZE> * map = new array<array<Node, IDX_SIZE>, IDX_SIZE>;
+	array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2> * map = new array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>;
 
 	for (int x=0; x<IDX_SIZE; x++) {
 		for (int z=0; z<IDX_SIZE; z++) {
-			(*map)[x][z].fCost = FLT_MAX;
-			(*map)[x][z].gCost = FLT_MAX;
-			(*map)[x][z].hCost = FLT_MAX;
-			(*map)[x][z].parentPos.x = -1;
-			(*map)[x][z].parentPos.z = -1;
-			(*map)[x][z].pos.x = x;
-			(*map)[x][z].pos.z = z;
+			(*map)[0][x][z].fCost = FLT_MAX;
+			(*map)[0][x][z].gCost = FLT_MAX;
+			(*map)[0][x][z].hCost = FLT_MAX;
+			(*map)[0][x][z].parentPos.x = -1;
+			(*map)[0][x][z].parentPos.z = -1;
+			(*map)[0][x][z].pos.x = x;
+			(*map)[0][x][z].pos.z = z;
 			visitedList[x][z] = false;
 		}
 	}
@@ -170,15 +165,15 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	//init starting list
 	int x = startNode.pos.x;
 	int z = startNode.pos.z;
-	(*map)[x][z].fCost = 0.0;
-	(*map)[x][z].gCost = 0.0;
-	(*map)[x][z].hCost = 0.0;
-	(*map)[x][z].parentPos.x = x;
-	(*map)[x][z].parentPos.z = z;
+	(*map)[0][x][z].fCost = 0.0;
+	(*map)[0][x][z].gCost = 0.0;
+	(*map)[0][x][z].hCost = 0.0;
+	(*map)[0][x][z].parentPos.x = x;
+	(*map)[0][x][z].parentPos.z = z;
 	//cout << "wolf pos: " << x << " " << z << "\n";
 
 	vector<Node> openList;
-	openList.push_back((*map)[x][z]);
+	openList.push_back((*map)[0][x][z]);
 	std::make_heap(openList.begin(), openList.end(), isLessThan);
 	bool destinationFound = false;
 	while (!openList.empty() && openList.size() < IDX_SIZE*IDX_SIZE) {
