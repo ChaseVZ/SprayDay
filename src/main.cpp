@@ -36,9 +36,13 @@
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include "Components/HudComponent.h"
-#include "Components/AnimationComponent.h"
+//#include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/HudSystem.h"
+#include "systems/AnimationSystem.h"
+//#include <assimp-5.2.4/include/assimp/scene.h>
+//#include <assimp-5.2.4/include/assimp/Importer.hpp>
+//#include <assimp-5.2.4/include/assimp/postprocess.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -80,6 +84,7 @@ SpraySys* spraySys;
 std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
 std::shared_ptr<HudSys> hudSys;
+std::shared_ptr<AnimationSys> animationSys;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -108,6 +113,7 @@ public:
 #define _CUBE '#'
 #define _NONE '.'
 #define _NEWLINE '\n'
+#define RAMP_OFFSET 1.76f
 
 
 
@@ -716,7 +722,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(0, 0, -1.5f),		//vec3 pos;
+			pos + vec3(0, 0, -RAMP_OFFSET),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0f), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale),		//vec3 scale;
 			vec3(0,0,0)
@@ -731,7 +737,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(0,0,1),
-				45,
+				radians(40.0f),
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
@@ -757,7 +763,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(0, 0, 1.5f),		//vec3 pos;
+			pos + vec3(0, 0, RAMP_OFFSET),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3.14159265f / 1.0f, 0)
@@ -772,7 +778,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(0,0,-1),
-				-45,
+				radians(40.0f),
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
@@ -798,7 +804,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(1.5f, 0, 0),		//vec3 pos;
+			pos + vec3(RAMP_OFFSET, 0, 0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3 * 3.14159265f / 2.0f, 0)
@@ -813,7 +819,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(-1,0,0),
-				45,
+				radians(40.0f),
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
@@ -839,7 +845,7 @@ public:
 		gCoordinator.AddComponent(
 			rampEnt,
 			Transform{
-			pos + vec3(-1.5, 0, 0),		//vec3 pos;
+			pos + vec3(-RAMP_OFFSET, 0, 0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0), // vec3 rotation
 			vec3(rampScale * 2, rampScale * 1.75, rampScale * 1),		//vec3 scale;
 			vec3(0, 3.14159265f / 2.0f, 0)
@@ -854,7 +860,7 @@ public:
 				RAMP,
 				4.0,
 				vec3(1,0,0),
-				45,
+				radians(40.0f),
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
@@ -924,7 +930,8 @@ public:
 		wolf = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/wolf.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-			true, false, &numTextures);
+			true, false, &numTextures,
+			resourceDirectory + "/chase_resources/low-poly-animals/wolf.dae");
 
 		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate_small.obj",
 			resourceDirectory + "/chase_resources/crate/",
@@ -1016,6 +1023,15 @@ public:
 			
 		// only move player if there was no collision
 		CollisionOutput co = collisionSys->checkCollisions(player.nextPos, true, player.pos);
+		Transform& skunkTR = gCoordinator.GetComponent<Transform>(skunkEnt);
+		skunkTR.rampRotation = vec3(0);
+		//skunkTR.rampRotation = co.slope;
+		if (co.slopeDir.x == 1) { skunkTR.rampRotation.z = co.slope; }
+		else if (co.slopeDir.x == -1) { skunkTR.rampRotation.z = -co.slope; }
+		else if (co.slopeDir.z == 1) { skunkTR.rampRotation.x = -co.slope; }
+		else if (co.slopeDir.z == -1) { skunkTR.rampRotation.x = co.slope; }
+		
+
 		//if (!co.isCollide) {
 		//	player.localGround = co.height;
 		//}
@@ -1168,14 +1184,14 @@ public:
 		}
 
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		hudSys->update(Projection, player);
 			
 		if (!debugMode && !gameOver) { 
 			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
 			
-			spawnSys->update(frametime);
+			spawnSys->update(frametime, animationSys);
 			damageSys->update(&trail, frametime);
 		}
 	}
@@ -1233,6 +1249,15 @@ public:
 			signature.set(gCoordinator.GetComponentType<HudComponent>());
 			gCoordinator.SetSystemSignature<HudSys>(signature);
 		}
+
+		animationSys = gCoordinator.RegisterSystem<AnimationSys>();
+		{
+			Signature signature;
+			signature.set(gCoordinator.GetComponentType<SkeletalComponent>());
+			gCoordinator.SetSystemSignature<AnimationSys>(signature);
+		}
+
+		//animationSys->init();
 		
 	}
 
@@ -1243,6 +1268,7 @@ public:
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
 		spraySys->init(&sphere, texProg);
+		//animationSys->init();
 	}
 };
 
@@ -1255,6 +1281,7 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<Enemy>();
 	gCoordinator.RegisterComponent<CollisionComponent>();
 	gCoordinator.RegisterComponent<HudComponent>();
+	gCoordinator.RegisterComponent<SkeletalComponent>();
 }
 
 void freeSystems() {
@@ -1290,9 +1317,9 @@ int main(int argc, char *argv[])
 
 	application->registerSystems();
 	application->init(resourceDir);
-	cout << "doing geom" << endl;
+	//cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
-	cout << "doing geom2" << endl;
+	//cout << "doing geom2" << endl;
 	application->initSystems();
 	
 	
