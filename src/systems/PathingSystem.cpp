@@ -79,10 +79,12 @@ extern Coordinator gCoordinator;
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
+				/*
 				cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.z + 79 << endl;
 				cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.z + 79 << endl;
 				cout << "player pos: " << p->pos.x + 79 << " " << p->pos.z + 79 << endl;
 				cout << endl;
+				*/
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 				
 			}

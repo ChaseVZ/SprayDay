@@ -168,10 +168,8 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 	}
 
 	//init starting list
-	cout << "astar startNodePos: " << startNode.pos.x << " " << startNode.pos.z << endl;
 	int x = startNode.pos.x;
 	int z = startNode.pos.z;
-	cout << "astar xz pos: " << x << " " << z << endl;
 	(*map)[x][z].fCost = 0.0;
 	(*map)[x][z].gCost = 0.0;
 	(*map)[x][z].hCost = 0.0;
@@ -260,6 +258,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 			//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 		}
 	}
-	cout << "astar fail" << endl;
+	//cout << "astar fail" << endl;
 	return truncateVec(tr->pos);
 }
