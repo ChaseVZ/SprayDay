@@ -210,21 +210,11 @@ static vector<Node> checkNodes(Node startNode, Node player, shared_ptr<Collision
 			return returnVal;
 		}
 		addNeighbors(x, z, map, collSys, visitedList, &openList, &node, &player);
-
-		// cout << "MAP:\n";
-		// for (int i=0; i<IDX_SIZE; i++){
-		// 	for (int j = 0; j<IDX_SIZE; j++) {
-		// 		cout<< map[i][j].fCost << " ";
-		// 	}
-		// 	cout << "\n";
-		// }
-
 	}
 	//if (destinationFound == false) {
 			//cout << "Did not find player: " << openList.size() << " nodes left to search\n";
 	delete map;
 	return empty;
-	//}
 }
 
 bool vecIsLessThanOrEqual( vec3 a, vec3 b) {
@@ -254,14 +244,8 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		//cerr << "Player above ground and unreachable";
 		return truncateVec(tr->pos);
 	}
-	//player.pos = vec3(player.pos.x, 0, player.pos.z);
-	//cerr << "playerPos: " << player.pos.x << " " << player.pos.z << endl;
-
 	Node startNode; // startingPos
 	startNode.pos = collSys->worldToMapVec(tr->pos);
-	//startNode.pos = tr->pos + vec3(MAP_SIZE/2, 0, MAP_SIZE/2);
-	//cout << "Player POS " << player.pos.x << " " << player.pos.y << " " << player.pos.z << "\n";
-	//cout << "Wolf POS " << startNode.pos.x << " " << startNode.pos.y << " " << startNode.pos.z << "\n";
 	vector<Node> moves;
 
 	assert(!(startNode.pos.x >= IDX_SIZE || startNode.pos.z >= IDX_SIZE));
@@ -270,24 +254,12 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	if (!moves.empty()){
 		glm::vec3 retMove = collSys->mapToWorldVec(moves.front().pos);
 		glm::vec3 trPos = truncateVec(tr->pos);
-		/*
-		cout << "PRINTING MOVE LIST " << endl;
-		for (Node move : moves) {
-			cout << " m: " << move.pos.x << " " << move.pos.z << endl;
-		}
-		cout << "FINISH MOVE LIST PRINT" << endl;
-		*/
 		if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 			moves.erase(moves.begin());
 			return collSys->mapToWorldVec(moves.front().pos);
 			//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 		}
-		//return tr->pos;
-		//}
-		//return retMove;
 	}
 	cout << "astar fail" << endl;
 	return truncateVec(tr->pos);
 }
-
-
