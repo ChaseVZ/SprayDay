@@ -95,7 +95,11 @@ void addNeighbors(int x, int z, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>
 			if (visitedList[x + newX][z + newZ] == false && isValid(vec3(x + newX, 0, z + newZ), collSys)) { //not blocked and unvisited tile
 				//cerr << "...it is valid\n";
 				//calc new costs
-				gNew = node->gCost + 1.0;
+				double gPrice = 1.0;
+				if (abs(newX) == 1 && abs(newZ) == 1) {
+					gPrice = 3.0;
+				}
+				gNew = node->gCost + gPrice;
 				hNew = calcH(vec3(x + newX, 0, z + newZ), *player);
 				fNew = gNew + hNew;
 				if ((*map)[0][x + newX][z + newZ].fCost >= 10000) { //not on openList
