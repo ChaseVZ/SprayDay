@@ -125,7 +125,7 @@ void SpawnSys::initWolf() {
 		});
 }
 
-void SpawnSys::spawnEnemy() {
+void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys) {
 	spawnTimer -= spawnTime;
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
