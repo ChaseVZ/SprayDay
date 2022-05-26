@@ -85,6 +85,7 @@ extern Coordinator gCoordinator;
 				cout << "player pos: " << p->pos.x + 79 << " " << p->pos.z + 79 << endl;
 				cout << endl;
 				*/
+				
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 				
 			}
