@@ -153,7 +153,7 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 	glUniform1i(curS->getUniform("useCubeTex"), useCubeMap);
 	glUniform1i(curS->getUniform("isGrey"), isGrey);
 	//check to cull
-	if (!ViewFrustCull(tr->pos, 4.0f)) {
+	if (!ViewFrustCull(tr->pos, 4.0f) || curS->getFShaderName() == "../resources/cube_frag.glsl") {
 		// non-textured shapes draw
 		if ((rc->sg)->textures.size() == 0 || useCubeMap)
 		{
