@@ -21,7 +21,7 @@ vec3 CollisionSys::worldToMapVec(vec3 val) {
 }
 
 vec3 CollisionSys::mapToWorldVec(vec3 val) {
-	return vec3(mapToWorld(val.x), 0, mapToWorld(val.z));
+	return vec3(mapToWorld(val.x), val.y, mapToWorld(val.z));
 }
 
 void CollisionSys::verifyCollisionAddition(int i, int j, CollisionComponent cc)

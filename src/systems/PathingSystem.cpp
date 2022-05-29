@@ -72,19 +72,14 @@ extern Coordinator gCoordinator;
 		}
 		return true;
 	}
-
+	vec3 getXZ(vec3 inVec) {
+		return vec3(inVec.x, 0, inVec.z);
+	}
     void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys,
 		float frametime, float* damageFromEnemies) {
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
-		   //cout << e->baseSpeed << endl;
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
-				/*
-				cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.z + 79 << endl;
-				cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.z + 79 << endl;
-				cout << "player pos: " << p->pos.x + 79 << " " << p->pos.z + 79 << endl;
-				cout << endl;
-				*/
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
 				
 			}
@@ -93,12 +88,14 @@ extern Coordinator gCoordinator;
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
+			vec3 velXZ = getXZ(e->vel);
+			vec3 prevVelXZ = getXZ(e->prevVel);
 			if (e->vel != vec3(0)) {
 				e->vel = normalize(e->vel)*vec3(e->baseSpeed) / vec3(4.0f) ;
-				if (e->vel+ e->prevVel == vec3(0))
-					tr->lookDir = normalize(e->vel);
+				if (velXZ+ prevVelXZ == vec3(0))
+					tr->lookDir = velXZ;
 				else
-					tr->lookDir = normalize(e->vel + e->prevVel);
+					tr->lookDir = velXZ + prevVelXZ;
 			}
 			tr->pos += e->vel*dt;
        }
