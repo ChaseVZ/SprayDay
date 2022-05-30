@@ -16,7 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
-float PLAYER_DAMAGE_CAP = 75.0; // maximum damage per second (player has 100 hp)
+float PLAYER_DAMAGE_CAP = 55.0; // maximum damage per second (player has 100 hp)
 
 using namespace glm;
 using namespace std;
@@ -60,7 +60,7 @@ extern Coordinator gCoordinator;
         // }
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
-			*damageFromEnemies += 40.0;
+			*damageFromEnemies += 30.0;
             return true;
         }
         return false;
@@ -80,11 +80,14 @@ extern Coordinator gCoordinator;
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
+				//cout << "player pos: " << p->pos.x + 79 << " " << p->pos.y << " " << p->pos.z + 79 << endl;
+				//cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.y << " " << tr->pos.z + 79 << endl;
 				e->nextTile = Astar::findNextPos(*p, tr, collSys);
-				
+				//cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.y << " " << e->nextTile.z + 79 << endl;
 			}
 			e->prevVel = e->vel;
 			e->vel = (e->nextTile +vec3(0.5, 0.0, 0.5) - tr->pos);
+			//cout << "enemy vel: " << e->vel.x << " " << e->vel.y << " " << e->vel.z<< endl << endl;
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";

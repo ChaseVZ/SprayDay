@@ -78,6 +78,7 @@ static vector<Node> makePath(array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* m
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
 	while ((x != -1) && (z != -1)) {
+		//cout << "  pushing: " << (*map)[y][x][z].pos.x << " " << (*map)[y][x][z].pos.y << " " << (*map)[y][x][z].pos.z << " " << endl;
 		assert((*map)[y][x][z].parentPos != player.pos);
 		path.push((*map)[y][x][z]);
 		int tempX = x;
@@ -127,12 +128,12 @@ void addNeighbors(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SI
 	Node* node, Node* player) {
 	for (int newX = -1; newX <= 1; newX++) {
 		for (int newZ = -1; newZ <= 1; newZ++) {
-
-			// don't add tiles out of range
 			if (x + newX < 0 || z + newZ < 0 || x + newX >= IDX_SIZE || z + newZ >= IDX_SIZE) {
-				break;
+				break; // don't add tiles out of range
 			}
+			
 			int blockType = getBlockType(vec3(x + newX, 0, z + newZ), collSys);
+			//out << "  checking neighbor: " << x + newX << " " << y << " " << z + newZ << endl;
 			if (y == 0) {
 				if (visitedList[0][x + newX][z + newZ] == false && (blockType == EMPTY_BLOCK || blockType == RAMP_BLOCK)) {
 					if (blockType == RAMP_BLOCK) {
@@ -159,7 +160,7 @@ void addNeighbors(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SI
 
 static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionSys> collSys) {
 	vector<Node> empty;
-	if (!(getBlockType(player.pos, collSys) == EMPTY_BLOCK) && player.pos.y == 0) { //player is unreachable and is in an obstacle
+	if ((getBlockType(player.pos, collSys) == CRATE_BLOCK) && player.pos.y == 0) { //player is unreachable and is in an obstacle
 		return empty;
 	}
 
@@ -200,24 +201,24 @@ static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionS
 	std::make_heap(openList.begin(), openList.end(), isLessThan);
 	bool destinationFound = false;
 	while (!openList.empty() && openList.size() < IDX_SIZE * IDX_SIZE) {
-		Node node;
-		node = openList.front();
+		Node selected = openList.front();
 		std::pop_heap(openList.begin(), openList.end(), isLessThan);
 		openList.pop_back();
-		assert(node.pos.x < IDX_SIZE && node.pos.z < IDX_SIZE);
-		assert(node.pos.x >= 0 && node.pos.z >= 0);
-		assert(node.fCost < 100000);
-		x = node.pos.x;
-		z = node.pos.z;
-		y = node.pos.y;
+		assert(selected.pos.x < IDX_SIZE && selected.pos.z < IDX_SIZE);
+		assert(selected.pos.x >= 0 && selected.pos.z >= 0);
+		assert(selected.fCost < 100000);
+		x = selected.pos.x;
+		z = selected.pos.z;
+		y = selected.pos.y;
 		visitedList[y][x][z] = true;
-		if (isDestination(node.pos, player.pos)) {
+		if (isDestination(selected.pos, player.pos)) {
 			destinationFound = true;
 			vector<Node> returnVal = makePath(map, player);
 			delete map;
 			return returnVal;
 		}
-		addNeighbors(x, z, y, map, collSys, visitedList, &openList, &node, &player);
+		//cout << " selected: " << x << " " << y << " " << z << endl;
+		addNeighbors(x, z, y, map, collSys, visitedList, &openList, &selected, &player);
 	}
 	delete map;
 	return empty;
@@ -282,5 +283,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 			//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 		}
 	}
+	//cout << "astar fail " << endl;
 	return floorVec(tr->pos);
 }
