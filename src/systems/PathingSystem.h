@@ -1,19 +1,24 @@
 #pragma once
 #define NOMINMAX
+#include "CollisionSystem.h"
 #include "../Enemy.h"
 #include "../Player.h"
 #include "../Program.h"
 #include "../MatrixStack.h"
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "../GameManager.h"
 #include "../Components/Transform.h"
-#include "CollisionSystem.h"
 #include "../Astar.h"
-#include "../Enemy.h"
 #include "../EcsCore/EcsTypes.h"
 #include "../EcsCore/Coordinator.h"
 #include "../EcsCore/System.h"
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
+#include <iostream>
+#include <list>
+#include <glad/glad.h>
+#include <cmath>
+#include <thread>
 
 using namespace std;
 using namespace glm;

@@ -1,20 +1,4 @@
 #include "PathingSystem.h"
-#include "../Enemy.h"
-#include "../Player.h"
-#include "../Program.h"
-#include "../GameManager.h"
-#include "../MatrixStack.h"
-#include "../MatrixStack.h"
-
-
-#include <iostream>
-#include <list>
-#include <glad/glad.h>
-
-#include <vector>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <cmath>
 
 float PLAYER_DAMAGE_CAP = 55.0; // maximum damage per second (player has 100 hp)
 

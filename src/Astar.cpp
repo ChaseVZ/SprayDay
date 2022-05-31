@@ -67,6 +67,25 @@ static bool isDestination(vec3 newPos, vec3 destPos) {
 static float euclideanDist(vec3 a, vec3 b) {
 	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
+void swap(float* a, float* b) {
+	float temp = *a;
+	*a = *b;
+	*b = temp;
+}
+float minMaxApproxDistance(float min, float mid, float max)
+{
+	float approx;
+	if (min > mid) {swap(&min, &mid);}
+	if (min > max) {swap(&min, &max);}
+	if (mid > max) {swap(&mid, &max);}
+
+	approx = max * 16 + mid * 10 + min * 7;
+	/*
+	if (max < (min << 4))
+		approx -= (max * 40);
+	*/
+	return approx/23.0;
+}
 
 static float euclidApprox(vec3 a, vec3 b) {
 	return (a.x - b.x) * (a.x - b.x) + ((a.y - b.y) * (a.y - b.y))*16.0 + (a.z - b.z) * (a.z - b.z);
@@ -102,28 +121,35 @@ bool isLessThan(Node a, Node b) {
 	return a.fCost > b.fCost;
 }
 
-bool isDiagonal(int newX, int newZ) {
-	return abs(newX) == 1 && abs(newZ) == 1;
+bool isDiagonal(int offsetX, int offsetZ) {
+	return abs(offsetX) == 1 && abs(offsetZ) == 1;
 }
-void addTile(int x, int z, int y, int newX, int newZ, int newY, Node* node, Node* player,
-	array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map, 
+void addTile(int parentX, int parentZ, int parentY, int offsetX, int offsetZ, int offsetY, Node* node, Node* player,
+	array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map,
 	vector<Node>* openList) {
 	double gNew, hNew, fNew;
-	double gPrice = 1.0;
-	if (isDiagonal(newX, newZ)) {
-		gPrice = 3.0;
+	double gPrice = 3.0;
+	if (isDiagonal(offsetX, offsetZ)) {
+		gPrice *= 1.41;
 	}
+	if (abs(offsetY) == 1 && (abs(offsetX) == 1 || abs(offsetZ) == 1)) {
+		gPrice *= 1.41;
+	}
+	
+	int newX = parentX + offsetX;
+	int newY = parentY + offsetY;
+	int newZ = parentZ + offsetZ;
 	gNew = node->gCost + gPrice;
-	hNew = calcH(vec3(x + newX, newY, z + newZ), *player);
+	hNew = calcH(vec3(newX, newY, newZ), *player);
 	fNew = gNew + hNew;
-	if ((*map)[newY][x + newX][z + newZ].fCost == FLT_MAX || (*map)[newY][x + newX][z + newZ].fCost > fNew) { //either unseen or improved
-		(*map)[newY][x + newX][z + newZ].fCost = fNew;
-		(*map)[newY][x + newX][z + newZ].gCost = gNew;
-		(*map)[newY][x + newX][z + newZ].hCost = hNew;
-		(*map)[newY][x + newX][z + newZ].parentPos.x = x;
-		(*map)[newY][x + newX][z + newZ].parentPos.z = z;
-		(*map)[newY][x + newX][z + newZ].parentPos.y = y;
-		openList->push_back((*map)[newY][x + newX][z + newZ]);
+	if ((*map)[newY][newX][newZ].fCost == FLT_MAX || (*map)[newY][newX][newZ].fCost > fNew) { //either unseen or improved
+		(*map)[newY][newX][newZ].fCost = fNew;
+		(*map)[newY][newX][newZ].gCost = gNew;
+		(*map)[newY][newX][newZ].hCost = hNew;
+		(*map)[newY][newX][newZ].parentPos.x = parentX;
+		(*map)[newY][newX][newZ].parentPos.z = parentZ;
+		(*map)[newY][newX][newZ].parentPos.y = parentY;
+		openList->push_back((*map)[newY][newX][newZ]);
 		std::push_heap(openList->begin(), openList->end(), isLessThan);
 	}
 }
@@ -152,10 +178,10 @@ void addNeighbors(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SI
 			}
 			if (y == 1) {
 				if (visitedList[1][x + newX][z + newZ] == false && (blockType == CRATE_BLOCK|| blockType == RAMP_BLOCK)) {
-					addTile(x, z, y, newX, newZ, 1, node, player, map, openList);
+					addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
 				}
 				if (visitedList[0][x + newX][z + newZ] == false && (blockType == RAMP_BLOCK) || blockType == EMPTY_BLOCK /*&& !isDiagonal(newX, newZ)*/) {
-					addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
+					addTile(x, z, y, newX, newZ, -1, node, player, map, openList);
 				}
 			}
 		}
