@@ -53,13 +53,32 @@ void CollisionSys::addStaticCollisions()
 		}
 	}
 }
+void CollisionSys::initFastColMap() {
+	float BASE_LENGTH = 3;
+	float BASE_WIDTH = 3;
+	for (int i = 0; i < MAP_SIZE + 1; i++) {
+		for (int j = 0; j < MAP_SIZE + 1; j++) {
+			/*
+			if (i == 39 && j == 107) {
+				InRamp = false;
+			} */
+			InRamp = false;
+			isP = false;
+			entityPos = vec3(-1);
+			InRamp = false;
+			colDir = vec3(1);
+			ignoreDir = vec2(0);
+			localGround = 0;
+			currSlope = 0;
+			currSlopeDir = vec3(0);
 
-void CollisionSys::fillEmpty() {
-	for (int i = 0; i <= MAP_SIZE; i++) {
-		for (int j = 0; j <= MAP_SIZE; j++) {
-			if (colMap[i][j].c == 0) {
-				CollisionComponent cc = CollisionComponent{ vec3(0), -1, -1, GROUND, 0 };
-				colMap[i][j] = cc;
+			bool isCollide = checkCollisionsAlg(mapToWorldVec(vec3(i, 0, j)), BASE_LENGTH, BASE_WIDTH);
+			fastColMap[i][j] = GROUND;
+			if (isCollide) {
+				fastColMap[i][j] = CUBE;
+			}
+			else if (InRamp) {
+				fastColMap[i][j] = RAMP;
 			}
 		}
 	}
@@ -69,7 +88,21 @@ void CollisionSys::init()
 {
 	if (MAP_SIZE % 2 == 1) { cout << "ERROR: Map size is not even!!" << endl; }
 	addStaticCollisions();
+	initFastColMap();
+	//printFastColMap(vec3(39, 0, 107));
 }
+
+void CollisionSys::fillEmpty() {
+	for (int i = 0; i <= MAP_SIZE; i++) {
+		for (int j = 0; j <= MAP_SIZE; j++) {
+			if (colMap[i][j].c == GROUND) {
+				CollisionComponent cc = CollisionComponent{ vec3(0), -1, -1, GROUND, 0 };
+				colMap[i][j] = cc;
+			}
+		}
+	}
+}
+
 
 void CollisionSys::printCol(vec2 newCol)
 {
@@ -222,7 +255,7 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos)
 	if (i < 0 || j < 0) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
 	if (i >= MAP_SIZE || j >= MAP_SIZE) { setColDir(i, j); return true; } // don't let anything move outside of mapped world
 
-	if ((colMap[i][j].c == 1 || colMap[i][j].c == 3))  // check map for crates & cubes
+	if ((colMap[i][j].c == CRATE || colMap[i][j].c == CUBE))
 	{ 
 		// either we collide
 		if (collideOrIgnore(i, j, pos)) {
@@ -234,7 +267,7 @@ bool CollisionSys::isCollision(int i, int j, vec3 pos)
 		return false;
 	}
 	
-	else if (colMap[i][j].c == 2) // check map for ramps (let player move on them)
+	else if (colMap[i][j].c == RAMP) // let player move on ramps
 	{ 
 		return interpRamp(pos, colMap[i][j]); 
 		//return false;
@@ -327,8 +360,12 @@ CollisionOutput CollisionSys::checkCollisions(vec3 nextPos, bool isPlayer, vec3 
 	bool res;
 
 	if (isP) { res = checkCollisionsAlg(nextPos, 3, 3); } // player l x w hardcoded for now}
-	else { res = checkCollisionsAlg(nextPos, 3, 3); } // enemy ; x w hardcoded for now}
+	else { res = checkCollisionsAlg(nextPos, 3, 3); } // enemy l x w hardcoded for now}
 	return CollisionOutput{ localGround, colDir, res, vec2(entityPos.x, entityPos.y), currSlope, currSlopeDir, InRamp };
+}
+
+int CollisionSys::getBlockTypeForEnemy(int i, int j) {
+	return fastColMap[i][j];
 }
 
 
@@ -348,8 +385,10 @@ std::vector<vec2> CollisionSys::printMap(vec3 pos) {
 		for (int j = 0; j <= MAP_SIZE; j++) {
 			if (i == i1 && j == j1 || i+1 == i1 && j+1 == j1 || i-1 == i1 && j-1 == j1 || i - 1 == i1 && j + 1 == j1 || i + 1 == i1 && j - 1 == j1)
 				printf("X");
-			else if (colMap[i][j].c == 0)
+			else if (colMap[i][j].c == GROUND)
 				printf(".");
+			else if (colMap[i][j].c == CRATE)
+				printf("#");
 			else {
 				printf("%d", colMap[i][j].c);
 				collisions.push_back(vec2(mapToWorld(i), mapToWorld(j)));
@@ -359,4 +398,25 @@ std::vector<vec2> CollisionSys::printMap(vec3 pos) {
 	}
 	cout << endl << endl << endl;
 	return collisions;
+}
+
+void CollisionSys::printFastColMap(vec3 pos) {
+	int i1 = pos.x;
+	int j1 = pos.z;
+
+	for (int i = 0; i <= MAP_SIZE; i++) {
+		for (int j = 0; j <= MAP_SIZE; j++) {
+			if (i == i1 && j == j1 || i + 1 == i1 && j + 1 == j1 || i - 1 == i1 && j - 1 == j1 || i - 1 == i1 && j + 1 == j1 || i + 1 == i1 && j - 1 == j1)
+				printf("X");
+			else if (fastColMap[i][j] == GROUND)
+				printf(".");
+			else if (fastColMap[i][j] == CRATE)
+				printf("#");
+			else {
+				printf("%d", fastColMap[i][j]);
+			}
+		}
+		cout << "\n";
+	}
+	cout << endl << endl << endl;
 }

@@ -14,8 +14,8 @@ using namespace std;
 using namespace glm;
 
 const int EMPTY_BLOCK = 0;
-const int CRATE_BLOCK = 1;
 const int RAMP_BLOCK = 2;
+const int CRATE_BLOCK = 3;
 
 //Developed with lots of help from https://dev.to/jansonsa/a-star-a-path-finding-c-4a4h and
 // https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
@@ -38,8 +38,10 @@ std::shared_ptr<CollisionSys> collisionSysAstar;
 
 static int getBlockType(vec3 blockPos, shared_ptr<CollisionSys> collSys) {
 	// 0 = empty space
-	// 1 = crate
 	// 2 = ramp
+	// 3 = crate
+	
+	/*
 	blockPos = vec3(blockPos.x, 0, blockPos.z); // collison map is not vertical
 	CollisionOutput colOut;
 	colOut = collisionSysAstar->checkCollisions(collSys->mapToWorldVec(blockPos), false, vec3(-1));
@@ -51,6 +53,8 @@ static int getBlockType(vec3 blockPos, shared_ptr<CollisionSys> collSys) {
 	}
 	else 
 		return EMPTY_BLOCK;
+	*/
+	return collisionSysAstar->getBlockTypeForEnemy(blockPos.x, blockPos.z);
 }
 
 static bool isDestination(vec3 newPos, vec3 destPos) {
