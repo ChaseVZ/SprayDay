@@ -23,7 +23,7 @@ public:
 
 	vec3 worldToMapVec(vec3 val);
 	vec3 mapToWorldVec(vec3 val);
-	int CollisionSys::getBlockTypeForEnemy(int i, int j);
+	int getBlockTypeForEnemy(int i, int j);
 
 private:
 	float localGround; // output param of checkCollide()
