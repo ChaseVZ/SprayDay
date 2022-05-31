@@ -225,7 +225,7 @@ public:
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
-	particleSys* winParticleSys;
+	particleSys* sprayParticleSys;
 
 	Entity skunkEnt;
 	vector<Entity> obstacles;
@@ -542,11 +542,10 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-		/*
-		winParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
-		winParticleSys->setnumP(90);
-		winParticleSys->gpuSetup();
-		*/
+
+		sprayParticleSys = new particleSys(vec3(0, -15, 5), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
+		sprayParticleSys->setnumP(90);
+		sprayParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -1154,6 +1153,8 @@ public:
 		LO = SetOrthoMatrix(DepthProg);
 		LV = SetLightView(DepthProg, g_light, lightLA, lightUp);
 		LSpace = LO*LV;
+
+		
 		renderSys->drawDepth(DepthProg);
 		DepthProg->unbind();
 
@@ -1210,6 +1211,14 @@ public:
 			}
 		}
 
+		/*
+		sprayParticleSys->setCamera(View);
+		texture->bind(partProg->getUniform("alphaTexture"));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix())));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(V->topMatrix())));
+		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix())));
+		sprayParticleSys->drawMe(partProg);
+		sprayParticleSys->update(); */
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
 		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		hudSys->update(Projection, player);
