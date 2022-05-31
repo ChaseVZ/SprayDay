@@ -207,12 +207,12 @@ public:
 	};
 
 	vector<std::string> cartoon_sky_faces{
-	"CloudyCrown_Midday_Right.png",
-	"CloudyCrown_Midday_Left.png",
+	"6.png",
+	"6.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"CloudyCrown_Midday_Front.png",
-	"CloudyCrown_Midday_Back.png"
+	"6.png",
+	"6.png"
 	};
 
 	int numTextures = 0;
