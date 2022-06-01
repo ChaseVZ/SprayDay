@@ -90,6 +90,10 @@ float minMaxApproxDistance(float min, float mid, float max)
 static float euclidApprox(vec3 a, vec3 b) {
 	return (a.x - b.x) * (a.x - b.x) + ((a.y - b.y) * (a.y - b.y))*16.0 + (a.z - b.z) * (a.z - b.z);
 }
+float manhattanDist(vec3 a, vec3 b) {
+	vec3 distVec = a - b;
+	return distVec.x + distVec.y * 4 + distVec.z;
+}
 static float calcH(vec3 newPos, Node dest) {
 	return euclidApprox(newPos, dest.pos);
 }
@@ -129,18 +133,18 @@ void addTile(int parentX, int parentZ, int parentY, int offsetX, int offsetZ, in
 	vector<Node>* openList) {
 	double gNew, hNew, fNew;
 	double gPrice = 3.0;
+	int newX = parentX + offsetX;
+	int newY = parentY + offsetY;
+	int newZ = parentZ + offsetZ;
+	hNew = calcH(vec3(newX, newY, newZ), *player);
 	if (isDiagonal(offsetX, offsetZ)) {
 		gPrice *= 1.41;
 	}
 	if (abs(offsetY) == 1 && (abs(offsetX) == 1 || abs(offsetZ) == 1)) {
 		gPrice *= 1.41;
-	}
-	
-	int newX = parentX + offsetX;
-	int newY = parentY + offsetY;
-	int newZ = parentZ + offsetZ;
+	}	
 	gNew = node->gCost + gPrice;
-	hNew = calcH(vec3(newX, newY, newZ), *player);
+	
 	fNew = gNew + hNew;
 	if ((*map)[newY][newX][newZ].fCost == FLT_MAX || (*map)[newY][newX][newZ].fCost > fNew) { //either unseen or improved
 		(*map)[newY][newX][newZ].fCost = fNew;
@@ -153,42 +157,65 @@ void addTile(int parentX, int parentZ, int parentY, int offsetX, int offsetZ, in
 		std::push_heap(openList->begin(), openList->end(), isLessThan);
 	}
 }
+
+void checkNeighboringTile(int x, int z, int y, int newX, int newZ, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map,
+	std::shared_ptr<CollisionSys> collSys, bool visitedList[2][IDX_SIZE][IDX_SIZE], vector<Node>* openList,
+	Node* node, Node* player) {
+	if (x + newX < 0 || z + newZ < 0 || x + newX >= IDX_SIZE || z + newZ >= IDX_SIZE) {
+		return; // don't add tiles out of range
+	}
+
+	int blockType = getBlockType(vec3(x + newX, 0, z + newZ), collSys);
+	//out << "  checking neighbor: " << x + newX << " " << y << " " << z + newZ << endl;
+	if (y == 0) {
+		if (visitedList[0][x + newX][z + newZ] == false && (blockType == EMPTY_BLOCK || blockType == RAMP_BLOCK)) {
+			if (blockType == RAMP_BLOCK) {
+				vec3 newPos = (*map)[1][x + newX][z + newZ].pos;
+			}
+			addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
+		}
+		if (visitedList[1][x + newX][z + newZ] == false && (blockType == RAMP_BLOCK) /*&& !isDiagonal(newX, newZ)*/) {
+			vec3 newPos = (*map)[1][x + newX][z + newZ].pos;
+			addTile(x, z, y, newX, newZ, 1, node, player, map, openList);
+		}
+	}
+	if (y == 1) {
+		if (visitedList[1][x + newX][z + newZ] == false && (blockType == CRATE_BLOCK || blockType == RAMP_BLOCK)) {
+			addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
+		}
+		if (visitedList[0][x + newX][z + newZ] == false && (blockType == RAMP_BLOCK) || blockType == EMPTY_BLOCK /*&& !isDiagonal(newX, newZ)*/) {
+			addTile(x, z, y, newX, newZ, -1, node, player, map, openList);
+		}
+	}
+}
+void addNeighborsOrtho(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map,
+	std::shared_ptr<CollisionSys> collSys, bool visitedList[2][IDX_SIZE][IDX_SIZE], vector<Node>* openList,
+	Node* node, Node* player) {
+	int offsetX = -1, offsetZ = 0;
+	checkNeighboringTile(x, z, y, offsetX, offsetZ, map, collSys, visitedList, openList, node, player);
+	offsetX = 1, offsetZ = 0;
+	checkNeighboringTile(x, z, y, offsetX, offsetZ, map, collSys, visitedList, openList, node, player);
+	offsetX = 0, offsetZ = -1;
+	checkNeighboringTile(x, z, y, offsetX, offsetZ, map, collSys, visitedList, openList, node, player);
+	offsetX = 0, offsetZ = 1;
+	checkNeighboringTile(x, z, y, offsetX, offsetZ, map, collSys, visitedList, openList, node, player);
+}
+
 void addNeighbors(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map, 
 	std::shared_ptr<CollisionSys> collSys, bool visitedList[2][IDX_SIZE][IDX_SIZE], vector<Node>* openList,
 	Node* node, Node* player) {
 	for (int newX = -1; newX <= 1; newX++) {
 		for (int newZ = -1; newZ <= 1; newZ++) {
-			if (x + newX < 0 || z + newZ < 0 || x + newX >= IDX_SIZE || z + newZ >= IDX_SIZE) {
-				break; // don't add tiles out of range
-			}
-			
-			int blockType = getBlockType(vec3(x + newX, 0, z + newZ), collSys);
-			//out << "  checking neighbor: " << x + newX << " " << y << " " << z + newZ << endl;
-			if (y == 0) {
-				if (visitedList[0][x + newX][z + newZ] == false && (blockType == EMPTY_BLOCK || blockType == RAMP_BLOCK)) {
-					if (blockType == RAMP_BLOCK) {
-						vec3 newPos = (*map)[1][x + newX][z + newZ].pos;
-					}
-					addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
-				}
-				if (visitedList[1][x + newX][z + newZ] == false && (blockType == RAMP_BLOCK) /*&& !isDiagonal(newX, newZ)*/) {
-					vec3 newPos = (*map)[1][x + newX][z + newZ].pos;
-					addTile(x, z, y, newX, newZ, 1, node, player, map, openList);
-				}
-			}
-			if (y == 1) {
-				if (visitedList[1][x + newX][z + newZ] == false && (blockType == CRATE_BLOCK|| blockType == RAMP_BLOCK)) {
-					addTile(x, z, y, newX, newZ, 0, node, player, map, openList);
-				}
-				if (visitedList[0][x + newX][z + newZ] == false && (blockType == RAMP_BLOCK) || blockType == EMPTY_BLOCK /*&& !isDiagonal(newX, newZ)*/) {
-					addTile(x, z, y, newX, newZ, -1, node, player, map, openList);
-				}
-			}
+			checkNeighboringTile(x, z, y, newX, newZ, map, collSys, visitedList, openList, node, player);
 		}
 	}
 }
 
-static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionSys> collSys) {
+static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionSys> collSys, 
+
+	void (*addNeighborFunc)(int x, int z, int y, array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* map,
+		std::shared_ptr<CollisionSys> collSys, bool visitedList[2][IDX_SIZE][IDX_SIZE], vector<Node>* openList,
+		Node* node, Node* player)) {
 	vector<Node> empty;
 	if ((getBlockType(player.pos, collSys) == CRATE_BLOCK) && player.pos.y == 0) { //player is unreachable and is in an obstacle
 		return empty;
@@ -248,7 +275,7 @@ static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionS
 			return returnVal;
 		}
 		//cout << " selected: " << x << " " << y << " " << z << endl;
-		addNeighbors(x, z, y, map, collSys, visitedList, &openList, &selected, &player);
+		addNeighborFunc(x, z, y, map, collSys, visitedList, &openList, &selected, &player);
 	}
 	delete map;
 	return empty;
@@ -285,7 +312,20 @@ vec3 initPlayerNodePos(vec3 truePlayerPos, shared_ptr<CollisionSys> collSys) {
 	}
 	return newPlayerPos;
 }
-vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys) {
+
+
+vec3 getNextTileFromMoveList(vec3 startPos, vector<Node> * moves) {
+	if (moves->size() > 1) {
+		vec3 futurePos = (*moves)[1].pos;
+		vec3 differenceVec = futurePos - startPos;
+		if (isDiagonal(differenceVec.x, differenceVec.z) && differenceVec.y == 0) {
+			return futurePos;
+		}
+	}
+	return (*moves)[0].pos;
+}
+
+vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT pathingType) {
 	//cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 	Node playerNode;
@@ -301,7 +341,12 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	vector<Node> moves;
 	assert(!(startPos.x >= IDX_SIZE || startPos.z >= IDX_SIZE));
 	assert(!(startPos.z <= 0 || startPos.x <= 0));
-	moves = checkNodes(startPos, playerNode, collSys);
+	if (pathingType == SIMPLE_PATH) {
+		moves = checkNodes(startPos, playerNode, collSys, &addNeighbors);
+	}
+	else if (pathingType == FLANK_PATH) {
+		moves = checkNodes(startPos, playerNode, collSys, &addNeighborsOrtho);
+	}
 	
 	if (!moves.empty()){
 		glm::vec3 retMove = collSys->mapToWorldVec(moves.front().pos);
@@ -309,7 +354,8 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 		glm::vec3 trPos = floorVec(tr->pos);
 		if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 			moves.erase(moves.begin());
-			return collSys->mapToWorldVec(moves.front().pos * vec3(1.0, 4.0, 1.0));
+			vec3 nextTile = getNextTileFromMoveList(startPos, &moves);
+			return collSys->mapToWorldVec(nextTile * vec3(1.0, 4.0, 1.0));
 			//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 		}
 	}

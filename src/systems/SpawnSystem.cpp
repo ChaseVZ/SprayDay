@@ -1,4 +1,4 @@
-
+	
 #include "SpawnSystem.h"
 #include <iostream>
 
@@ -41,7 +41,8 @@ void SpawnSys::initBear() {
 			startPos, //vec3 nextTile
 			false, // bool exploding;
 			0, // int explodeFrame;
-			0.6 // speed
+			0.6, // speed
+			SIMPLE_PATH
 		});
 
 	gCoordinator.AddComponent(
@@ -88,7 +89,8 @@ void SpawnSys::initWolf() {
 			startPos, //start poosition (nextTile)
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.1 //SPEED
+			1.1, //SPEED
+			FLANK_PATH
 		});
 
 	gCoordinator.AddComponent(

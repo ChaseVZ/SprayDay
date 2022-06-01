@@ -66,7 +66,7 @@ extern Coordinator gCoordinator;
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
 				//cout << "player pos: " << p->pos.x + 79 << " " << p->pos.y << " " << p->pos.z + 79 << endl;
 				//cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.y << " " << tr->pos.z + 79 << endl;
-				e->nextTile = Astar::findNextPos(*p, tr, collSys);
+				e->nextTile = Astar::findNextPos(*p, tr, collSys , e->pathingType);
 				//cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.y << " " << e->nextTile.z + 79 << endl;
 			}
 			e->prevVel = e->vel;

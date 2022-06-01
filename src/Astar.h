@@ -11,10 +11,15 @@
 #endif
 #include <vector>
 
+enum PathingT : int {
+	SIMPLE_PATH = 0,
+	FLANK_PATH,
+};
+
 class Astar
 {
     public: 
-        static vec3 findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys);
+        static vec3 findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT);
 
 };
 
