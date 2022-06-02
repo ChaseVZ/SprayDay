@@ -38,6 +38,6 @@ private:
 
 namespace RenderSystem {
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
-		 shared_ptr<Texture> grassTexture, bool isGrey);
+		 shared_ptr<Texture> grassTexture, bool isGrey, GLuint depthMap);
 
 }

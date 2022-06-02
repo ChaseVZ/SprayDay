@@ -1210,12 +1210,11 @@ public:
 				resetMovement();				
 			}
 		}
-		//glEnable(GL_BLEND);
-		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver);
+		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
 		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		// do not want transparency when drawing shadows
-		/*
 		sprayParticleSys->setCamera(View);
+
 		partProg->bind();
 		particleTexture->bind(partProg->getUniform("alphaTexture"));
 		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
@@ -1224,14 +1223,11 @@ public:
 		sprayParticleSys->drawMe(partProg);
 		sprayParticleSys->update();
 		partProg->unbind();
-		*/
 		
 		hudSys->update(Projection, player);
-			
 		if (!debugMode && !gameOver) { 
 			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
-			
 			spawnSys->update(frametime, animationSys);
 			damageSys->update(&trail, frametime);
 		}

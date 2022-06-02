@@ -568,7 +568,9 @@ namespace RenderSystem {
 	//code to draw the ground plane
 
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, 
-		mat4 View, shared_ptr<Texture> grassTexture, bool isGrey) {
+		mat4 View, shared_ptr<Texture> grassTexture, bool isGrey, GLuint depthMap) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
 		
 		curS->bind();
 		glUniform1i(curS->getUniform("useCubeTex"), false);
