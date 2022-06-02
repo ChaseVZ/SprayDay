@@ -14,7 +14,6 @@ struct Enemy {
 	int explodeFrame;
 	float baseSpeed;
 	PathingT pathingType;
-	vec3 prevVel = vec3(1, 0, 0);
 };
 
 #endif

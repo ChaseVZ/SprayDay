@@ -69,20 +69,21 @@ extern Coordinator gCoordinator;
 				e->nextTile = Astar::findNextPos(*p, tr, collSys , e->pathingType);
 				//cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.y << " " << e->nextTile.z + 79 << endl;
 			}
-			e->prevVel = e->vel;
 			e->vel = (e->nextTile +vec3(0.5, 0.0, 0.5) - tr->pos);
 			//cout << "enemy vel: " << e->vel.x << " " << e->vel.y << " " << e->vel.z<< endl << endl;
 
 			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
 			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			vec3 velXZ = getXZ(e->vel);
-			vec3 prevVelXZ = getXZ(e->prevVel);
+			vec3 prevLookXZ = getXZ(tr->lookDir);
 			if (e->vel != vec3(0)) {
-				e->vel = normalize(e->vel)*vec3(e->baseSpeed) / vec3(4.0f) ;
-				if (velXZ+ prevVelXZ == vec3(0))
-					tr->lookDir = velXZ;
+				e->vel = normalize(e->vel)*vec3(e->baseSpeed) / vec3(4.0f);
+
+				vec3 nextLookDir = velXZ * vec3(0.3) + prevLookXZ * vec3(0.7);
+				if (nextLookDir != vec3(0))
+					tr->lookDir = nextLookDir;	
 				else
-					tr->lookDir = velXZ + prevVelXZ;
+					tr->lookDir = velXZ;
 			}
 			tr->pos += e->vel*dt;
        }
