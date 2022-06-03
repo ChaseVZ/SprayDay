@@ -14,17 +14,19 @@
 #include "../EcsCore/System.h"
 #include "../Components/Transform.h"
 #include "../Components/AnimationComponent.h"
+#include "../Tree.h"
 
 
 class RenderSys : public System
 {
 public:
 	void init(float grndSize);
-	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime);
+	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawDepth(shared_ptr<Program> curS);
 	int ViewFrustCull(vec3 center, float radius);
 	float DistToPlane(float A, float B, float C, float D, vec3 point);
 	void ExtractVFPlanes(mat4 P, mat4 V);
+	Tree::TreeNode getTree();
 private:
 	Entity mCamera;
 	GLuint mVao{};
@@ -34,6 +36,7 @@ private:
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc);
+
 };
 
 namespace RenderSystem {

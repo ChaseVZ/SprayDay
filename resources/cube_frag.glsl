@@ -15,4 +15,7 @@ void main() {
   } else{
   FragColor = texture(cubeTex, TexCoords);
   }
+  if (color.x >= 0.99 && color.y >= 0.99 && color.z >= 0.99){
+    FragColor.w = 0.0;
+  }
 }
