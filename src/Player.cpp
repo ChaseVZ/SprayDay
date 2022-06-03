@@ -123,7 +123,7 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 
 	// Only involve gravity when player is jumping or falling
 	if (jumping || falling) {
-		vel = vel + acc * lastTime;
+		vel = vel + acc * frametime;
 
 		// Only have jump speed affect velocity @ start of jump
 		if (lastTime == 0 && !falling)
