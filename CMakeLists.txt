@@ -16,8 +16,11 @@ file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/e
 file(GLOB_RECURSE HEADERS "src/*.h" "ext/*/*.h" "ext/glad/*/*.h")
 file(GLOB_RECURSE GLSL "resources/*.glsl")
 
+find_package(Freetype REQUIRED)
+
 include_directories("ext")
 include_directories("ext/glad/include")
+include_directories("ext/includes")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
@@ -37,7 +40,7 @@ if(NOT WIN32)
   # TODO: The following links may be uneeded. 
   if(APPLE)
     # Add required frameworks for GLFW.
-    target_link_libraries(${CMAKE_PROJECT_NAME} "-framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo")
+    target_link_libraries(${CMAKE_PROJECT_NAME} ${FREETYPE_LIBRARIES} "-framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo")
   else()
     #Link the Linux OpenGL library
     target_link_libraries(${CMAKE_PROJECT_NAME} "GL" "dl")

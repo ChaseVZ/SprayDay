@@ -20,9 +20,11 @@ public:
 		float radius;
 		vector<TreeNode> children;
 		vector<Entity> entities;
+		int nodeNum;
 	} TreeNode;
 
 	static TreeNode initTree(set<Entity> mEntities);
+	static void TraverseTree(TreeNode tn);
 
 private:
 	static bool isEntityInside(vec3 entPos, TreeNode node);
