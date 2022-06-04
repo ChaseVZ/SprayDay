@@ -82,8 +82,7 @@ void initGround(float grndSize) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
 }
 
-void RenderSys::init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex)
-{
+void RenderSys::init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex){
 	initGround(grndSize);
 	sprayParticleSys = new particleSys(vec3(0, 5, 0), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
 	sprayParticleSys->setnumP(90);

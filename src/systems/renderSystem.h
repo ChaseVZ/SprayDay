@@ -20,7 +20,7 @@
 class RenderSys : public System
 {
 public:
-	void init(float grndSize);
+	void init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex);
 	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawDepth(shared_ptr<Program> curS);
 	int ViewFrustCull(vec3 center, float radius);
