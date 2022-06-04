@@ -57,7 +57,7 @@ void DamageSys::animatePoison(Entity entity) {
 		enemyRC.shader = texShader;
 	}
 }
-void DamageSys :: update(vector<Entity>* trail, float frameTime)
+void DamageSys :: update(vector<Entity>* trail, float frameTime, int* enemiesKilled)
 {
 	set<Entity>::iterator itr;
 	for (itr = mEntities.begin(); itr != mEntities.end(); ){
@@ -79,6 +79,7 @@ void DamageSys :: update(vector<Entity>* trail, float frameTime)
 		animatePoison(entity);
 		if (hpLessThanOne(entity)) {
 			gCoordinator.DestroyEntity(entity);
+			*enemiesKilled = *enemiesKilled + 1;
 		}
 	}	
 }

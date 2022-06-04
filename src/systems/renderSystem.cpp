@@ -18,6 +18,13 @@ int objCount;
 int cullCount;
 
 Tree::TreeNode tree;
+bool madeTree = false;
+int playerScore;
+int lastEnemiesKilled = 0;
+int lastKillTime = 0;
+
+vector<Text::Kill> kills;
+
 
 /* ============== GROUND ============== */
 
@@ -203,14 +210,18 @@ void RenderSys::init(float grndSize)
 
 Tree::TreeNode RenderSys::getTree() {
 	//cout << "getting tree" << endl;
-	if ( tree.children.empty() ) {
-		//cout << "making tree!" << endl;
+	if ( !madeTree ) { //tree.children.empty() ) {
+		madeTree = true;
+		cout << "making tree!" << endl;
 		tree = Tree::initTree(mEntities);
 		//cout << "Tree radius: " << tree.radius << endl;
 		//cout << "Tree next root: " << endl;
-		for (Tree::TreeNode tn : tree.children){
-			//cout<<"TN: " << tn.pos.x << " " << tn.pos.z << " rad: " << tn.radius <<endl;
-		}
+		// while (!tn.children.empty()) {
+		// 	for (Tree::TreeNode tn2 : tn.children)
+		// 		cout<<"TN: " << tn.pos.x << " " << tn.pos.z << " rad: " << tn.radius <<endl;
+
+		// }
+		Tree::TraverseTree(tree);
 	}
 	return tree;
 }
@@ -582,6 +593,10 @@ int RenderSys::ViewFrustCull(vec3 center, float radius) {
 	return 0; 
 }
 
+float randomFloat(int min, int max) {
+		return  min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(max-min)));
+}
+
 namespace RenderSystem {
 	//code to draw the ground plane
 
@@ -633,5 +648,38 @@ namespace RenderSystem {
 		Model->popMatrix();
 
 		curS->unbind();
+	}
+
+	void drawText(shared_ptr<Program> textProg, bool gameOver, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, Text::Character> Characters, int gameTime, int enemiesKilled) {
+
+		if (!gameOver) {
+			// if (lastEnemiesKilled != enemiesKilled) {
+			// 	Text::RenderText(textProg, "enemy sprayed!", 100.0f, 100.0f, 1.0f, glm::vec3(0.21f, 0.0f, 0.74f), TextVAO, TextVBO, Characters);
+			// }
+			// if (lastKillTime < gameTime - 3) {
+			// 	lastEnemiesKilled = enemiesKilled;
+			// 	lastKillTime = gameTime;
+			// }
+			playerScore = gameTime + 10*enemiesKilled;
+
+			if (kills.size() != enemiesKilled) {
+				Text::Kill newKill;
+				newKill.killTime = gameTime;
+				newKill.pos = glm::vec2(randomFloat(50, 725), randomFloat(50, 525));
+				newKill.scale = 1.0f;
+				newKill.color = glm::vec3(randomFloat(0, 1), randomFloat(0, 1), randomFloat(0, 1));
+				kills.push_back(newKill);
+			}
+			for (Text::Kill k : kills) {
+				if (k.killTime > gameTime - 3){
+					Text::RenderText(textProg, "enemy sprayed! +10", k.pos.x, k.pos.y, k.scale, k.color, TextVAO, TextVBO, Characters);
+				}
+			}
+			Text::RenderText(textProg, "score: " + to_string(playerScore), 350.0f, 550.0f, 1.5f, glm::vec3(0.21f, 0.0f, 0.74f), TextVAO, TextVBO, Characters);
+		}
+		else {
+			Text::RenderText(textProg, "GAME OVER", 120.0f, 300.0f, 5.0f, glm::vec3(0.9f, 0.0f, 0.0f), TextVAO, TextVBO, Characters);
+			Text::RenderText(textProg, "score: " + to_string(playerScore), 275.0f, 250.0f, 3.0f, glm::vec3(0.21f, 0.0f, 0.74f), TextVAO, TextVBO, Characters);
+		}
 	}
 }

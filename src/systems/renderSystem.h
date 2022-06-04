@@ -15,6 +15,8 @@
 #include "../Components/Transform.h"
 #include "../Components/AnimationComponent.h"
 #include "../Tree.h"
+#include "../Text.h"
+#include <vector>
 
 
 class RenderSys : public System
@@ -42,5 +44,6 @@ private:
 namespace RenderSystem {
 	void drawGround(shared_ptr<Program> curS, shared_ptr<MatrixStack> Projection, mat4 View,
 		 shared_ptr<Texture> grassTexture, bool isGrey);
+	void drawText(shared_ptr<Program> textProg, bool gameOver, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, Text::Character> Characters, int gameTime, int enemiesKilled);
 
 }
