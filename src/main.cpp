@@ -206,21 +206,78 @@ public:
 	"red.png"
 	};
 
-	vector<std::string> cartoon_sky_faces{
-	"CloudyCrown_Midday_Right.png",
-	"CloudyCrown_Midday_Left.png",
+	vector<std::string> cartoon_sky_faces1{
+	"1.png",
+	"1.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"CloudyCrown_Midday_Front.png",
-	"CloudyCrown_Midday_Back.png"
+	"1.png",
+	"1.png"
 	};
 
+	vector<std::string> cartoon_sky_faces2{
+	"2.png",
+	"2.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"2.png",
+	"2.png"
+	};
+
+	vector<std::string> cartoon_sky_faces3{
+	"3.png",
+	"3.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"3.png",
+	"3.png"
+	};
+
+	vector<std::string> cartoon_sky_faces4{
+	"4.png",
+	"4.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"4.png",
+	"4.png"
+	};
+
+	vector<std::string> cartoon_sky_faces5{
+	"5.png",
+	"5.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"5.png",
+	"5.png"
+	};
+
+	vector<std::string> cartoon_sky_faces6{
+	"6.png",
+	"6.png",
+	"CloudyCrown_Midday_Up.png",
+	"CloudyCrown_Midday_Down.png",
+	"6.png",
+	"6.png"
+	};
+
+
 	int numTextures = 0;
-	unsigned int skyTexID;
+	unsigned int skyTexID1;
+	unsigned int skyTexID2;
+	unsigned int skyTexID3;
+	unsigned int skyTexID4;
+	unsigned int skyTexID5;
+	unsigned int skyTexID6;
 	unsigned int redTexID;
 	unsigned int cubeTexID;
 	unsigned int rampTexID;
 
+	Entity skyEnt1;
+	Entity skyEnt2;
+	Entity skyEnt3;
+	Entity skyEnt4;
+	Entity skyEnt5;
+	Entity skyEnt6;
 
 	/* ================ GLOBAL ================= */
 	Player player;
@@ -599,24 +656,120 @@ public:
 
 	#pragma region InitEntities
 	void initSkybox() {
-		Entity skyEnt = gCoordinator.CreateEntity();
+
+		skyEnt6 = gCoordinator.CreateEntity();
 		gCoordinator.AddComponent(
-			skyEnt,
+			skyEnt6,
 			RenderComponent{
-			&cube,     //ShapeGroup * sg;
+			&sphere,     //ShapeGroup * sg;
 			1.0,           //float transparency;
 			cubeProg,
 			GL_FRONT,
-			skyTexID
+			skyTexID6
 		});
 
 		gCoordinator.AddComponent(
-			skyEnt,
+			skyEnt6,
 			Transform{
-			vec3(0.0),				 //vec3 pos;
+			vec3(20.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(MAP_SIZE * 2.0),	 //vec3 scale;
+		});
+
+		skyEnt5 = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt5,
+			RenderComponent{
+			&sphere,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			skyTexID5
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt5,
+			Transform{
+			vec3(20.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(MAP_SIZE * 1.9),	 //vec3 scale;
+		});
+
+		skyEnt4 = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt4,
+			RenderComponent{
+			&sphere,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			skyTexID4
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt4,
+			Transform{
+			vec3(20.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(MAP_SIZE * 1.8),	 //vec3 scale;
+		});
+
+		skyEnt3 = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt3,
+			RenderComponent{
+			&sphere,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			skyTexID3
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt3,
+			Transform{
+			vec3(20.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(MAP_SIZE * 1.7),	 //vec3 scale;
+		});
+
+		skyEnt2 = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt2,
+			RenderComponent{
+			&sphere,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			skyTexID2
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt2,
+			Transform{
+			vec3(20.0),				 //vec3 pos;
+			vec3(0.0, 0.0, -1.0),     // vec3 rotation
+			vec3(MAP_SIZE * 1.6),	 //vec3 scale;
+		});
+		
+		skyEnt1 = gCoordinator.CreateEntity();
+		gCoordinator.AddComponent(
+			skyEnt1,
+			RenderComponent{
+			&sphere,     //ShapeGroup * sg;
+			1.0,           //float transparency;
+			cubeProg,
+			GL_FRONT,
+			skyTexID1
+		});
+
+		gCoordinator.AddComponent(
+			skyEnt1,
+			Transform{
+			vec3(20.0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.5),	 //vec3 scale;
-			});
+		});
 	};
 
 	void initSkunk() {
@@ -967,7 +1120,12 @@ public:
 
 		// SKYBOX
 		//createSky(resourceDirectory + "/skybox/", sky_faces);
-		skyTexID =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces);
+		skyTexID1 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces1);
+		skyTexID2 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces2);
+		skyTexID3 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces3);
+		skyTexID4 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces4);
+		skyTexID5 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces5);
+		skyTexID6 =  createSky(resourceDirectory + "/FarlandSkies/Skyboxes/CloudyCrown_01_Midday/", cartoon_sky_faces6);
 		redTexID =  createSky(resourceDirectory + "/chase_resources/", redFaces);
 		cubeTexID = createSky(resourceDirectory + "/chase_resources/crate/", crate_faces);
 		rampTexID = createSky(resourceDirectory + "/chase_resources/", crate_faces2);
@@ -1034,6 +1192,27 @@ public:
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		cout << " creating cube map any errors : " << glGetError() << endl;
 		return textureID;
+	}
+
+	void updateSkybox(float frametime) {
+		Transform& sky1 = gCoordinator.GetComponent<Transform>(skyEnt1);
+		sky1.rotation += vec3(0, 0.01*frametime, 0);
+		sky1.pos.y += 2*frametime*sin(gameTime);
+		Transform& sky2 = gCoordinator.GetComponent<Transform>(skyEnt2);
+		sky2.rotation += vec3(0, -0.01*frametime, 0);
+		sky2.pos.y -= 2*frametime*sin(gameTime);
+		Transform& sky3 = gCoordinator.GetComponent<Transform>(skyEnt3);
+		sky3.rotation += vec3(0, 0.01*frametime, 0);
+		sky3.pos.y += 2*frametime*sin(gameTime);
+		Transform& sky4 = gCoordinator.GetComponent<Transform>(skyEnt4);
+		sky4.rotation += vec3(0, -0.01*frametime, 0);
+		sky4.pos.y -= 2*frametime*sin(gameTime);
+		Transform& sky5 = gCoordinator.GetComponent<Transform>(skyEnt5);
+		sky5.rotation += vec3(0, 0.01*frametime, 0);
+		sky5.pos.y += 2*frametime*sin(gameTime);
+		Transform& sky6 = gCoordinator.GetComponent<Transform>(skyEnt6);
+		sky6.rotation += vec3(0, -0.01*frametime, 0);
+		sky6.pos.y -= 2*frametime*sin(gameTime);
 	}
 
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
@@ -1205,8 +1384,9 @@ public:
 				resetMovement();				
 			}
 		}
+		updateSkybox(frametime);
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
 		// do not want transparency when drawing shadows
 		
 		

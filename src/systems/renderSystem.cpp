@@ -3,6 +3,7 @@
 #include "../GameManager.h"
 #include "../EcsCore/Coordinator.h"
 
+
 using namespace glm;
 extern Coordinator gCoordinator;
 
@@ -19,6 +20,8 @@ bool debugCullCount = false;
 
 int objCount;
 int cullCount;
+
+Tree::TreeNode tree;
 
 /* ============== GROUND ============== */
 
@@ -209,6 +212,20 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 
 
 
+
+Tree::TreeNode RenderSys::getTree() {
+	//cout << "getting tree" << endl;
+	if ( tree.children.empty() ) {
+		//cout << "making tree!" << endl;
+		tree = Tree::initTree(mEntities);
+		//cout << "Tree radius: " << tree.radius << endl;
+		//cout << "Tree next root: " << endl;
+		for (Tree::TreeNode tn : tree.children){
+			//cout<<"TN: " << tn.pos.x << " " << tn.pos.z << " rad: " << tn.radius <<endl;
+		}
+	}
+	return tree;
+}
 
 // mat4 GetProjectionMatrix() {
 //     	int width, height;
@@ -425,12 +442,13 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 }
 #pragma endregion
 
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime)
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey)
 {
 	cullCount = 0;
 	objCount = 0;
 	vector<Entity> transparentEnts;
 
+	Tree::TreeNode hierTree = RenderSys::getTree();
 	for (Entity const& entity : mEntities) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
