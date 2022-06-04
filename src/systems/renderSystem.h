@@ -19,7 +19,7 @@
 class RenderSys : public System
 {
 public:
-	void init(float grndSize);
+	void init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex);
 	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime);
 	void drawDepth(shared_ptr<Program> curS);
 	int ViewFrustCull(vec3 center, float radius);
@@ -34,6 +34,7 @@ private:
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc);
+	void RenderSys::drawSprayParticles(mat4 view, mat4 projection, mat4 model);
 };
 
 namespace RenderSystem {

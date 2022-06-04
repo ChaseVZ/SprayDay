@@ -225,7 +225,6 @@ public:
 	/* ================ GLOBAL ================= */
 	Player player;
 	VirtualCamera vcam;
-	particleSys* sprayParticleSys;
 
 	Entity skunkEnt;
 	vector<Entity> obstacles;
@@ -542,10 +541,6 @@ public:
 		partProg->addAttribute("pColor");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
-
-		sprayParticleSys = new particleSys(vec3(0, 5, 0), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
-		sprayParticleSys->setnumP(90);
-		sprayParticleSys->gpuSetup();
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -1213,16 +1208,7 @@ public:
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
 		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		// do not want transparency when drawing shadows
-		sprayParticleSys->setCamera(View);
-
-		partProg->bind();
-		particleTexture->bind(partProg->getUniform("alphaTexture"));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix())));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(View)));
-		CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(mat4(1.0))));
-		sprayParticleSys->drawMe(partProg);
-		sprayParticleSys->update();
-		partProg->unbind();
+		
 		
 		hudSys->update(Projection, player);
 		if (!debugMode && !gameOver) { 
@@ -1250,7 +1236,7 @@ public:
 			signature.set(gCoordinator.GetComponentType<RenderComponent>());
 			gCoordinator.SetSystemSignature<RenderSys>(signature);
 		}
-		renderSys->init(MAP_SIZE);
+		renderSys->init(MAP_SIZE, partProg, particleTexture);
 
 		damageSys = gCoordinator.RegisterSystem<DamageSys>();
 		Signature signature;

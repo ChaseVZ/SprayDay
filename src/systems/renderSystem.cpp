@@ -6,6 +6,10 @@
 using namespace glm;
 extern Coordinator gCoordinator;
 
+particleSys* sprayParticleSys;
+shared_ptr<Program> partProg;
+shared_ptr<Texture> particleTexture;
+
 vec3 worldShift = vec3(-0.5f, 0, -0.5f);
 
 vec4 Left, Right, Bottom, Top, Near, Far;
@@ -73,6 +77,17 @@ void initGround(float grndSize) {
 	glGenBuffers(1, &GIndxBuffObj);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GIndxBuffObj);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+}
+
+void RenderSys::init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex)
+{
+	initGround(grndSize);
+	sprayParticleSys = new particleSys(vec3(0, 5, 0), 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 0.4f); // start off screen
+	sprayParticleSys->setnumP(90);
+	sprayParticleSys->gpuSetup();
+
+	partProg = ptProg;
+	particleTexture = ptTex;
 }
 
 void SetModel(vec3 trans, float rotZ, float rotY, float rotX, vec3 sc, shared_ptr<Program> curS) {
@@ -193,10 +208,7 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 }
 
 
-void RenderSys::init(float grndSize)
-{
-	initGround(grndSize);
-}
+
 
 // mat4 GetProjectionMatrix() {
 //     	int width, height;
@@ -438,12 +450,14 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint dep
 			draw(Projection, View, &rc, &tr, depthMap, LSpace, isGrey);
 		}
 	}
+	drawSprayParticles(View, Projection->topMatrix(), mat4(1.0));
 	// draw all transparent entities second
 	for (Entity entity : transparentEnts) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
 		draw(Projection, View, &rc ,&tr, depthMap, LSpace, isGrey);
 	}
+	
 	if (debugCullCount) {
 		cout << "cull count: " << cullCount << endl;
 		cout << "object Count: " << objCount << endl;
@@ -562,6 +576,18 @@ int RenderSys::ViewFrustCull(vec3 center, float radius) {
 		}
 	}
 	return 0; 
+}
+
+void RenderSys::drawSprayParticles(mat4 view, mat4 projection, mat4 model) {
+	sprayParticleSys->setCamera(view);
+	partProg->bind();
+	particleTexture->bind(partProg->getUniform("alphaTexture"));
+	CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("P"), 1, GL_FALSE, value_ptr(projection)));
+	CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(view)));
+	CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(model)));
+	sprayParticleSys->drawMe(partProg);
+	sprayParticleSys->update();
+	partProg->unbind();
 }
 
 namespace RenderSystem {

@@ -14,7 +14,6 @@ void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos) {
 			0.4,  //transparency
 			texProg,
 			GL_BACK,
-			//SPRAY
 		});
 	gCoordinator.AddComponent(
 		sprayEnt,
@@ -43,7 +42,7 @@ void SpraySys::update(float frametime, vector<Entity> * trail, int mvmType, vec3
 			i -= 1;
 		}
 	}
-
+	
 	if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
 		if (mvmType == 1) {
 			timeSinceLastSpray -= TIME_UNTIL_SPRAY;

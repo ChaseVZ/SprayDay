@@ -3,6 +3,9 @@
 #include "../ShapeGroup.h"
 #include "../Components/Transform.h"
 #include "../EcsCore/Coordinator.h"
+#include "../particleSys.h"
+#include "../GLSL.h"
+
 
 
 class SpraySys : public System
