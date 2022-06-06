@@ -10,14 +10,14 @@ const unsigned int SCR_HEIGHT = 600;
 
 
 /* set up the projection matrix for the font render */
-mat4 Text::setTextProj(shared_ptr<Program> curShade)  {
+mat4 MyText::setTextProj(shared_ptr<Program> curShade)  {
 	glm::mat4 proj = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
 	glUniformMatrix4fv(curShade->getUniform("projection"), 1, GL_FALSE, value_ptr(proj));
-
+	return proj;
 }
 
 /* helper function modified from learnOpenGL to fit with our programs */
-void Text::RenderText(shared_ptr<Program> textProg, std::string text, float x, float y, float scale, glm::vec3 color, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, Text::Character> Characters){
+void MyText::RenderText(shared_ptr<Program> textProg, std::string text, float x, float y, float scale, glm::vec3 color, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, MyText::Character> Characters){
 	// activate corresponding render state	
 	textProg->bind();
 

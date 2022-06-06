@@ -7,14 +7,8 @@ uniform float alpha;
 uniform bool useCubeTex;
 uniform bool isGrey;
 
-in OUT_struct {
-   vec3 fPos;
-   vec3 fragNor;
-   vec2 vTexCoord;
-   vec4 fPosLS;
-   vec3 vColor;
-} in_struct;
-
+in vec4 bw;
+in vec4 fPosLS;
 in vec3 texCoords;
 in vec3 fragNor;
 in vec3 lightDir;
@@ -67,21 +61,15 @@ void main() {
 	vec3 h = (cam + light) / 2.0;
 	float Sc = pow(max(0.0, dot(normal, h)), 1);
 
-	float Shade = TestShadow(in_struct.fPosLS);
-	//Shade = 0.0;
+	float Shade = TestShadow(fPosLS);
 	vec4 color = vec4(matDif * Dc + matAmb + matSpec * Sc, alpha);
-	//vec4 color = vec4(matSpec*Sc, 1.0);
 
-	//if (color.g > 0.5)
-	//	discard;
-	
 	color = vec4((1.0-Shade)*color.xyz, color.w);
 	if(isGrey){
-	float averageCol = (color.x + color.y + color.z)/3.0;
-	Outcolor = vec4(vec3(averageCol), color.w);
+		float averageCol = (color.x + color.y + color.z)/3.0;
+		Outcolor = vec4(vec3(averageCol), color.w);
 	}
 	else{
-	Outcolor = color;
+		Outcolor = color;
 	}
-
 }

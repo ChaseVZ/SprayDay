@@ -70,7 +70,7 @@ void SpawnSys::initBear() {
 		});
 }
 
-void SpawnSys::initWolf() {
+void SpawnSys::initWolf(float gameTime) {
 	Entity wolfEnt = gCoordinator.CreateEntity();
 	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
@@ -119,23 +119,25 @@ void SpawnSys::initWolf() {
 			true // isSkeletal
 		});
 
-	cout << "adding skeletal comp\n";
+	//cout << "adding skeletal comp\n";
+	//cout << gameTime << endl;
 	gCoordinator.AddComponent(
 		wolfEnt,
 		SkeletalComponent{
-			wolf->filename.c_str()
+			wolf->filename.c_str(),
+			gameTime
 		});
 }
 
-void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys) {
+void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float gameTime) {
 	spawnTimer -= spawnTime;
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
 		initBear();
 	}
 	else {
-		initWolf();
-		//animationSys->init();
+		initWolf(gameTime);
+		animationSys->init();
 	}
 }
 
@@ -148,11 +150,11 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	POISON_TICK_TIME = poisonTickTime;
 }
 
-void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys) {
+void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys, float gameTime) {
 	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE * frameTime, MIN_SPAWN_TIME);
 	spawnTimer += frameTime;
 	if (spawnTimer > spawnTime) {
-		spawnEnemy(animationSys);
+		spawnEnemy(animationSys, gameTime);
 	}
 }
 

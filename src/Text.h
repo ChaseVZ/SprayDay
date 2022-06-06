@@ -8,11 +8,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Components/Transform.h"
 #include "Program.h"
+#include <memory>
 
 using namespace std;
 using namespace glm;
 
-class Text
+class MyText
 {
 
 public:
@@ -32,8 +33,11 @@ public:
 	};
 
 	static mat4 setTextProj(shared_ptr<Program> curShade);
-	static void RenderText(shared_ptr<Program> textProg, std::string text, float x, float y, float scale, glm::vec3 color, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, Text::Character> Characters);
+	static void RenderText(shared_ptr<Program> textProg, std::string text, float x, float y, float scale, glm::vec3 color, unsigned int TextVAO, unsigned int TextVBO, std::map<GLchar, MyText::Character> Characters);
 
 private:
 };
+
+//namespace mytext{
+//}
 

@@ -36,17 +36,12 @@
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include "Components/HudComponent.h"
-//#include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/HudSystem.h"
 #include "systems/AnimationSystem.h"
-//#include <assimp-5.2.4/include/assimp/scene.h>
-//#include <assimp-5.2.4/include/assimp/Importer.hpp>
-//#include <assimp-5.2.4/include/assimp/postprocess.h>
-
 #include <ft2build.h>
 #include FT_FREETYPE_H 
-#include "Text.h"
+//#include "Text.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -321,7 +316,7 @@ public:
 	//Free type data
 	FT_Library ft;
 	FT_Face face;
-	std::map<GLchar, Text::Character> Characters;
+	std::map<GLchar, MyText::Character> Characters;
 	unsigned int TextVAO, TextVBO;
 	int enemiesKilled = 0;
 
@@ -507,10 +502,16 @@ public:
 		texProg->addUniform("isGrey");
  	 	texProg->addUniform("shadowDepth");
 		texProg->addUniform("LS");
+		texProg->addUniform("isSkeletal");
+		texProg->addUniform("bone_transforms");
 
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+
+		texProg->addAttribute("uv");
+		texProg->addAttribute("boneIds");
+		texProg->addAttribute("boneWeights");
 		/*
 		GLuint partLocation0 = glGetUniformLocation(texProg->getPID(), "Texture0");
 		GLuint partLocation2 = glGetUniformLocation(texProg->getPID(), "cubeTex");
@@ -747,13 +748,13 @@ public:
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			// now store character for later use
-				Text::Character character = {
+				MyText::Character character = {
 					texture,
 					glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
 					glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
 					static_cast<unsigned int>(face->glyph->advance.x)
 				};
-				Characters.insert(std::pair<char, Text::Character>(c, character));
+				Characters.insert(std::pair<char, MyText::Character>(c, character));
 			}
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}	
@@ -1213,7 +1214,7 @@ public:
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures,
-			resourceDirectory + "/chase_resources/low-poly-animals/wolf.dae");
+			resourceDirectory + "/chase_resources/low-poly-animals/wolfAnim2.fbx");
 
 		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate_small.obj",
 			resourceDirectory + "/chase_resources/crate/",
@@ -1494,7 +1495,7 @@ public:
 		}
 		updateSkybox(frametime);
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		// do not want transparency when drawing shadows
 		
 		
@@ -1502,7 +1503,7 @@ public:
 		if (!debugMode && !gameOver) { 
 			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
-			spawnSys->update(frametime, animationSys);
+			spawnSys->update(frametime, animationSys, gameTime);
 			damageSys->update(&trail, frametime, &enemiesKilled);
 		}
 		RenderSystem::drawText(textProg, gameOver, TextVAO, TextVBO, Characters, gameTime, enemiesKilled);
@@ -1608,7 +1609,7 @@ int main(int argc, char *argv[])
 	{
 		resourceDir = argv[1];
 	}
-	int test;
+	//int test;
 	Application *application = new Application();
 
 	// Your main will always include a similar set up to establish your window
