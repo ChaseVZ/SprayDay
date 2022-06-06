@@ -213,48 +213,48 @@ public:
 	};
 
 	vector<std::string> cartoon_sky_faces1{
-	"1.png",
-	"1.png",
+	"1_3.png",
+	"1_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"1.png",
-	"1.png"
+	"1_3.png",
+	"1_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces2{
-	"2.png",
-	"2.png",
+	"2_3.png",
+	"2_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"2.png",
-	"2.png"
+	"2_3.png",
+	"2_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces3{
-	"3.png",
-	"3.png",
+	"3_3.png",
+	"3_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"3.png",
-	"3.png"
+	"3_3.png",
+	"3_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces4{
-	"4.png",
-	"4.png",
+	"4_3.png",
+	"4_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"4.png",
-	"4.png"
+	"4_3.png",
+	"4_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces5{
-	"5.png",
-	"5.png",
+	"5_3.png",
+	"5_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"5.png",
-	"5.png"
+	"5_3.png",
+	"5_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces6{
