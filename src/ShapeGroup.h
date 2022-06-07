@@ -13,7 +13,18 @@ using namespace glm;
 struct ShapeGroup {
 	vector<shared_ptr<Shape>> shapes;
 	vector<shared_ptr<Texture>> textures;
-	string filename = "";
+	string filename;
+
+	float startTime = 0.0f;
+	float speed = 0.0f;
+	Bone skeleton;
+	Animation animation;
+	uint boneCount;
+	uint vao;
+	std::vector<uint> indices;
+	std::vector<glm::mat4> currentPose;
+	glm::mat4 globalInverseTransform;
+	float animDur = 0.0f;
 };
 
 

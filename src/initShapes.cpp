@@ -119,6 +119,7 @@ namespace initShapes {
 		}
 
 		sg.filename = fbx_dir;
+		//cout << "setting filename to: " << sg.filename << "\n OG: " << fbx_dir << endl;
 
 		return sg;
 	}
