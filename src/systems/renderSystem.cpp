@@ -263,10 +263,10 @@ Tree::TreeNode RenderSys::getTree() {
 #pragma region Animation
 
 
-std::pair<uint, float> getTimeFraction(std::vector<float>& times, float& dt) {
+std::pair<uint, float> getTimeFraction(std::vector<float>& times, float& dt, float animSpeed) {
 	uint segment = 0;
 
-	float tempDt = dt * 10.0f;
+	float tempDt = dt * animSpeed;
 	while (tempDt >= times[segment]) {
 		segment++;
 		if (segment >= times.size()) {
@@ -295,14 +295,14 @@ glm::mat4 convertMatrix(const aiMatrix4x4& aiMat)
 }
 
 void getPose(Animation& animation, Bone& skeleton, float dt, std::vector<glm::mat4>& output,
-	glm::mat4& parentTransform, glm::mat4& globalInverseTransform, float* animDur) {
+	glm::mat4& parentTransform, glm::mat4& globalInverseTransform, float animDur, float animSpeed) {
 	
 	BoneTransformTrack& btt = animation.boneTransforms[skeleton.name];
-	dt = fmod(dt, *animDur / 10.0f);
+	dt = fmod(dt, animDur / animSpeed);
 
 	std::pair<uint, float> fp;
 	//calculate interpolated position
-	fp = getTimeFraction(btt.positionTimestamps, dt);
+	fp = getTimeFraction(btt.positionTimestamps, dt, animSpeed);
 
 	glm::vec3 position1 = btt.positions[fp.first - 1];
 	glm::vec3 position2 = btt.positions[fp.first];
@@ -310,14 +310,14 @@ void getPose(Animation& animation, Bone& skeleton, float dt, std::vector<glm::ma
 	glm::vec3 position = glm::mix(position1, position2, fp.second);
 
 	//calculate interpolated rotation
-	fp = getTimeFraction(btt.rotationTimestamps, dt);
+	fp = getTimeFraction(btt.rotationTimestamps, dt, animSpeed);
 	glm::quat rotation1 = btt.rotations[fp.first - 1];
 	glm::quat rotation2 = btt.rotations[fp.first];
 
 	glm::quat rotation = glm::slerp(rotation1, rotation2, fp.second);
 
 	//calculate interpolated scale
-	fp = getTimeFraction(btt.scaleTimestamps, dt);
+	fp = getTimeFraction(btt.scaleTimestamps, dt, animSpeed);
 	glm::vec3 scale1 = btt.scales[fp.first - 1];
 	glm::vec3 scale2 = btt.scales[fp.first];
 
@@ -337,7 +337,7 @@ void getPose(Animation& animation, Bone& skeleton, float dt, std::vector<glm::ma
 	for (Bone& child : skeleton.children) {
 		//cout << "child bone: " << child.name << endl;
 		if (child.name.length() > 1)
-			getPose(animation, child, dt, output, globalTransform, globalInverseTransform, animDur);
+			getPose(animation, child, dt, output, globalTransform, globalInverseTransform, animDur, animSpeed);
 	}
 }
 
@@ -346,7 +346,7 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 	curS->bind();	
 	
 	glm::mat4 identity(1.0);
-	getPose(sc.animation, sc.skeleton, elapsedTime - sc.startTime, sc.currentPose, identity, sc.globalInverseTransform, &sc.animDur);
+	getPose(sc.animation, sc.skeleton, elapsedTime - sc.startTime, sc.currentPose, identity, sc.globalInverseTransform, sc.animDur, sc.speed);
 
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUniform1i(curS->getUniform("isSkeletal"), true);
@@ -369,16 +369,22 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(.2f, .2f, .2f));
 	float dAngle = (elapsedTime * 0.002);
 	modelMatrix = glm::rotate(modelMatrix, dAngle, glm::vec3(0, 1, 0));
+	tr->pos = tr->pos + vec3(0, -0.3, 0);
 	setModelRC(curS, tr);
-
 
 	//uint diffuseTexture = tex->getUnit(); // chase added
 	//glBindTexture(GL_TEXTURE_2D, diffuseTexture);
 	(rc->sg)->textures[0]->bind(curS->getUniform("Texture0"));
 	//glUniform1i(textureLocation, 0);
 	glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
+	for (int i = 1; i < (rc->sg)->shapes.size(); i++) {
+		glUniform1i(curS->getUniform("isSkeletal"), false);
+		(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
+		(rc->sg)->shapes[i]->draw(curS);
+	}
 
-	glUniform1i(curS->getUniform("isSkeletal"), false);
+	glUniform1i(curS->getUniform("isSkeletal"), false); // reset it
+	tr->pos = tr->pos + vec3(0, 0.3, 0);
 	curS->unbind();
 }
 #pragma endregion
@@ -389,7 +395,7 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint dep
 	objCount = 0;
 	vector<Entity> transparentEnts;
 
-	Tree::TreeNode hierTree = RenderSys::getTree();
+	//Tree::TreeNode hierTree = RenderSys::getTree();
 	for (Entity const& entity : mEntities) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);

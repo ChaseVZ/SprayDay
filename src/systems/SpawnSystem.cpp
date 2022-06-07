@@ -21,7 +21,7 @@ vec3 SpawnSys::getRandStart() {
 	return vec3((rand() % 2) * 2 - 1, 0.0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
 }
 
-void SpawnSys::initBear() {
+void SpawnSys::initBear(float gameTime) {
 	Entity bearEnt = gCoordinator.CreateEntity();
 	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
@@ -67,6 +67,15 @@ void SpawnSys::initBear() {
 			1.0,
 			texProg,
 			GL_BACK,
+			999,
+			true // isSkeletal
+		});
+	gCoordinator.AddComponent(
+		bearEnt,
+		SkeletalComponent{
+			bear->filename.c_str(),
+			gameTime,
+			20.0f
 		});
 }
 
@@ -118,14 +127,12 @@ void SpawnSys::initWolf(float gameTime) {
 			999,
 			true // isSkeletal
 		});
-
-	//cout << "adding skeletal comp\n";
-	//cout << gameTime << endl;
 	gCoordinator.AddComponent(
 		wolfEnt,
 		SkeletalComponent{
 			wolf->filename.c_str(),
-			gameTime
+			gameTime,
+			20.0f
 		});
 }
 
@@ -133,7 +140,9 @@ void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float game
 	spawnTimer -= spawnTime;
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
-		initBear();
+		initBear(gameTime);
+		
+		animationSys->init();
 	}
 	else {
 		initWolf(gameTime);

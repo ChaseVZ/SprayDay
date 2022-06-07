@@ -45,7 +45,6 @@ void main() {
 	vec3 wPos;
 	if (isSkeletal) {
 		wPos = vec3(M * vec4(vertPos.xyz, 1.0) * boneTransform);
-		//wPos = vec3(M * vec4(vertPos.xyz, 1.0));
 		gl_Position = P * V * M * boneTransform * vec4(vertPos.xyz, 1.0);
 
 		fragNor = mat3(transpose(inverse(M * boneTransform))) * vertNor; // SKELETAL ("v_normal" = "fragNor" i think; "normal" = "verNor")

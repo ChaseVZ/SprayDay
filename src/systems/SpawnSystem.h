@@ -32,7 +32,7 @@ private:
 
 	void spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float gameTime);
 	void initWolf(float gameTime);
-	void initBear();
+	void initBear(float gameTime);
 	vec3 getRandStart();
 	shared_ptr<Program> texProg;
 };

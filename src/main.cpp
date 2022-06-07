@@ -592,6 +592,13 @@ public:
 		redProg->addAttribute("vertPos");
 		redProg->addAttribute("vertNor");
 		redProg->addAttribute("vertTex");
+
+		redProg->addUniform("isSkeletal");
+		redProg->addUniform("bone_transforms");
+
+		redProg->addAttribute("uv");
+		redProg->addAttribute("boneIds");
+		redProg->addAttribute("boneWeights");
 		cerr << "in init1: " << endl;
 		cerr << "init red to named: " << redProg->getFShaderName() << "\n";
 
@@ -707,7 +714,7 @@ public:
 
 		FT_Face face;
 		/*TODO you may need to change where this points - where is the arial file for you? */
-		if (FT_New_Face(ft, "/System/Library/Fonts/Supplemental/Arial.ttf", 0, &face)) {
+		if (FT_New_Face(ft, "../resources/arial.ttf", 0, &face)) {
 			std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 			return -1;
 		}
@@ -1209,7 +1216,8 @@ public:
 		bear = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-			true, false, &numTextures);
+			true, false, &numTextures,
+			resourceDirectory + "/chase_resources/low-poly-animals/bearAnim.fbx");
 		wolf = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/wolf.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
