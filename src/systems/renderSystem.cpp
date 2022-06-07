@@ -136,10 +136,6 @@ void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 RampRotX = glm::rotate(glm::mat4(1.0f), tr->rampRotation.x, vec3(1, 0, 0));
 	mat4 RampRotY = glm::rotate(glm::mat4(1.0f), tr->rampRotation.y, vec3(0, 1, 0));
 	mat4 RampRotZ = glm::rotate(glm::mat4(1.0f), tr->rampRotation.z, vec3(0, 0, 1));
-	//if (tr->rampRotation.x != 0 || tr->rampRotation.z != 0) {
-	//	cout << tr->rampRotation.x << endl;
-	//	cout << tr->rampRotation.z << endl << endl;
-	//}
 	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
@@ -364,27 +360,18 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 	glUniformMatrix4fv(curS->getUniform("bone_transforms"), sc.boneCount, GL_FALSE, glm::value_ptr(sc.currentPose[0])); // boneMatricesLocation
 	// end replacement
 
-	glm::mat4 modelMatrix(1.0f);
-	modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(.2f, .2f, .2f));
-	float dAngle = (elapsedTime * 0.002);
-	modelMatrix = glm::rotate(modelMatrix, dAngle, glm::vec3(0, 1, 0));
-	tr->pos = tr->pos + vec3(0, -0.3, 0);
+	// Model
+	worldShift += vec3(0, -0.9f, 0);
 	setModelRC(curS, tr);
 
-	//uint diffuseTexture = tex->getUnit(); // chase added
-	//glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+	// Texture and Draw
 	(rc->sg)->textures[0]->bind(curS->getUniform("Texture0"));
-	//glUniform1i(textureLocation, 0);
+	(rc->sg)->shapes[0]->bindTex(sc.vao, curS, sc);
 	glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
-	for (int i = 1; i < (rc->sg)->shapes.size(); i++) {
-		glUniform1i(curS->getUniform("isSkeletal"), false);
-		(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
-		(rc->sg)->shapes[i]->draw(curS);
-	}
 
-	glUniform1i(curS->getUniform("isSkeletal"), false); // reset it
-	tr->pos = tr->pos + vec3(0, 0.3, 0);
+	// reset & end
+	worldShift += vec3(0, 0.9f, 0);
+	glUniform1i(curS->getUniform("isSkeletal"), false); 
 	curS->unbind();
 }
 #pragma endregion
