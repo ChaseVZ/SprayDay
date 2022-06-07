@@ -13,10 +13,10 @@ class SpraySys : public System
 {
 public:
 	void init(ShapeGroup* spherePtr, shared_ptr<Program>, particleGen* pg);
-	void update(float frameTime, vector<Entity>*, int mvmType, vec3 playerPos);
+	void update(float frameTime, vector<Entity>*, int mvmType, vec3 playerPos, vec3 lookDir);
 
 private:
 	ShapeGroup* sphere;
 	shared_ptr<Program> texProg;
-	void generateSpray(vector<Entity>* trail, vec3 playerPos);
+	void generateSpray(vector<Entity>* trail, vec3 playerPos, vec3 lookDir);
 };

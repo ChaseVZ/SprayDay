@@ -16,7 +16,7 @@ file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/e
 file(GLOB_RECURSE HEADERS "src/*.h" "ext/*/*.h" "ext/glad/*/*.h")
 file(GLOB_RECURSE GLSL "resources/*.glsl")
 
-find_package(Freetype REQUIRED)
+#find_package(Freetype REQUIRED)
 
 include_directories("ext")
 include_directories("ext/glad/include")

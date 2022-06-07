@@ -29,7 +29,8 @@ Particle::Particle(vec3 start) :
 	scale(1.0f),
 	color(1.0f, 1.0f, 1.0f, 1.0f),
 	startPos(start),
-	attachedEntity(MAX_ENTITIES + 1)
+	attachedEntity(MAX_ENTITIES + 1),
+	camDist(1.0f)
 {
 }
 
@@ -85,4 +86,13 @@ void Particle::assignGroup(vec3 start, Entity entity, float r_low, float r_high,
 	attachedEntity = entity; // not used currently
 
 	rebirth(0.0f, start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
+}
+
+void Particle::calcCamDist(mat4 view) {
+	// Particle positions in camera space
+	vec4 camSpaceVec = view * vec4(x.x, x.y, x.z, 1.0f);
+	camDist = camSpaceVec.z;
+}
+
+void Particle::resize() {
 }

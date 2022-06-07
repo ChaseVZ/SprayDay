@@ -8,7 +8,8 @@ particleGen* myPartGen;
 float TIME_UNTIL_SPRAY = .15;
 float timeSinceLastSpray = 0;
 
-void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos) {
+void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos, vec3 lookDir) {
+	vec3 buttPos = playerPos - vec3(2.0)*normalize(lookDir);
 	Entity sprayEnt = gCoordinator.CreateEntity();
 	gCoordinator.AddComponent(
 		sprayEnt,
@@ -21,7 +22,7 @@ void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos) {
 	gCoordinator.AddComponent(
 		sprayEnt,
 		Transform{
-		playerPos,		//vec3 pos;
+		buttPos,		//vec3 pos;
 		vec3(1.0, 0.0, 0.0),     // vec3 rotation
 		vec3(1.0),		//vec3 scale;
 		});
@@ -35,8 +36,7 @@ void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos) {
 			sprayParticleGen
 		});
 		*/
-
-	myPartGen->initParticleGroup(PARTICLES_PER_SPRAY, playerPos, sprayEnt);
+	myPartGen->initParticleGroup(PARTICLES_PER_SPRAY, buttPos, sprayEnt);
 	trail->push_back(sprayEnt);
 }
 void SpraySys::init(ShapeGroup* spherePtr, shared_ptr<Program> texProgPtr, particleGen* pg) {
@@ -45,7 +45,7 @@ void SpraySys::init(ShapeGroup* spherePtr, shared_ptr<Program> texProgPtr, parti
 	texProg = texProgPtr;
 }
 
-void SpraySys::update(float frametime, vector<Entity> * trail, int mvmType, vec3 playerPos) {
+void SpraySys::update(float frametime, vector<Entity> * trail, int mvmType, vec3 playerPos, vec3 lookDir) {
 	timeSinceLastSpray += frametime;
 	for (int i = 0; i < trail->size(); i++) {
 		RenderComponent* sprayRC = &(gCoordinator.GetComponent<RenderComponent>((*trail)[i]));
@@ -66,7 +66,7 @@ void SpraySys::update(float frametime, vector<Entity> * trail, int mvmType, vec3
 	if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
 		if (mvmType == 1) {
 			timeSinceLastSpray -= TIME_UNTIL_SPRAY;
-			generateSpray(trail, playerPos);
+			generateSpray(trail, playerPos, lookDir);
 		}
 		else {
 			timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time

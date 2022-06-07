@@ -28,7 +28,7 @@ particleGen::particleGen(vec3 source, float r_l, float r_h, float g_l, float g_h
 }
 
 void particleGen::gpuSetup() {
-
+	glEnable(GL_PROGRAM_POINT_SIZE);
 	//cout << numP << endl;
  	for (int i=0; i < numP; i++) {
 		points[i * 3 + 0] = start.x;
@@ -120,6 +120,11 @@ void particleGen::update() {
   vec4 p;
   quat r;
   glm::decompose(theCamera, s, r, t, sk, p);
+  for (int i = 0; i < numP; i++) {
+	  particles[i]->calcCamDist(theCamera);
+	  particles[i]->resize();
+  }
+
   sorter.C = glm::toMat4(r); 
   sort(particles.begin(), particles.end(), sorter);
 
@@ -146,6 +151,8 @@ void particleGen::update() {
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffObj);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(pointColors), NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*numP*4, pointColors);
+
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

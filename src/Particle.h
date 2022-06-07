@@ -36,6 +36,8 @@ public:
 	const vec3 &getVelocity() const { return v; };
 	const vec4 &getColor() const { return color; };
 	void assignGroup(vec3 start, Entity, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
+	void calcCamDist(mat4 view);
+	void resize();
 private:
 	float charge; // +1 or -1
 	float m; // mass
@@ -48,6 +50,7 @@ private:
 	vec4 color;
 	vec3 startPos;
 	Entity attachedEntity;
+	float camDist;
 };
 
 #endif // LAB471_PARTICLE_H_INCLUDED

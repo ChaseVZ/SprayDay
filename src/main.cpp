@@ -1559,7 +1559,7 @@ public:
 		
 		hudSys->update(Projection, player);
 		if (!debugMode && !gameOver) { 
-			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
+			spraySys->update(frametime, &trail, player.mvm_type, player.pos, skunkTR.lookDir);
 			healPlayer(frametime);
 			spawnSys->update(frametime, animationSys, gameTime);
 			damageSys->update(&trail, frametime, &enemiesKilled);
@@ -1631,7 +1631,7 @@ public:
 	}
 
 	void initSystems() {
-		partGen = new particleGen(vec3(0, -10, 0), 0.5f, 0.9f, 0.0f, 0.5f, 4.0f, 8.0f, 0.1f, 0.4f); // start off screen
+		partGen = new particleGen(vec3(0, -10, 0), 0.5f, 0.9f, 0.0f, 0.5f, 0.4f, 1.0f, 0.1f, 0.4f); // start off screen
 		partGen->setnumP(PARTICLES_PER_SPRAY * MAX_SPRAY_SPHERES);
 		partGen->gpuSetup();
 
