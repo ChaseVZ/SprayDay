@@ -37,17 +37,22 @@ Tree::TreeNode Tree::initTree(set<Entity> mEntities) {
 	root.pos = vec3(0, 0, 0);
 	root.radius = 160.0f;
 	root.nodeNum = treenodeCount;
+	treenodeCount++;
 	bool entityAdded;
 	if (debug) { cout << "initTree: "<<endl; }
 	int count =0;
 	for (Entity const& entity : mEntities) {
 		///if (count <8 ) {
-		if (debug) { cout << "entity #" << count << endl; }
+		if (debug) { cout << "\nentity #" << count << endl; }
 		count++;
 		entityAdded = false;
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
 		Tree::TreeNode* n = &root;
 		while (!entityAdded) {
+			if (debug) { cout << "Checking parent " << n->nodeNum << " with values:" <<endl;
+						 cout << "   radius: " << n->radius << endl;
+						 cout << "   pos: " << n->pos.x << " " << n->pos.z << endl;
+						 cout << "   numChildren: " << n->children.size() << endl;}
 			//if (Tree::isEntityInside(tr.pos, *n)) {
 				if (n->radius == 10) { //at the very bottom (leafnode) of tree, now need to add entity to tree
 					if (debug) { cout << "  adding entity to tree" << endl; }
@@ -74,7 +79,11 @@ Tree::TreeNode Tree::initTree(set<Entity> mEntities) {
 						if (Tree::isEntityInside(tr.pos, c)){
 							n = &c;
 							foundTreeNode = true;
-							if (debug) { cout << "     found tree node parent " << n->nodeNum << endl; }
+							if (debug) { cout << "     found tree node parent " << c.nodeNum << "should be same as " << n->nodeNum << endl; }
+							if (debug) { cout << "     found parent " << n->nodeNum << " with values:" <<endl;
+											cout << "     radius: " << n->radius << endl;
+											cout << "     pos: " << n->pos.x << " " << n->pos.z << endl;
+											cout << "     numChildren: " << n->children.size() << endl; }
 							break;
 						}
 					}
@@ -89,6 +98,11 @@ Tree::TreeNode Tree::initTree(set<Entity> mEntities) {
 						treenodeCount++;
 					}
 				}
+				if (debug) {cout << "end loop"<<endl;
+				            cout << "   Treenode made?: " << n->nodeNum-1 << " with values:" <<endl;
+							cout << "        radius: " << n->radius << endl;
+							cout << "        pos: " << n->pos.x << " " << n->pos.z << endl;
+							cout << "        numChildren: " << n->children.size() << endl; }
 			//}
 		}
 		///}

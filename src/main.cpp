@@ -787,7 +787,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt6,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),			 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 2.0),	 //vec3 scale;
 		});
@@ -806,7 +806,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt5,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.9),	 //vec3 scale;
 		});
@@ -825,7 +825,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt4,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.8),	 //vec3 scale;
 		});
@@ -844,7 +844,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt3,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.7),	 //vec3 scale;
 		});
@@ -863,7 +863,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt2,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.6),	 //vec3 scale;
 		});
@@ -882,7 +882,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt1,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),			 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.5),	 //vec3 scale;
 		});
@@ -1332,6 +1332,21 @@ public:
 		sky6.pos.y -= 2*frametime*sin(gameTime);
 	}
 
+	void resetSkybox() {
+		Transform& sky1 = gCoordinator.GetComponent<Transform>(skyEnt1);
+		sky1.pos.y = 20.0;
+		Transform& sky2 = gCoordinator.GetComponent<Transform>(skyEnt2);
+		sky2.pos.y = 20.0;
+		Transform& sky3 = gCoordinator.GetComponent<Transform>(skyEnt3);
+		sky3.pos.y = 20.0;
+		Transform& sky4 = gCoordinator.GetComponent<Transform>(skyEnt4);
+		sky4.pos.y = 20.0;
+		Transform& sky5 = gCoordinator.GetComponent<Transform>(skyEnt5);
+		sky5.pos.y = 20.0;
+		Transform& sky6 = gCoordinator.GetComponent<Transform>(skyEnt6);
+		sky6.pos.y = 20.0;;
+	}
+
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
 		vec3 move = player.pos;
 		bool forward;
@@ -1364,6 +1379,19 @@ public:
 		//}
 		player.localGround = co.height;
 		player.updatePos(co.dir, co.isCollide, collisionSys);
+		if (move != vec3(0, 0, 0)){
+			cout <<"roto player" <<endl;
+			int frame = int(gameTime*10.0f);
+			if (frame % (2+player.mvm_type) == 0.0) {
+				skunkTR.rotation = vec3(0, 0, 0.1);
+			}
+			else{
+				skunkTR.rotation = vec3(0, 0, -0.1);
+			}
+		}
+		else {
+			skunkTR.rotation = vec3(0, 0, 0);
+		}
 			
 		// camera
 		vcam.updatePos(player.pos);
@@ -1417,9 +1445,12 @@ public:
 		gameOver = false;
 		removeAllEnemies();
 		removeSpray();
+		resetSkybox();
 		player.pos = player.pos_default;
 		player.localGround = 0;
 		spawnSys->reset();
+		enemiesKilled = 0;
+		gameTime = 0;
 	}
 
 	void render(float frametime) {
