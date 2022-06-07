@@ -7,8 +7,8 @@ float WOLF_BASE_HP = 3.0; // seconds of spraying until death (if divisible by ti
 float BEAR_BASE_HP = 12.0;
 float STARTING_SPAWN_TIME = 6.0;
 float TIME_TO_FIRST_SPAWN =  2.0;
-float MIN_SPAWN_TIME = 0.5;
-float SPAWN_TIME_DECREASE = .005; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
+float MIN_SPAWN_TIME = 0.7;
+float SPAWN_TIME_DECREASE = .03; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
 float spawnTime;
 float spawnTimer;
 
@@ -41,7 +41,7 @@ void SpawnSys::initBear(float gameTime) {
 			startPos, //vec3 nextTile
 			false, // bool exploding;
 			0, // int explodeFrame;
-			0.6, // speed
+			0.7, // speed
 			SIMPLE_PATH
 		});
 
@@ -114,7 +114,7 @@ void SpawnSys::initWolf(float gameTime) {
 			startPos, //start poosition (nextTile)
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.1, //SPEED
+			1.25, //SPEED
 			FLANK_PATH
 		});
 

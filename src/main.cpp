@@ -1683,7 +1683,7 @@ int main(int argc, char *argv[])
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
-	//PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/worldCup.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
+	PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/Garbage_Day.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state

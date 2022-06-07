@@ -675,7 +675,9 @@ namespace RenderSystem {
 			// 	lastKillTime = gameTime;
 			// }
 			playerScore = gameTime + 10*enemiesKilled;
-
+			if (enemiesKilled == 0){
+				kills.clear();
+			}
 			if (kills.size() != enemiesKilled) {
 				MyText::Kill newKill;
 				newKill.killTime = gameTime;

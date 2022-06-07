@@ -1,6 +1,6 @@
 #include "PathingSystem.h"
 
-float PLAYER_DAMAGE_CAP = 55.0; // maximum damage per second (player has 100 hp)
+float PLAYER_DAMAGE_CAP = 110.0; // maximum damage per second (player has 100 hp)
 
 using namespace glm;
 using namespace std;
@@ -44,7 +44,7 @@ extern Coordinator gCoordinator;
         // }
         if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
         {
-			*damageFromEnemies += 30.0;
+			*damageFromEnemies += 60.0;
             return true;
         }
         return false;
