@@ -64,15 +64,15 @@ void main() {
 	vec3 fPos = (M*vec4(vertPos, 1.0)).xyz;
 
 	fPosLS = LS*vec4(fPos, 1.0);
-
-	//out_struct.vColor = vec3(max(dot(out_struct.fragNor, normalize(lightPos)), 0));
   
 	/* pass through the texture coordinates to be interpolated */
-	if (isSkeletal)
-		vTexCoord = uv;
+	if (isSkeletal){
+		//vTexCoord = uv;
+		vTexCoord = vertTex;
+	}
 	else
 		vTexCoord = vertTex;
 	
-	//vTexCoord = vertTex;
-	texCoords = vertPos;
+	//vTexCoord = vertTex; // uv is not working
+	texCoords = vertPos; // for cubes
 }
