@@ -28,4 +28,7 @@ struct RenderComponent {
 	int cullDir;
 	unsigned int texID = 999;
 	bool isSkeletal = false;
+	ShapeGroup* sg2;
+	bool isSkunk = false;
+	float skunkSpeed = 0.0f;
 };

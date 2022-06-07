@@ -31,10 +31,10 @@ public:
 	vec3 nextPos = vec3(0, 0, 0);
 	float health = 100.0;
 	float maxHP = 100.0;
+	vec3 vel = vec3(0, 0, 0);  // velocity
 
 
 private:
-	vec3 vel = vec3(0, 0, 0);  // velocity
 	vec3 acc = vec3(0, -80.0, 0);	// acceleration
 	vec3 jumpSpeed = vec3(0, 22.0, 0);  // jumpspeed (time = 2s)
 	float lastTime = 0;

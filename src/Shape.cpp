@@ -216,3 +216,41 @@ void Shape::reverseNormals() {
 		norBuf[i * 3 + 2] = temp.z;
 	}
 }
+
+void Shape::bindTex(unsigned int vaoID, const std::shared_ptr<Program> prog, SkeletalComponent sc) const
+{
+	CHECKED_GL_CALL(glBindVertexArray(vaoID));
+
+	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, texBufID));
+	CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, texBuf.size() * sizeof(float), &texBuf[0], GL_STATIC_DRAW));
+
+	int h_tex = prog->getAttribute("vertTex");
+	GLSL::enableVertexAttribArray(h_tex);
+	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, texBufID));
+	CHECKED_GL_CALL(glVertexAttribPointer(h_tex, 2, GL_FLOAT, GL_FALSE, 0, (const void*)0));
+
+	//CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, posBufID));
+	//CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, posBuf.size() * sizeof(float), &posBuf[0], GL_STATIC_DRAW));
+
+	//int h_pos = prog->getAttribute("vertPos");
+	//GLSL::enableVertexAttribArray(h_pos);
+	//CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, posBufID));
+	//CHECKED_GL_CALL(glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void*)0));
+
+	//CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, norBufID));
+	//CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, norBuf.size() * sizeof(float), &norBuf[0], GL_STATIC_DRAW));
+
+	//int h_nor = prog->getAttribute("vertNor");
+	//GLSL::enableVertexAttribArray(h_nor);
+	//CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, norBufID));
+	//CHECKED_GL_CALL(glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void*)0));
+
+	//glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
+
+	//GLSL::disableVertexAttribArray(h_tex);
+	//GLSL::disableVertexAttribArray(h_pos);
+	//GLSL::disableVertexAttribArray(h_nor);
+
+	//CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	//CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}

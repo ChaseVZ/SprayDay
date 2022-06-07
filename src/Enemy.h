@@ -14,6 +14,7 @@ struct Enemy {
 	int explodeFrame;
 	float baseSpeed;
 	PathingT pathingType;
+	float debufSpeed = 1.0f;
 };
 
 #endif

@@ -41,9 +41,9 @@
 #include <fstream>
 #include "systems/HudSystem.h"
 #include "systems/AnimationSystem.h"
-//#include <assimp-5.2.4/include/assimp/scene.h>
-//#include <assimp-5.2.4/include/assimp/Importer.hpp>
-//#include <assimp-5.2.4/include/assimp/postprocess.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H 
+//#include "Text.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -143,6 +143,8 @@ public:
 	//Damage Animation shader
 	std::shared_ptr<Program> redProg;
 
+	//Text shader
+	std::shared_ptr<Program> textProg;
 
 	/* ================ GEOMETRY ================= */
 
@@ -150,6 +152,7 @@ public:
 	ShapeGroup bear;
 	ShapeGroup wolf;
 	ShapeGroup skunk;
+	ShapeGroup skunkTail;
 	ShapeGroup sphere;
 	ShapeGroup cube;
 
@@ -211,48 +214,48 @@ public:
 	};
 
 	vector<std::string> cartoon_sky_faces1{
-	"1.png",
-	"1.png",
+	"1_3.png",
+	"1_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"1.png",
-	"1.png"
+	"1_3.png",
+	"1_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces2{
-	"2.png",
-	"2.png",
+	"2_3.png",
+	"2_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"2.png",
-	"2.png"
+	"2_3.png",
+	"2_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces3{
-	"3.png",
-	"3.png",
+	"3_3.png",
+	"3_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"3.png",
-	"3.png"
+	"3_3.png",
+	"3_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces4{
-	"4.png",
-	"4.png",
+	"4_3.png",
+	"4_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"4.png",
-	"4.png"
+	"4_3.png",
+	"4_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces5{
-	"5.png",
-	"5.png",
+	"5_3.png",
+	"5_3.png",
 	"CloudyCrown_Midday_Up.png",
 	"CloudyCrown_Midday_Down.png",
-	"5.png",
-	"5.png"
+	"5_3.png",
+	"5_3.png"
 	};
 
 	vector<std::string> cartoon_sky_faces6{
@@ -315,6 +318,13 @@ public:
 	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
 	GLuint depthMap;
 	vec3 g_light = vec3(5, 3, 5);
+
+	//Free type data
+	FT_Library ft;
+	FT_Face face;
+	std::map<GLchar, MyText::Character> Characters;
+	unsigned int TextVAO, TextVBO;
+	int enemiesKilled = 0;
 
 	/* ================ DEBUG ================= */
 	bool debugMode = false;
@@ -498,10 +508,16 @@ public:
 		texProg->addUniform("isGrey");
  	 	texProg->addUniform("shadowDepth");
 		texProg->addUniform("LS");
+		texProg->addUniform("isSkeletal");
+		texProg->addUniform("bone_transforms");
 
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
+
+		texProg->addAttribute("uv");
+		texProg->addAttribute("boneIds");
+		texProg->addAttribute("boneWeights");
 		/*
 		GLuint partLocation0 = glGetUniformLocation(texProg->getPID(), "Texture0");
 		GLuint partLocation2 = glGetUniformLocation(texProg->getPID(), "cubeTex");
@@ -582,6 +598,13 @@ public:
 		redProg->addAttribute("vertPos");
 		redProg->addAttribute("vertNor");
 		redProg->addAttribute("vertTex");
+
+		redProg->addUniform("isSkeletal");
+		redProg->addUniform("bone_transforms");
+
+		redProg->addAttribute("uv");
+		redProg->addAttribute("boneIds");
+		redProg->addAttribute("boneWeights");
 		cerr << "in init1: " << endl;
 		cerr << "init red to named: " << redProg->getFShaderName() << "\n";
 
@@ -603,6 +626,19 @@ public:
 		partProg->addUniform("isGrey");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
+
+		textProg = make_shared<Program>();
+		textProg->setVerbose(true);
+		textProg->setShaderNames(resourceDirectory + "/textVert.glsl", resourceDirectory + "/textFrag.glsl");
+		textProg->init();
+		textProg->addAttribute("vertex");
+		textProg->addUniform("projection");
+		textProg->addUniform("textTex");
+		textProg->addUniform("textColor");
+
+		initShadow();
+		int fError = initFont();
+		cout << "Font error?: " << fError << endl;
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -631,6 +667,9 @@ public:
 		numTextures += 2;
 
 		initShadow();
+
+		//initialize the text quad
+		initTextQuad();
 	}
 
 	/* set up the FBO for storing the light's depth */
@@ -659,6 +698,85 @@ public:
 
 	}
 
+	/*similar to bill board quad, keeping separate for ease in copy and paste between projects */
+	void initTextQuad() {
+		glGenVertexArrays(1, &TextVAO);
+		glGenBuffers(1, &TextVBO);
+		glBindVertexArray(TextVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, TextVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	/*initiatlization of the free type types in order to include text */
+	int initFont() {
+
+		if (FT_Init_FreeType(&ft)) {
+			std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+			return -1;
+		}
+
+		FT_Face face;
+		/*TODO you may need to change where this points - where is the arial file for you? */
+		if (FT_New_Face(ft, "../resources/arial.ttf", 0, &face)) {
+			std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+			return -1;
+		}
+		else {
+		// set size to load glyphs as
+			FT_Set_Pixel_Sizes(face, 0, 18);
+
+		// disable byte-alignment restriction
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+		// load first 128 characters of ASCII set
+			for (unsigned char c = 0; c < 128; c++)
+			{
+			// Load character glyph 
+				if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+				{
+					std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+					continue;
+				}
+			// generate texture
+				unsigned int texture;
+				glGenTextures(1, &texture);
+				glBindTexture(GL_TEXTURE_2D, texture);
+				glTexImage2D(
+					GL_TEXTURE_2D,
+					0,
+					GL_RED,
+					face->glyph->bitmap.width,
+					face->glyph->bitmap.rows,
+					0,
+					GL_RED,
+					GL_UNSIGNED_BYTE,
+					face->glyph->bitmap.buffer
+					);
+			// set texture options
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			// now store character for later use
+				MyText::Character character = {
+					texture,
+					glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+					glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+					static_cast<unsigned int>(face->glyph->advance.x)
+				};
+				Characters.insert(std::pair<char, MyText::Character>(c, character));
+			}
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}	
+
+		return glGetError();
+		//cout << "End of init font: " << glGetError() << endl;	
+	}
+
 	#pragma region InitEntities
 	void initSkybox() {
 
@@ -676,7 +794,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt6,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),			 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 2.0),	 //vec3 scale;
 		});
@@ -695,7 +813,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt5,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.9),	 //vec3 scale;
 		});
@@ -714,7 +832,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt4,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.8),	 //vec3 scale;
 		});
@@ -733,7 +851,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt3,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.7),	 //vec3 scale;
 		});
@@ -752,7 +870,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt2,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),				 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.6),	 //vec3 scale;
 		});
@@ -771,7 +889,7 @@ public:
 		gCoordinator.AddComponent(
 			skyEnt1,
 			Transform{
-			vec3(20.0),				 //vec3 pos;
+			vec3(0, 20.0, 0),			 //vec3 pos;
 			vec3(0.0, 0.0, -1.0),     // vec3 rotation
 			vec3(MAP_SIZE * 1.5),	 //vec3 scale;
 		});
@@ -786,14 +904,19 @@ public:
 			1.0,           //float transparency;
 			texProg,
 			GL_BACK,
+			999,
+			false,
+			&skunkTail,
+			true // isSkunk
 			});
 		gCoordinator.AddComponent(
 			skunkEnt,
 			Transform{
 			vec3(0.0, 0.0, 0.0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0),     // vec3 rotation
-			vec3(2.0),		//vec3 scale;
+			vec3(1.3),		//vec3 scale;
 			});
+		
 	}
 
 	Entity initCrate(vec3 pos) {
@@ -1093,7 +1216,12 @@ public:
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
 
-		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
+		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsakaBod.obj",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			true, false, &numTextures);
+
+		skunkTail = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsakaTail.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			true, false, &numTextures);
@@ -1105,12 +1233,13 @@ public:
 		bear = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/bear.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
-			true, false, &numTextures);
+			true, false, &numTextures,
+			resourceDirectory + "/chase_resources/low-poly-animals/bearAnim.fbx");
 		wolf = initShapes::load(resourceDirectory + "/chase_resources/low-poly-animals/obj/wolf.obj",
 			resourceDirectory + "/chase_resources/low-poly-animals/obj/",
 			resourceDirectory + "/chase_resources/low-poly-animals/texture/",
 			true, false, &numTextures,
-			resourceDirectory + "/chase_resources/low-poly-animals/wolf.dae");
+			resourceDirectory + "/chase_resources/low-poly-animals/wolfAnim2.fbx");
 
 		crate = initShapes::load(resourceDirectory + "/chase_resources/crate/crate_small.obj",
 			resourceDirectory + "/chase_resources/crate/",
@@ -1220,6 +1349,21 @@ public:
 		sky6.pos.y -= 2*frametime*sin(gameTime);
 	}
 
+	void resetSkybox() {
+		Transform& sky1 = gCoordinator.GetComponent<Transform>(skyEnt1);
+		sky1.pos.y = 20.0;
+		Transform& sky2 = gCoordinator.GetComponent<Transform>(skyEnt2);
+		sky2.pos.y = 20.0;
+		Transform& sky3 = gCoordinator.GetComponent<Transform>(skyEnt3);
+		sky3.pos.y = 20.0;
+		Transform& sky4 = gCoordinator.GetComponent<Transform>(skyEnt4);
+		sky4.pos.y = 20.0;
+		Transform& sky5 = gCoordinator.GetComponent<Transform>(skyEnt5);
+		sky5.pos.y = 20.0;
+		Transform& sky6 = gCoordinator.GetComponent<Transform>(skyEnt6);
+		sky6.pos.y = 20.0;;
+	}
+
 	vec3 updatePlayer(float frametime, vec3 *moveDir, bool *isMovingForward)	{
 		vec3 move = player.pos;
 		bool forward;
@@ -1252,13 +1396,26 @@ public:
 		//}
 		player.localGround = co.height;
 		player.updatePos(co.dir, co.isCollide, collisionSys);
+		if (move != vec3(0, 0, 0)){
+			//cout <<"roto player" <<endl;
+			int frame = int(gameTime*10.0f);
+			if (frame % (2+player.mvm_type) == 0.0) {
+				skunkTR.rotation = vec3(0, 0, 0.1);
+			}
+			else{
+				skunkTR.rotation = vec3(0, 0, -0.1);
+			}
+		}
+		else {
+			skunkTR.rotation = vec3(0, 0, 0);
+		}
 			
 		// camera
 		vcam.updatePos(player.pos);
 		
 		// ALEX's CODE
 		*moveDir = move;
-		return player.pos + vec3(0, -0.5f, 0);
+		return player.pos + vec3(0, -0.45f, 0);
 	}
 	
 	void healPlayer(float frametime) {
@@ -1306,9 +1463,12 @@ public:
 		gameOver = false;
 		removeAllEnemies();
 		removeSpray();
+		resetSkybox();
 		player.pos = player.pos_default;
 		player.localGround = 0;
 		spawnSys->reset();
+		enemiesKilled = 0;
+		gameTime = 0;
 	}
 
 	void render(float frametime) {
@@ -1366,6 +1526,7 @@ public:
 
 		if (!gameOver) {
 			skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
+			skunkRC2.skunkSpeed = abs(player.vel.x) + abs(player.vel.z);
 		}
 		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
 			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
@@ -1392,7 +1553,7 @@ public:
 		}
 		updateSkybox(frametime);
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		// do not want transparency when drawing shadows
 		
 		
@@ -1400,9 +1561,10 @@ public:
 		if (!debugMode && !gameOver) { 
 			spraySys->update(frametime, &trail, player.mvm_type, player.pos);
 			healPlayer(frametime);
-			spawnSys->update(frametime, animationSys);
-			damageSys->update(&trail, frametime);
+			spawnSys->update(frametime, animationSys, gameTime);
+			damageSys->update(&trail, frametime, &enemiesKilled);
 		}
+		RenderSystem::drawText(textProg, gameOver, TextVAO, TextVBO, Characters, gameTime, enemiesKilled);
 	}
 
 	void initCamPos() {
@@ -1511,7 +1673,7 @@ int main(int argc, char *argv[])
 	{
 		resourceDir = argv[1];
 	}
-	int test;
+	//int test;
 	Application *application = new Application();
 
 	// Your main will always include a similar set up to establish your window

@@ -9,6 +9,7 @@
 #include <memory>
 #include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader/tiny_obj_loader.h>
+#include "Components/AnimationComponent.h"
 
 class Program;
 
@@ -25,6 +26,7 @@ public:
 	void normalizeNorBuf();
 	void reverseNormals();
 	void draw(const std::shared_ptr<Program> prog) const;
+	void bindTex(unsigned int vaoID, const std::shared_ptr<Program> prog, SkeletalComponent sc) const;
 
 	glm::vec3 min = glm::vec3(0);
 	glm::vec3 max = glm::vec3(0);

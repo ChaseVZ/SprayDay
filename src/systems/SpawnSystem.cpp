@@ -21,7 +21,7 @@ vec3 SpawnSys::getRandStart() {
 	return vec3((rand() % 2) * 2 - 1, 0.0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
 }
 
-void SpawnSys::initBear() {
+void SpawnSys::initBear(float gameTime) {
 	Entity bearEnt = gCoordinator.CreateEntity();
 	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
@@ -67,10 +67,19 @@ void SpawnSys::initBear() {
 			1.0,
 			texProg,
 			GL_BACK,
+			999,
+			true // isSkeletal
+		});
+	gCoordinator.AddComponent(
+		bearEnt,
+		SkeletalComponent{
+			bear->filename.c_str(),
+			gameTime,
+			35.0f
 		});
 }
 
-void SpawnSys::initWolf() {
+void SpawnSys::initWolf(float gameTime) {
 	Entity wolfEnt = gCoordinator.CreateEntity();
 	vec3 startPos = getRandStart();
 	gCoordinator.AddComponent(
@@ -79,6 +88,7 @@ void SpawnSys::initWolf() {
 			startPos,
 			vec3(1.0, 0.0, 0.0),
 			vec3(5.0),
+			vec3(0.0,-3.14 / 2, 0.0) //rotation
 		});
 
 	gCoordinator.AddComponent(
@@ -118,24 +128,25 @@ void SpawnSys::initWolf() {
 			999,
 			true // isSkeletal
 		});
-
-	cout << "adding skeletal comp\n";
 	gCoordinator.AddComponent(
 		wolfEnt,
 		SkeletalComponent{
-			wolf->filename.c_str()
+			wolf->filename.c_str(),
+			gameTime,
+			50.0f
 		});
 }
 
-void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys) {
+void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float gameTime) {
 	spawnTimer -= spawnTime;
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
-		initBear();
+		initBear(gameTime);
+		animationSys->init();
 	}
 	else {
-		initWolf();
-		//animationSys->init();
+		initWolf(gameTime);
+		animationSys->init();
 	}
 }
 
@@ -148,11 +159,11 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 	POISON_TICK_TIME = poisonTickTime;
 }
 
-void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys) {
+void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys, float gameTime) {
 	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE * frameTime, MIN_SPAWN_TIME);
 	spawnTimer += frameTime;
 	if (spawnTimer > spawnTime) {
-		spawnEnemy(animationSys);
+		spawnEnemy(animationSys, gameTime);
 	}
 }
 

@@ -22,7 +22,7 @@ class SpawnSys : public System
 {
 public:
 	void init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, ShapeGroup* bearPtr, shared_ptr<Program> texProg);
-	void update(float frameTime, std::shared_ptr<AnimationSys> animationSys);
+	void update(float frameTime, std::shared_ptr<AnimationSys> animationSys, float gameTime);
 	void reset();
 	int MAP_SIZE;
 	float POISON_TICK_TIME;
@@ -30,9 +30,9 @@ private:
 	ShapeGroup* wolf;
 	ShapeGroup* bear;
 
-	void spawnEnemy(std::shared_ptr<AnimationSys> animationSys);
-	void initWolf();
-	void initBear();
+	void spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float gameTime);
+	void initWolf(float gameTime);
+	void initBear(float gameTime);
 	vec3 getRandStart();
 	shared_ptr<Program> texProg;
 };
