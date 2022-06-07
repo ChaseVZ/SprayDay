@@ -77,7 +77,7 @@ extern Coordinator gCoordinator;
 			vec3 velXZ = getXZ(e->vel);
 			vec3 prevLookXZ = getXZ(tr->lookDir);
 			if (e->vel != vec3(0)) {
-				e->vel = normalize(e->vel)*vec3(e->baseSpeed) / vec3(4.0f);
+				e->vel = normalize(e->vel)*vec3(e->baseSpeed)*vec3(e->debufSpeed) / vec3(4.0f);
 
 				vec3 nextLookDir = velXZ * vec3(0.3) + prevLookXZ * vec3(0.7);
 				if (nextLookDir != vec3(0))

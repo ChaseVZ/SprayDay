@@ -51,7 +51,7 @@ void DamageSys::animatePoison(Entity entity) {
 		//cout << "new shader: " << redShader->getFShaderName() << endl;
 		enemyRC.shader = redShader;
 	}
-	if (pFrame > 4) {
+	if (pFrame > 2) {
 		enemyAC.poisonDamageFrame = 0;
 		enemyTr.scale = vec3(5.0);
 		enemyRC.shader = texShader;
@@ -67,13 +67,20 @@ void DamageSys :: update(vector<Entity>* trail, float frameTime, int* enemiesKil
 		RenderComponent& enemyRC = gCoordinator.GetComponent<RenderComponent>(entity);
 		AnimationComponent& enemyAC = gCoordinator.GetComponent<AnimationComponent>(entity);
 		Enemy & enemy = gCoordinator.GetComponent<Enemy>(entity);
+		SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
 		
 		if (checkPoisonCollision(enemyTr, enemy, trail)) {
+			enemy.debufSpeed = 0.70f;
+			sc.debuff = 0.40f;
+
 			simulatePoisonCollision(entity, frameTime);
 			set<Entity>::iterator currentEnt = itr;
 			enemyAC.inPoison = true;
 		}
 		else {
+			enemy.debufSpeed = 1.0f;
+			sc.debuff = 1.0f;
+
 			enemyAC.inPoison = false;
 		}
 		animatePoison(entity);

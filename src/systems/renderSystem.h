@@ -36,7 +36,7 @@ private:
 	GLuint mVboNormals{};
 	vec3 lightPos = vec3(5, 3, 5);
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
-	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
+	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime);
 	void drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc, 
 		shared_ptr<Program> curS, GLuint depthMap, mat4 LSpace, RenderComponent* rc, Transform* tr);
 	void drawSprayParticles(mat4 view, mat4 projection, mat4 model);

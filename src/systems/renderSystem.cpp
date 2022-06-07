@@ -139,6 +139,23 @@ void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
 }
+
+void setModelRC_Offset(shared_ptr<Program> curS, Transform* tr, vec3 offset, float tailRot, vec3 pivot) {
+
+	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos + worldShift);
+	mat4 TransOff = glm::translate(glm::mat4(1.0f), offset - pivot);
+	mat4 TransPivot = glm::translate(glm::mat4(1.0f), pivot);
+	mat4 ScaleS = glm::scale(glm::mat4(1.0f), tr->scale * 0.8f);
+	mat4 RotX = glm::rotate(glm::mat4(1.0f), tr->rotation.x , vec3(1, 0, 0));
+	mat4 RotY = glm::rotate(glm::mat4(1.0f), tr->rotation.y, vec3(0, 1, 0));
+	mat4 RotZ = glm::rotate(glm::mat4(1.0f), tr->rotation.z, vec3(0, 0, 1));
+	mat4 RotTail = glm::rotate(glm::mat4(1.0f), radians(tailRot), vec3(1, 0, 0));
+	mat4 RampRotX = glm::rotate(glm::mat4(1.0f), tr->rampRotation.x, vec3(1, 0, 0));
+	mat4 RampRotY = glm::rotate(glm::mat4(1.0f), tr->rampRotation.y, vec3(0, 1, 0));
+	mat4 RampRotZ = glm::rotate(glm::mat4(1.0f), tr->rampRotation.z, vec3(0, 0, 1));
+	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS * TransOff * RotTail * TransPivot;
+	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
+}
 //
 //void setModelRC_Origin(shared_ptr<Program> curS, Transform* tr) {
 //
@@ -162,7 +179,8 @@ void setModelRC_Origin(shared_ptr<Program> curS, Transform* tr) {
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
-void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey)
+void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap,
+	mat4 LSpace, bool isGrey, float gameTime)
 {
 	//only extract the planes for the game camaera
 	ExtractVFPlanes(Projection->topMatrix(), View);
@@ -215,6 +233,24 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 				(rc->sg)->textures[i]->bind(curS->getUniform("Texture0"));
 				(rc->sg)->shapes[i]->draw(curS);
 			}
+
+			// DRAWING TAIL
+			if (rc->isSkunk) {
+				float range = 5 * (rc->skunkSpeed * 0.1f + 1);
+				range = 5;
+				float degreeShift = - 5;
+				float tailRot = (sin(gameTime * 2) * range + degreeShift); // - abs(rc->skunkSpeed) * 1.2f;
+				//tailRot = 0;
+				vec3 offset = vec3(0, 0.06, 2.07);
+				vec3 pivot = vec3(0, 0, 1.45);
+				setModelRC_Offset(curS, tr, offset, tailRot, pivot);
+				
+				for (int i = 0; i < (rc->sg2)->shapes.size(); i++) {
+					(rc->sg2)->textures[i]->bind(curS->getUniform("Texture0"));
+					(rc->sg2)->shapes[i]->draw(curS);
+				}
+			}
+
 		}
 	}
 	curS->unbind();
@@ -342,7 +378,7 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 	curS->bind();	
 	
 	glm::mat4 identity(1.0);
-	getPose(sc.animation, sc.skeleton, elapsedTime - sc.startTime, sc.currentPose, identity, sc.globalInverseTransform, sc.animDur, sc.speed);
+	getPose(sc.animation, sc.skeleton, elapsedTime - sc.startTime, sc.currentPose, identity, sc.globalInverseTransform, sc.animDur, sc.speed * sc.debuff);
 
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUniform1i(curS->getUniform("isSkeletal"), true);
@@ -396,7 +432,7 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint dep
 			transparentEnts.push_back(entity);
 		}
 		else {
-			draw(Projection, View, &rc, &tr, depthMap, LSpace, isGrey);
+			draw(Projection, View, &rc, &tr, depthMap, LSpace, isGrey, gameTime);
 		}
 	}
 	drawSprayParticles(View, Projection->topMatrix(), mat4(1.0));
@@ -404,7 +440,7 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint dep
 	for (Entity entity : transparentEnts) {
 		RenderComponent& rc = gCoordinator.GetComponent<RenderComponent>(entity);
 		Transform& tr = gCoordinator.GetComponent<Transform>(entity);
-		draw(Projection, View, &rc ,&tr, depthMap, LSpace, isGrey);
+		draw(Projection, View, &rc ,&tr, depthMap, LSpace, isGrey, gameTime);
 	}
 	
 	if (debugCullCount) {

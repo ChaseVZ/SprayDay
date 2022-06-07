@@ -18,4 +18,5 @@ struct SkeletalComponent {
 	std::vector<glm::mat4> currentPose;
 	glm::mat4 globalInverseTransform;
 	float animDur;
+	float debuff = 1.0f;
 };

@@ -148,6 +148,7 @@ public:
 	ShapeGroup bear;
 	ShapeGroup wolf;
 	ShapeGroup skunk;
+	ShapeGroup skunkTail;
 	ShapeGroup sphere;
 	ShapeGroup cube;
 
@@ -897,14 +898,19 @@ public:
 			1.0,           //float transparency;
 			texProg,
 			GL_BACK,
+			999,
+			false,
+			&skunkTail,
+			true // isSkunk
 			});
 		gCoordinator.AddComponent(
 			skunkEnt,
 			Transform{
 			vec3(0.0, 0.0, 0.0),		//vec3 pos;
 			vec3(1.0, 0.0, 0.0),     // vec3 rotation
-			vec3(2.0),		//vec3 scale;
+			vec3(1.3),		//vec3 scale;
 			});
+		
 	}
 
 	Entity initCrate(vec3 pos) {
@@ -1204,7 +1210,12 @@ public:
 		// Initialize RoundWon mesh.
 		roundWon = initShapes::load(resourceDirectory + "/roundWon.obj", "", "", false, false, &numTextures);
 
-		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsaka.obj",
+		skunk = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsakaBod.obj",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			resourceDirectory + "/chase_resources/moufsaka/",
+			true, false, &numTextures);
+
+		skunkTail = initShapes::load(resourceDirectory + "/chase_resources/moufsaka/moufsakaTail.obj",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			resourceDirectory + "/chase_resources/moufsaka/",
 			true, false, &numTextures);
@@ -1380,7 +1391,7 @@ public:
 		player.localGround = co.height;
 		player.updatePos(co.dir, co.isCollide, collisionSys);
 		if (move != vec3(0, 0, 0)){
-			cout <<"roto player" <<endl;
+			//cout <<"roto player" <<endl;
 			int frame = int(gameTime*10.0f);
 			if (frame % (2+player.mvm_type) == 0.0) {
 				skunkTR.rotation = vec3(0, 0, 0.1);
@@ -1398,7 +1409,7 @@ public:
 		
 		// ALEX's CODE
 		*moveDir = move;
-		return player.pos + vec3(0, -0.5f, 0);
+		return player.pos + vec3(0, -0.45f, 0);
 	}
 	
 	void healPlayer(float frametime) {
@@ -1508,6 +1519,7 @@ public:
 
 		if (!gameOver) {
 			skunkTR.pos = updatePlayer(frametime, &moveDir, &isMovingForward);
+			skunkRC2.skunkSpeed = abs(player.vel.x) + abs(player.vel.z);
 		}
 		if (!(moveDir.x == 0.0 && moveDir.z == 0.0)) {
 			skunkTR.lookDir = vec3(moveDir.x, 0.0, moveDir.z);
