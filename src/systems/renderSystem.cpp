@@ -1,5 +1,8 @@
 #include "renderSystem.h"
 //#include "AnimationSystem.h"
+#include "../GameManager.h"
+#include "../EcsCore/Coordinator.h"
+#include <string>
 
 
 using namespace glm;
@@ -134,6 +137,20 @@ void setModelRC(shared_ptr<Program> curS, Transform* tr) {
 	mat4 RampRotZ = glm::rotate(glm::mat4(1.0f), tr->rampRotation.z, vec3(0, 0, 1));
 	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
 	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm)); 
+}
+
+void setModelRCAdd(shared_ptr<Program> curS, Transform* tr, float rotY_add) {
+
+	mat4 Trans = glm::translate(glm::mat4(1.0f), tr->pos + worldShift);
+	mat4 ScaleS = glm::scale(glm::mat4(1.0f), tr->scale);
+	mat4 RotX = glm::rotate(glm::mat4(1.0f), tr->rotation.x, vec3(1, 0, 0));
+	mat4 RotY = glm::rotate(glm::mat4(1.0f), tr->rotation.y + rotY_add, vec3(0, 1, 0));
+	mat4 RotZ = glm::rotate(glm::mat4(1.0f), tr->rotation.z, vec3(0, 0, 1));
+	mat4 RampRotX = glm::rotate(glm::mat4(1.0f), tr->rampRotation.x, vec3(1, 0, 0));
+	mat4 RampRotY = glm::rotate(glm::mat4(1.0f), tr->rampRotation.y, vec3(0, 1, 0));
+	mat4 RampRotZ = glm::rotate(glm::mat4(1.0f), tr->rampRotation.z, vec3(0, 0, 1));
+	mat4 ctm = Trans * RampRotX * RampRotY * RampRotZ * lookDirToMat(tr->lookDir) * RotX * RotY * RotZ * ScaleS;
+	glUniformMatrix4fv(curS->getUniform("M"), 1, GL_FALSE, value_ptr(ctm));
 }
 
 void setModelRC_Offset(shared_ptr<Program> curS, Transform* tr, vec3 offset, float tailRot, vec3 pivot) {
@@ -400,11 +417,16 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 
 	// Model
 	worldShift += vec3(0, -0.9f, 0);
-	setModelRC(curS, tr);
+
+	if (strcmp(sc.filename, "../resources/chase_resources/low-poly-animals/wolfAnim2.fbx") == 0)
+		setModelRCAdd(curS, tr, (-3.14f / 2.0f));
+	else
+		setModelRC(curS, tr);
 
 	// Texture and Draw
 	(rc->sg)->textures[0]->bind(curS->getUniform("Texture0"));
-	(rc->sg)->shapes[0]->bindTex(sc.vao, curS, sc);
+	//cout << (rc->sg)->textures[0]->
+	//(rc->sg)->shapes[0]->bindTex(sc.vao, curS, sc);
 	glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
 
 	// reset & end

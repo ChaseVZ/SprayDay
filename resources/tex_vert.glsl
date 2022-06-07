@@ -28,6 +28,9 @@ float lightDist = 1.0;
 void main() {
 
 	mat4 boneTransform  =  mat4(0.0);
+	vec3 fPos;
+
+
 	if (isSkeletal){
 		bw = vec4(0);
 
@@ -43,32 +46,38 @@ void main() {
 
 	/* First model transforms */
 	vec3 wPos;
+
 	if (isSkeletal) {
 		wPos = vec3(M * vec4(vertPos.xyz, 1.0) * boneTransform);
 		gl_Position = P * V * M * boneTransform * vec4(vertPos.xyz, 1.0);
 
 		fragNor = mat3(transpose(inverse(M * boneTransform))) * vertNor; // SKELETAL ("v_normal" = "fragNor" i think; "normal" = "verNor")
 		fragNor = normalize(fragNor); // SKELETAL
+
+		fPos = (M*vec4(vertPos, 1.0)).xyz;
 	}
 	else{
 		wPos = vec3(M * vec4(vertPos.xyz, 1.0));
 		gl_Position = P * V * M * vec4(vertPos.xyz, 1.0);
 
 		fragNor = (V * M * vec4(vertNor, 0.0)).xyz;
+
+		fPos = (M*vec4(vertPos, 1.0)).xyz;
 	}		
 
 	lightDir = (V*vec4(1.0*lightDist, 2.0*lightDist, 2.0*lightDist, 0.0)).xyz;
 	
 	EPos = (V * vec4(wPos, 1.0)).xyz;
 
-	vec3 fPos = (M*vec4(vertPos, 1.0)).xyz;
+	//fPos = (M*vec4(vertPos, 1.0)).xyz;
 
 	fPosLS = LS*vec4(fPos, 1.0);
   
 	/* pass through the texture coordinates to be interpolated */
 	if (isSkeletal){
-		//vTexCoord = uv;
-		vTexCoord = vertTex;
+		vTexCoord = uv;
+		//vTexCoord = vertTex;
+		//vTexCoord = vec2(0,0);
 	}
 	else
 		vTexCoord = vertTex;

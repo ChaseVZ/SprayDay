@@ -103,7 +103,7 @@ void SpawnSys::initWolf(float gameTime) {
 			startPos,
 			vec3(1.0, 0.0, 0.0),
 			vec3(5.0),
-			vec3(0.0,-3.14 / 2, 0.0) //rotation
+			vec3(0.0,0.0, 0.0) //rotation
 		});
 
 	gCoordinator.AddComponent(

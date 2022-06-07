@@ -32,7 +32,7 @@ bool readSkeleton(Bone& boneOutput, aiNode* node, std::unordered_map<std::string
 	return false;
 }
 
-void loadModel(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& verticesOutput, std::vector<uint>& indicesOutput, Bone& skeletonOutput, uint& nBoneCount) {
+void loadModel(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& verticesOutput, std::vector<uint>& indicesOutput, Bone& skeletonOutput, uint& nBoneCount, bool wolf) {
 
 	verticesOutput = {};
 	indicesOutput = {};
@@ -55,6 +55,16 @@ void loadModel(const aiScene* scene, aiMesh* mesh, std::vector<Vertex>& vertices
 		glm::vec2 vec;
 		vec.x = mesh->mTextureCoords[0][i].x;
 		vec.y = mesh->mTextureCoords[0][i].y;
+
+		if (wolf) {
+			vec.x = 0.8;
+			vec.y = 0.5;
+		}
+		else {
+			vec.x = 0;
+			vec.y = 0;
+		}
+
 		vertex.uv = vec;
 
 		vertex.boneIds = glm::ivec4(0);
@@ -243,7 +253,7 @@ void AnimationSys::init(ShapeGroup* wolf, ShapeGroup* bear) {
 		glm::mat4 globalInverseTransform = assimpToGlmMatrix(scene->mRootNode->mTransformation);
 		globalInverseTransform = glm::inverse(globalInverseTransform);
 
-		loadModel(scene, mesh, vertices, indices, skeleton, boneCount);
+		loadModel(scene, mesh, vertices, indices, skeleton, boneCount, i == 0);
 		//cout << "num bones: " << boneCount << endl;
 		//cout << "indicies size: " << indices.size();
 		//cout << "\nvertices size: " << vertices.size();
