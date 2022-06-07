@@ -209,15 +209,20 @@ unsigned int createVertexArray(std::vector<Vertex>& vertices, std::vector<uint> 
 	return vao;
 }
 
-void AnimationSys::init() {
+void AnimationSys::init(ShapeGroup* wolf, ShapeGroup* bear) {
 	Assimp::Importer importer;
 
-	for (Entity const& entity : mEntities) {
-		SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
+	//for (Entity const& entity : mEntities) {
+	//	SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
+
+	vector<ShapeGroup*> enemies = { wolf, bear };
+
+	for (int i = 0; i < 2; i++){
 
 		//load model file
-		const char* filePath = sc.filename;
+		//const char* filePath = sc.filename;
 		//const char* filePath = "../resources/Animation_Stuff/model.dae";
+		const char* filePath = enemies[i]->filename.c_str();
 		const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
@@ -255,14 +260,23 @@ void AnimationSys::init() {
 		std::vector<glm::mat4> currentPose = {};
 		currentPose.resize(boneCount, identity); // use this for no animation
 
-		sc.animation = animation;
-		sc.skeleton = skeleton;
-		sc.boneCount = boneCount;
-		sc.indices = indices;
-		sc.currentPose = currentPose;
-		sc.globalInverseTransform = globalInverseTransform;
-		sc.vao = vao;
-		sc.animDur = animation.duration / animation.ticksPerSecond;
+		//sc.animation = animation;
+		//sc.skeleton = skeleton;
+		//sc.boneCount = boneCount;
+		//sc.indices = indices;
+		//sc.currentPose = currentPose;
+		//sc.globalInverseTransform = globalInverseTransform;
+		//sc.vao = vao;
+		//sc.animDur = animation.duration / animation.ticksPerSecond;
+
+		enemies[i]->animation = animation;
+		enemies[i]->skeleton = skeleton;
+		enemies[i]->boneCount = boneCount;
+		enemies[i]->indices = indices;
+		enemies[i]->currentPose = currentPose;
+		enemies[i]->globalInverseTransform = globalInverseTransform;
+		enemies[i]->vao = vao;
+		enemies[i]->animDur = animation.duration / animation.ticksPerSecond;
 	}
 }
 

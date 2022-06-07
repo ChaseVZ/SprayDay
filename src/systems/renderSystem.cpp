@@ -232,11 +232,19 @@ void RenderSys::draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderCompon
 
 			// DRAWING TAIL
 			if (rc->isSkunk) {
-				float range = 5 * (rc->skunkSpeed * 0.1f + 1);
-				range = 5;
-				float degreeShift = - 5;
-				float tailRot = (sin(gameTime * 2) * range + degreeShift); // - abs(rc->skunkSpeed) * 1.2f;
-				//tailRot = 0;
+				//float range = 5 * (rc->skunkSpeed * 0.1f + 1);
+
+				float range = 12;
+				float degreeShift = -12;
+				float tailRot = (sin(gameTime * (rc->skunkSpeed * 0.7 + 1)) * range + degreeShift); // - abs(rc->skunkSpeed) * 1.2f;
+				
+				if (rc->prevTailRot == -999) { rc->prevTailRot = tailRot; }
+				else {
+					if (tailRot > rc->prevTailRot + 1) { tailRot -= (tailRot - rc->prevTailRot) / 2.0f; }
+					else if (tailRot < rc->prevTailRot + 1) { tailRot += (rc->prevTailRot - tailRot) / 2.0f; }
+					rc->prevTailRot = tailRot;
+				}
+
 				vec3 offset = vec3(0, 0.06, 2.07);
 				vec3 pivot = vec3(0, 0, 1.45);
 				setModelRC_Offset(curS, tr, offset, tailRot, pivot);

@@ -1642,8 +1642,7 @@ public:
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
 		spraySys->init(&sphere, texProg, partGen);
-		
-		//animationSys->init();
+		animationSys->init(&wolf, &bear);
 	}
 };
 

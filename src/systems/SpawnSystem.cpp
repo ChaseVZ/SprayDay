@@ -70,12 +70,27 @@ void SpawnSys::initBear(float gameTime) {
 			999,
 			true // isSkeletal
 		});
+	//gCoordinator.AddComponent(
+	//	bearEnt,
+	//	SkeletalComponent{
+	//		bear->filename,
+	//		gameTime,
+	//		35.0f
+	//	});
 	gCoordinator.AddComponent(
 		bearEnt,
 		SkeletalComponent{
 			bear->filename.c_str(),
 			gameTime,
-			35.0f
+			35.0f,
+			bear->skeleton,
+			bear->animation,
+			bear->boneCount,
+			bear->vao,
+			bear->indices,
+			bear->currentPose,
+			bear->globalInverseTransform,
+			bear->animDur
 		});
 }
 
@@ -128,12 +143,27 @@ void SpawnSys::initWolf(float gameTime) {
 			999,
 			true // isSkeletal
 		});
+	//gCoordinator.AddComponent(
+	//	wolfEnt,
+	//	SkeletalComponent{
+	//		wolf->filename,
+	//		gameTime,
+	//		50.0f
+	//	});
 	gCoordinator.AddComponent(
 		wolfEnt,
 		SkeletalComponent{
 			wolf->filename.c_str(),
 			gameTime,
-			50.0f
+			50.0f,
+			wolf->skeleton,
+			wolf->animation,
+			wolf->boneCount,
+			wolf->vao,
+			wolf->indices,
+			wolf->currentPose,
+			wolf->globalInverseTransform,
+			wolf->animDur
 		});
 }
 
@@ -142,11 +172,11 @@ void SpawnSys::spawnEnemy(std::shared_ptr<AnimationSys> animationSys, float game
 	int randEnemySpawn = rand() % 2;
 	if (randEnemySpawn == 1) {
 		initBear(gameTime);
-		animationSys->init();
+		//animationSys->init();
 	}
 	else {
 		initWolf(gameTime);
-		animationSys->init();
+		//animationSys->init();
 	}
 }
 
