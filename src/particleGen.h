@@ -42,6 +42,7 @@ private:
 	//GLfloat *points;
 	//GLfloat *pointColors;
 	int numP = MAX_PARTICLES;
+	GLfloat pSizes[MAX_PARTICLES];
 	GLfloat points[MAX_PARTICLES*3];
 	GLfloat pointColors[MAX_PARTICLES * 4];
 	
@@ -49,6 +50,7 @@ private:
 	unsigned vertArrObj;		// VAO: contains both buffer
 	unsigned vertBuffObj;
 	unsigned colorBuffObj;
+	unsigned sizeBuffObj;
 
 	float r_low;
 	float r_high;

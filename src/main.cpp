@@ -626,6 +626,7 @@ public:
 		partProg->addUniform("isGrey");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
+		partProg->addAttribute("size");
 
 		textProg = make_shared<Program>();
 		textProg->setVerbose(true);

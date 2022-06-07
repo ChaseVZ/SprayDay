@@ -34,6 +34,7 @@ void particleGen::gpuSetup() {
 		points[i * 3 + 0] = start.x;
 		points[i * 3 + 1] = start.y;
 		points[i * 3 + 2] = start.z;
+		pSizes[i] = 1000.0;
 		
 		// Initialization of pointColors DOES NOTHING, but good practice
 		pointColors[i * 4 + 0] = 1.0;
@@ -66,6 +67,13 @@ void particleGen::gpuSetup() {
    glBindBuffer(GL_ARRAY_BUFFER, colorBuffObj);
    //actually memcopy the data - only do this once
    glBufferData(GL_ARRAY_BUFFER, sizeof(pointColors), &pointColors[0], GL_STREAM_DRAW);
+
+   //generate vertex buffer to hand off to OGL - using instancing
+   glGenBuffers(1, &sizeBuffObj);
+   //set the current state to focus on our vertex buffer
+   glBindBuffer(GL_ARRAY_BUFFER, sizeBuffObj);
+   //actually memcopy the data - only do this once
+   glBufferData(GL_ARRAY_BUFFER, sizeof(pSizes), &pSizes[0], GL_STREAM_DRAW);
    
    assert(glGetError() == GL_NO_ERROR);
 	
