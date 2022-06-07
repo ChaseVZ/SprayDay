@@ -16,6 +16,10 @@ struct ShapeGroup {
 	string filename = "";
 };
 
+enum ParticleT : int {
+	NO_PARTICLES = 0,
+	PURPLE_POOF
+};
 
 struct RenderComponent {
 	ShapeGroup* sg;

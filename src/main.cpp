@@ -20,7 +20,7 @@
 #include "Spline.h"
 #include "Player.h"
 #include "VirtualCamera.h"
-#include "particleSys.h"
+#include "particleGen.h"
 #include <chrono> 
 #include "Enemy.h"
 #include "GameManager.h"
@@ -36,6 +36,7 @@
 #include "EcsCore/Coordinator.h"
 #include "Components/Transform.h"
 #include "Components/HudComponent.h"
+#include "Components/ParticleComponent.h"
 //#include "Components/AnimationComponent.h"
 #include <fstream>
 #include "systems/HudSystem.h"
@@ -85,6 +86,7 @@ std::shared_ptr<PathingSys> pathingSys;
 std::shared_ptr<CollisionSys> collisionSys;
 std::shared_ptr<HudSys> hudSys;
 std::shared_ptr<AnimationSys> animationSys;
+particleGen* partGen;
 
 // A simple type alias
 using Entity = std::uint32_t;
@@ -95,6 +97,7 @@ bool gameOver = false;
 
 
 float POISON_TICK_TIME = 0.5;
+
 
 class Application : public EventCallbacks
 {
@@ -159,6 +162,7 @@ public:
 	shared_ptr<Texture> particleTexture;
 	shared_ptr<Texture> grassTexture;
 	shared_ptr<Texture> sprayTexture;
+	
 	//shared_ptr<Texture> greenTexture;
 	// Skybox Texture Files
 	vector<std::string> space_faces{
@@ -596,6 +600,7 @@ public:
 		partProg->addUniform("M");
 		partProg->addUniform("V");
 		partProg->addAttribute("pColor");
+		partProg->addUniform("isGrey");
 		partProg->addUniform("alphaTexture");
 		partProg->addAttribute("vertPos");
 
@@ -1289,6 +1294,7 @@ public:
 		for (itr = trail.begin(); itr != trail.end(); ) {
 			Entity spraySphere = *itr;
 			itr++;  // avoid deletion errors
+			partGen->deleteOldestParticleGroup(PARTICLES_PER_SPRAY, spraySphere);
 			gCoordinator.DestroyEntity(spraySphere);
 		}
 		trail.clear();
@@ -1416,7 +1422,6 @@ public:
 			signature.set(gCoordinator.GetComponentType<RenderComponent>());
 			gCoordinator.SetSystemSignature<RenderSys>(signature);
 		}
-		renderSys->init(MAP_SIZE, partProg, particleTexture);
 
 		damageSys = gCoordinator.RegisterSystem<DamageSys>();
 		Signature signature;
@@ -1464,12 +1469,18 @@ public:
 	}
 
 	void initSystems() {
+		partGen = new particleGen(vec3(0, -10, 0), 0.5f, 0.9f, 0.0f, 0.5f, 4.0f, 8.0f, 0.1f, 0.4f); // start off screen
+		partGen->setnumP(PARTICLES_PER_SPRAY * MAX_SPRAY_SPHERES);
+		partGen->gpuSetup();
+
+		renderSys->init(MAP_SIZE, partProg, particleTexture, partGen);
 		hudSys->init(&cube, cubeProg, redTexID);
 		collisionSys->init();
 		spawnSys = new SpawnSys();
 		spawnSys->init(MAP_SIZE, POISON_TICK_TIME, &wolf, &bear, texProg);
 		spraySys = new SpraySys();
-		spraySys->init(&sphere, texProg);
+		spraySys->init(&sphere, texProg, partGen);
+		
 		//animationSys->init();
 	}
 };
@@ -1484,6 +1495,7 @@ void initCoordinator() {
 	gCoordinator.RegisterComponent<CollisionComponent>();
 	gCoordinator.RegisterComponent<HudComponent>();
 	gCoordinator.RegisterComponent<SkeletalComponent>();
+	gCoordinator.RegisterComponent<ParticleComponent>();
 }
 
 void freeSystems() {

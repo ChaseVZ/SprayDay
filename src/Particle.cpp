@@ -27,7 +27,9 @@ Particle::Particle(vec3 start) :
 	lifespan(10.0f),
 	tEnd(0.0f),
 	scale(1.0f),
-	color(1.0f, 1.0f, 1.0f, 1.0f)
+	color(1.0f, 1.0f, 1.0f, 1.0f),
+	startPos(start),
+	attachedEntity(MAX_ENTITIES + 1)
 {
 }
 
@@ -48,7 +50,7 @@ void Particle::rebirth(float t, vec3 start, float r_low, float r_high, float g_l
 	charge = randFloat(0.0f, 1.0f) < 0.5 ? -1.0f : 1.0f;	
 	m = 1.0f;
   	d = randFloat(0.0f, 0.02f);
-	x = start; // all spawn in same spot right now
+	x = startPos;
 	v.x = randFloat(-0.1f, 0.1f);
 	v.y = randFloat(-0.1f, 0.1f);
 	v.z = randFloat(-0.1f, 0.1f);
@@ -75,4 +77,12 @@ void Particle::update(float t, float h, const vec3 &g, const vec3 start, float r
 	//v = v + g * (tEnd - t);
 	x += v * scale;
 
+}
+
+void Particle::assignGroup(vec3 start, Entity entity, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high)
+{
+	startPos = start;
+	attachedEntity = entity; // not used currently
+
+	rebirth(0.0f, start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
 }

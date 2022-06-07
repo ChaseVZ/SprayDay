@@ -6,9 +6,12 @@
 #include <vector>
 #include "Particle.h"
 #include "Program.h"
+#include "EcsCore/EcsTypes.h"
+#include <queue>
 
 using namespace glm;
 using namespace std;
+const int MAX_PARTICLES = 8100;
 
 class ParticleSorter {
 public:
@@ -26,9 +29,11 @@ public:
    mat4 C; // current camera matrix
 };
 
-class particleSys {
+class particleGen {
 private:
 	vector<shared_ptr<Particle>> particles;
+	vector<shared_ptr<Particle>> unusedParticles;
+	queue<shared_ptr<Particle>> particleQueue;
 	float t, h; //?
 	vec3 g; //gravity
 	vec3 start;
@@ -36,9 +41,10 @@ private:
 	//int numP;
 	//GLfloat *points;
 	//GLfloat *pointColors;
-	GLfloat points[900];
-	GLfloat pointColors[1200];
-	int numP = 300;
+	int numP = MAX_PARTICLES;
+	GLfloat points[MAX_PARTICLES*3];
+	GLfloat pointColors[MAX_PARTICLES * 4];
+	
 	mat4 theCamera;
 	unsigned vertArrObj;		// VAO: contains both buffer
 	unsigned vertBuffObj;
@@ -54,7 +60,7 @@ private:
 	float scale_high;
 	
 public:
-	particleSys(vec3 source, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
+	particleGen(vec3 source, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
 	void drawMe(std::shared_ptr<Program> prog);
 	void gpuSetup();
 	void update();
@@ -69,6 +75,8 @@ public:
 		//points = new GLfloat[p1];
 		//pointColors = new GLfloat[p2];
 	}
+	void initParticleGroup(int PARTICLES_PER_SPRAY, vec3 playerPos, Entity sprayEnt);
+	void deleteOldestParticleGroup(const int PARTICLES_PER_SPRAY, Entity sprayEnt);
 };
 
 

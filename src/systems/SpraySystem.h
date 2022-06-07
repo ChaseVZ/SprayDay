@@ -3,15 +3,16 @@
 #include "../ShapeGroup.h"
 #include "../Components/Transform.h"
 #include "../EcsCore/Coordinator.h"
-#include "../particleSys.h"
-#include "../GLSL.h"
+#include "../particleGen.h"
+#include "../Components/ParticleComponent.h"
 
-
+const int PARTICLES_PER_SPRAY = 10;
+const int MAX_SPRAY_SPHERES = 100;
 
 class SpraySys : public System
 {
 public:
-	void init(ShapeGroup* spherePtr, shared_ptr<Program>);
+	void init(ShapeGroup* spherePtr, shared_ptr<Program>, particleGen* pg);
 	void update(float frameTime, vector<Entity>*, int mvmType, vec3 playerPos);
 
 private:

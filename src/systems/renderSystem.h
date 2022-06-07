@@ -5,7 +5,7 @@
 
 #include "../Program.h"
 #include "../MatrixStack.h"
-#include "../particleSys.h"
+#include "../particleGen.h"
 #include "../GLSL.h"
 
 #include <iostream>
@@ -14,13 +14,16 @@
 #include "../EcsCore/System.h"
 #include "../Components/Transform.h"
 #include "../Components/AnimationComponent.h"
+#include "../Components/ParticleComponent.h"
+#include "../GameManager.h"
+#include "../EcsCore/Coordinator.h"
+#include "../particleGen.h"
 #include "../Tree.h"
-
 
 class RenderSys : public System
 {
 public:
-	void init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex);
+	void init(float grndSize, shared_ptr<Program> ptProg, shared_ptr<Texture> ptTex, particleGen* sprayParticleGen);
 	void update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawDepth(shared_ptr<Program> curS);
 	int ViewFrustCull(vec3 center, float radius);
@@ -36,7 +39,7 @@ private:
 	void drawShadows(RenderComponent* rc, Transform* tr, shared_ptr<Program> curS);
 	void draw(shared_ptr<MatrixStack> Projection, mat4 View, RenderComponent* rc, Transform* tr, GLuint depthMap, mat4 LSpace, bool isGrey);
 	void drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, shared_ptr<Texture> tex, float elapsedTime, SkeletalComponent sc);
-	void RenderSys::drawSprayParticles(mat4 view, mat4 projection, mat4 model);
+	void RenderSys::drawParticles(particleGen* partGen, mat4 view, mat4 projection, mat4 model, bool isGrey);
 };
 
 namespace RenderSystem {

@@ -3,12 +3,13 @@
 #include <algorithm>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include "particleSys.h"
+#include "particleGen.h"
 #include "GLSL.h"
+#include <iostream>
 
 using namespace std;
 
-particleSys::particleSys(vec3 source, float r_l, float r_h, float g_l, float g_h, float b_l, float b_h, float scale_l, float scale_h)
+particleGen::particleGen(vec3 source, float r_l, float r_h, float g_l, float g_h, float b_l, float b_h, float scale_l, float scale_h)
 {
 	t = 0.0f;
 	h = 0.01f;
@@ -26,7 +27,7 @@ particleSys::particleSys(vec3 source, float r_l, float r_h, float g_l, float g_h
 	scale_high = scale_h;
 }
 
-void particleSys::gpuSetup() {
+void particleGen::gpuSetup() {
 
 	//cout << numP << endl;
  	for (int i=0; i < numP; i++) {
@@ -42,6 +43,7 @@ void particleSys::gpuSetup() {
 
 		auto particle = make_shared<Particle>(start);
 		particles.push_back(particle);
+		unusedParticles.push_back(particle);
 		particle->load(start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
 	}
 
@@ -69,13 +71,13 @@ void particleSys::gpuSetup() {
 	
 }
 
-void particleSys::reSet() {
+void particleGen::reSet() {
 	for (int i=0; i < numP; i++) {
 		particles[i]->load(start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
 	}
 }
 
-void particleSys::drawMe(std::shared_ptr<Program> prog) {
+void particleGen::drawMe(std::shared_ptr<Program> prog) {
 	glBindVertexArray(vertArrObj);
 
 	// COLOR BUF
@@ -99,7 +101,7 @@ void particleSys::drawMe(std::shared_ptr<Program> prog) {
 	glDisableVertexAttribArray(0);
 }
 
-void particleSys::update() {
+void particleGen::update() {
 
   vec3 pos;
   vec4 col;
@@ -134,7 +136,7 @@ void particleSys::update() {
         pointColors[i*4+1] = col.g; 
         pointColors[i*4+2] = col.b;
         pointColors[i*4+3] = col.a;
-  } 
+  }
 
 	//update the GPU data
 	glBindBuffer(GL_ARRAY_BUFFER, vertBuffObj);
@@ -146,3 +148,22 @@ void particleSys::update() {
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*numP*4, pointColors);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+void particleGen::initParticleGroup(int PARTICLES_PER_SPRAY, vec3 playerPos, Entity sprayEnt) {
+	for (int i = 0; i < PARTICLES_PER_SPRAY; i++) {
+		std::shared_ptr<Particle> particleToAdd = unusedParticles.back();
+		unusedParticles.pop_back();
+		particleToAdd->assignGroup(playerPos, sprayEnt, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
+		particleQueue.push(particleToAdd);
+	}
+}
+void particleGen::deleteOldestParticleGroup(const int PARTICLES_PER_SPRAY, Entity sprayEnt) {
+	for (int i = 0; i < PARTICLES_PER_SPRAY; i++) {
+		std::shared_ptr<Particle> deletedParticle = particleQueue.front();
+		particleQueue.pop();
+		deletedParticle->assignGroup(start, sprayEnt, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
+		unusedParticles.push_back(deletedParticle);
+	}
+}
+
+

@@ -15,6 +15,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "EcsCore/EcsTypes.h"
 
 using namespace glm;
 
@@ -34,7 +35,7 @@ public:
 	const vec3 &getPosition() const { return x; };
 	const vec3 &getVelocity() const { return v; };
 	const vec4 &getColor() const { return color; };
-	
+	void assignGroup(vec3 start, Entity, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
 private:
 	float charge; // +1 or -1
 	float m; // mass
@@ -45,6 +46,8 @@ private:
 	float tEnd;     // time this particle dies
 	float scale;
 	vec4 color;
+	vec3 startPos;
+	Entity attachedEntity;
 };
 
 #endif // LAB471_PARTICLE_H_INCLUDED
