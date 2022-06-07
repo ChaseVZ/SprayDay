@@ -38,4 +38,5 @@ struct RenderComponent {
 	ShapeGroup* sg2;
 	bool isSkunk = false;
 	float skunkSpeed = 0.0f;
+	float prevTailRot = -999;
 };
