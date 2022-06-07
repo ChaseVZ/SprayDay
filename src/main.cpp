@@ -1370,6 +1370,19 @@ public:
 		//}
 		player.localGround = co.height;
 		player.updatePos(co.dir, co.isCollide, collisionSys);
+		if (move != vec3(0, 0, 0)){
+			cout <<"roto player" <<endl;
+			int frame = int(gameTime*10.0f);
+			if (frame % (2+player.mvm_type) == 0.0) {
+				skunkTR.rotation = vec3(0, 0, 0.1);
+			}
+			else{
+				skunkTR.rotation = vec3(0, 0, -0.1);
+			}
+		}
+		else {
+			skunkTR.rotation = vec3(0, 0, 0);
+		}
 			
 		// camera
 		vcam.updatePos(player.pos);

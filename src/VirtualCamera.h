@@ -31,7 +31,7 @@ private:
 	Spline intro_path[11];
 	Spline intro_path_lookAt[11];
 	//vec3 camera_offset = vec3(0, 2, -2);
-	vec3 camera_offset = vec3(0, 2, 0);
+	vec3 camera_offset = vec3(0, 0, 0);
 	vec3 lookAt_default = vec3(0, 0, -1);
 };
 
