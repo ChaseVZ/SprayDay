@@ -46,7 +46,7 @@ void DamageSys::animatePoison(Entity entity) {
 	RenderComponent& enemyRC = gCoordinator.GetComponent<RenderComponent>(entity);
 	int pFrame = enemyAC.poisonDamageFrame;
 	if (pFrame > 0) {
-		enemyTr.scale = vec3(5.8);
+		enemyTr.scale = vec3(5.3);
 		enemyAC.poisonDamageFrame += 1;
 		//cout << "new shader: " << redShader->getFShaderName() << endl;
 		enemyRC.shader = redShader;
