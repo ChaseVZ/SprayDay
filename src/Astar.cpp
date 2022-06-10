@@ -325,7 +325,8 @@ vec3 getNextTileFromMoveList(vec3 startPos, vector<Node> * moves) {
 	return (*moves)[0].pos;
 }
 
-vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT pathingType) {
+vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT pathingType, 
+	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves, array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves) {
 	//cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 	Node playerNode;
@@ -342,10 +343,32 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	assert(!(startPos.x >= IDX_SIZE || startPos.z >= IDX_SIZE));
 	assert(!(startPos.z <= 0 || startPos.x <= 0));
 	if (pathingType == SIMPLE_PATH) {
+		vec3 storedMove = (*simpleStoredMoves)[startPos.y][startPos.x][startPos.z];
+		if (storedMove.x != -1) {
+			return collSys->mapToWorldVec(storedMove * vec3(1.0, 4.0, 1.0));
+		}
 		moves = checkNodes(startPos, playerNode, collSys, &addNeighbors);
+		if (moves.size() > 0){
+			for (int i = 0; i < moves.size() - 1; i++) {
+				vec3 tracePos = moves[i].pos;
+				vec3 nextPos = moves[i + 1].pos;
+				(*simpleStoredMoves)[tracePos.y][tracePos.x][tracePos.z] = nextPos;
+			}
+		}
 	}
 	else if (pathingType == FLANK_PATH) {
+		vec3 storedMove = (*flankStoredMoves)[startPos.y][startPos.x][startPos.z];
+		if (storedMove.x != -1) {
+			return collSys->mapToWorldVec(storedMove * vec3(1.0, 4.0, 1.0));
+		}
 		moves = checkNodes(startPos, playerNode, collSys, &addNeighborsOrtho);
+		if (moves.size() > 0) {
+			for (int i = 0; i < moves.size() - 1; i++) {
+				vec3 tracePos = moves[i].pos;
+				vec3 nextPos = moves[i + 1].pos;
+				(*flankStoredMoves)[tracePos.y][tracePos.x][tracePos.z] = nextPos;
+			}
+		}
 	}
 	
 	if (!moves.empty()){

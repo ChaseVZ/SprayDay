@@ -19,7 +19,8 @@ enum PathingT : int {
 class Astar
 {
     public: 
-        static vec3 findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT);
+        static vec3 findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT, 
+            array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves, array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves);
 
 };
 

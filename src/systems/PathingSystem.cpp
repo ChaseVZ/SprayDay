@@ -60,20 +60,15 @@ extern Coordinator gCoordinator;
 		return vec3(inVec.x, 0, inVec.z);
 	}
     void move(Player* p, float dt, Enemy* e, Transform* tr, shared_ptr<CollisionSys> collSys,
-		float frametime, float* damageFromEnemies) {
+		float frametime, float* damageFromEnemies,
+		array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves,
+		array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves) {
        if (!collideWithPlayer(tr->pos, p, e, dt, damageFromEnemies))
        {
 			if (!useOldDest(e->nextTile, tr->pos, (e->baseSpeed)*frametime)) {
-				//cout << "player pos: " << p->pos.x + 79 << " " << p->pos.y << " " << p->pos.z + 79 << endl;
-				//cout << "enemy pos: " << tr->pos.x + 79 << " " << tr->pos.y << " " << tr->pos.z + 79 << endl;
-				e->nextTile = Astar::findNextPos(*p, tr, collSys , e->pathingType);
-				//cout << "next  pos: " << e->nextTile.x + 79 << " " << e->nextTile.y << " " << e->nextTile.z + 79 << endl;
+				e->nextTile = Astar::findNextPos(*p, tr, collSys , e->pathingType, simpleStoredMoves, flankStoredMoves);
 			}
 			e->vel = (e->nextTile +vec3(0.5, 0.0, 0.5) - tr->pos);
-			//cout << "enemy vel: " << e->vel.x << " " << e->vel.y << " " << e->vel.z<< endl << endl;
-
-			//cerr << "Moved Wolf to tile vec3(" << nextPos.x << " " << nextPos.y << " " << nextPos.z << ")\n";
-			//cerr << "Moved Wolf by vec3(" << e->vel.x << " " << e->vel.y << " " << e->vel.z << ")\n";
 			vec3 velXZ = getXZ(e->vel);
 			vec3 prevLookXZ = getXZ(tr->lookDir);
 			if (e->vel != vec3(0)) {
@@ -108,13 +103,32 @@ void PathingSys::update(float frameTime, Player* player, shared_ptr<CollisionSys
 	}*/
 
 	float damageFromEnemies = 0.0;
+
+	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves = new array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>;
+	for (int x = 0; x < IDX_SIZE; x++) {
+		for (int z = 0; z < IDX_SIZE; z++) {
+			for (int y = 0; y < 2; y++) {
+				(*simpleStoredMoves)[y][x][z] = vec3(-1);
+			}
+		}
+	}
+
+	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves = new array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>;
+	for (int x = 0; x < IDX_SIZE; x++) {
+		for (int z = 0; z < IDX_SIZE; z++) {
+			for (int y = 0; y < 2; y++) {
+				(*flankStoredMoves)[y][x][z] = vec3(-1);
+			}
+		}
+	}
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
 
-		move(player, frameTime*50, &entityEnemyComp, &entityTransComp, collSys, entity, &damageFromEnemies);
+		move(player, frameTime*50, &entityEnemyComp, &entityTransComp, collSys, entity, &damageFromEnemies, simpleStoredMoves, flankStoredMoves);
 	}
-	
+	delete simpleStoredMoves;
+	delete flankStoredMoves;
 	applyDamageToPlayer(player, damageFromEnemies, frameTime, gameOver);
 	
 }
