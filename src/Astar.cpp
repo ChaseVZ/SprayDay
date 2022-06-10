@@ -105,7 +105,6 @@ static vector<Node> makePath(array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>* m
 	stack<Node> path;
 	vector<Node> usablePath; //reversed path from player->obj to obj->player
 	while ((x != -1) && (z != -1)) {
-		//cout << "  pushing: " << (*map)[y][x][z].pos.x << " " << (*map)[y][x][z].pos.y << " " << (*map)[y][x][z].pos.z << " " << endl;
 		assert((*map)[y][x][z].parentPos != player.pos);
 		path.push((*map)[y][x][z]);
 		int tempX = x;
@@ -229,7 +228,6 @@ static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionS
 
 	//initialize map array to be filled in later
 	array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2> * map = new array<array<array<Node, IDX_SIZE>, IDX_SIZE>, 2>;
-	//cout << "initializing map" << endl;
 	for (int x=0; x<IDX_SIZE; x++) {
 		for (int z=0; z<IDX_SIZE; z++) {
 			for (int y = 0; y < 2; y++) {
@@ -274,7 +272,6 @@ static vector<Node> checkNodes(vec3 startPos, Node player, shared_ptr<CollisionS
 			delete map;
 			return returnVal;
 		}
-		//cout << " selected: " << x << " " << y << " " << z << endl;
 		addNeighborFunc(x, z, y, map, collSys, visitedList, &openList, &selected, &player);
 	}
 	delete map;
@@ -327,7 +324,6 @@ vec3 getNextTileFromMoveList(vec3 startPos, vector<Node> * moves) {
 
 vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSys, PathingT pathingType, 
 	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves, array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves) {
-	//cerr << "inAstar\n";
 	collisionSysAstar = collSys;
 	Node playerNode;
 	playerNode.pos = initPlayerNodePos(p.pos, collSys); 
@@ -339,9 +335,20 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	if (startPos.y < 0) {
 		startPos.y = 0;
 	}
+	// clamping in case they round out 
+	if (startPos.x < 0) {
+		startPos.x = 0;
+	}
+	if (startPos.z < 0) {
+		startPos.z = 0;
+	}
+	if (startPos.x >= IDX_SIZE) {
+		startPos.x = IDX_SIZE -1 ;
+	}
+	if (startPos.z >= IDX_SIZE) {
+		startPos.z = IDX_SIZE -1 ;
+	}
 	vector<Node> moves;
-	assert(!(startPos.x >= IDX_SIZE || startPos.z >= IDX_SIZE));
-	assert(!(startPos.z <= 0 || startPos.x <= 0));
 	if (pathingType == SIMPLE_PATH) {
 		vec3 storedMove = (*simpleStoredMoves)[startPos.y][startPos.x][startPos.z];
 		if (storedMove.x != -1) {
@@ -373,7 +380,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 	
 	if (!moves.empty()){
 		glm::vec3 retMove = collSys->mapToWorldVec(moves.front().pos);
-		//cout << "   returned node: " << moves.front().pos.x << " " << moves.front().pos.z << endl;
 		glm::vec3 trPos = floorVec(tr->pos);
 		if (moves.size() > 1) { //retMove is same as pos, so return next pos in moveslist
 			moves.erase(moves.begin());
@@ -382,6 +388,6 @@ vec3 Astar::findNextPos(Player p, Transform* tr, shared_ptr<CollisionSys> collSy
 			//return vec3(moves.front().pos.x-MAP_SIZE/2, 0, moves.front().pos.z-MAP_SIZE/2);
 		}
 	}
-	//cout << "astar fail " << endl;
+	//astar failure
 	return floorVec(tr->pos);
 }

@@ -1,6 +1,7 @@
 #include "PathingSystem.h"
 
 float PLAYER_DAMAGE_CAP = 110.0; // maximum damage per second (player has 100 hp)
+float ENEMY_MVMT_INTO_PLAYER = 0.5;
 
 using namespace glm;
 using namespace std;
@@ -29,8 +30,12 @@ extern Coordinator gCoordinator;
 		}
 		return false;
 	}
-
-
+	float getEuclidianDist(vec2 a, vec2 b) {
+		return sqrtf(pow((a.x - b.x), 2) + pow((a.y - b.y), 2));
+	}
+	float getXZEuclidianDist(vec3 a, vec3 b) {
+		return sqrtf(pow((a.x - b.x), 2) + pow((a.z - b.z), 2));
+	}
     bool collideWithPlayer(vec3 nextPos, Player* p, Enemy* e, float frameTime, float* damageFromEnemies) {
         // if (nextPos.x + e->boRad > 125 || nextPos.x - e->boRad < -125)
         // {
@@ -42,12 +47,12 @@ extern Coordinator gCoordinator;
         //     e->vel = vec3(e->vel.x, e->vel.y, -1*(e->vel.z));
         //     return true;
         // }
-        if (sqrtf(pow((nextPos.x - p->pos.x), 2) + pow((nextPos.z - p->pos.z), 2)) < e->boRad + p->boRad) 
-        {
-			*damageFromEnemies += 60.0;
-            return true;
-        }
-        return false;
+		if (abs(p->pos.y - nextPos.y) < 2.0 && getXZEuclidianDist(nextPos, p->pos) < (e->boRad + p->boRad))
+		{
+			*damageFromEnemies = (*damageFromEnemies + PLAYER_DAMAGE_CAP) / 2.5;
+			return getXZEuclidianDist(nextPos, p->pos) < e->boRad + p->boRad - ENEMY_MVMT_INTO_PLAYER;
+		}
+		return false;
     }
 
 	bool useOldDest(vec3 a, vec3 b, float epsilon) {
@@ -91,8 +96,6 @@ void applyDamageToPlayer(Player* p,  float damageFromEnemies, float frameTime, b
 	p->health = (std::max)(p->health, 0.0f);
 	if (p->health == 0.0) {
 		*gameOver = true;
-		//cout << "YOU LOSE :(" << endl;
-		//exit(EXIT_SUCCESS);
 	}
 }
 
@@ -124,7 +127,6 @@ void PathingSys::update(float frameTime, Player* player, shared_ptr<CollisionSys
 	for (Entity const& entity : mEntities) {
 		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
 		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
-
 		move(player, frameTime*50, &entityEnemyComp, &entityTransComp, collSys, entity, &damageFromEnemies, simpleStoredMoves, flankStoredMoves);
 	}
 	delete simpleStoredMoves;

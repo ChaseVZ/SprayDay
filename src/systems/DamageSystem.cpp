@@ -2,6 +2,7 @@
 #include <iostream>
 
 const int SPRAY_HITBOX_FACTOR = 1; // increase for better performance
+const int SPRAY_BOUNDING_RADIUS = 3;
 
 extern Coordinator gCoordinator;
 
@@ -32,8 +33,7 @@ bool checkPoisonCollision(Transform enemyTr, Enemy enemy, vector<Entity>* trail)
 		cout << "trail pos:" << trailPos.x << " " << trailPos.z << endl;
 		cout << " "<< length(trailPos + enemyPos) << endl;
 		*/
-		if (length(trailPos - enemyPos) <= enemy.boRad + 1.0) {
-			//cout << "enemy hit spray at" << trailPos.x << " " << trailPos.z << "length: " << length(trailPos + enemyPos) << endl;
+		if (length(trailPos - enemyPos) <= enemy.boRad + SPRAY_BOUNDING_RADIUS) {
 			return true;
 		}
 	}
@@ -70,8 +70,8 @@ void DamageSys :: update(vector<Entity>* trail, float frameTime, int* enemiesKil
 		SkeletalComponent& sc = gCoordinator.GetComponent<SkeletalComponent>(entity);
 		
 		if (checkPoisonCollision(enemyTr, enemy, trail)) {
-			enemy.debufSpeed = 0.70f;
-			sc.debuff = 0.40f;
+			enemy.debufSpeed = 0.80f;
+			sc.debuff = 0.50f;
 
 			simulatePoisonCollision(entity, frameTime);
 			set<Entity>::iterator currentEnt = itr;

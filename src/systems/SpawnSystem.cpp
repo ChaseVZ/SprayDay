@@ -3,12 +3,12 @@
 #include <iostream>
 
 extern Coordinator gCoordinator;
-float WOLF_BASE_HP = 3.0; // seconds of spraying until death (if divisible by tick time)
-float BEAR_BASE_HP = 12.0;
-float STARTING_SPAWN_TIME = 6.0;
+float WOLF_BASE_HP = 2.2; // seconds of spraying until death (if divisible by tick time)
+float BEAR_BASE_HP = 10.0;
+float STARTING_SPAWN_TIME = 5.0;
 float TIME_TO_FIRST_SPAWN =  2.0;
 float MIN_SPAWN_TIME = 0.7;
-float SPAWN_TIME_DECREASE = .03; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
+float SPAWN_TIME_DECREASE = .02; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
 float spawnTime;
 float spawnTimer;
 
@@ -18,7 +18,7 @@ float randFloat() {
 	return r;
 }
 vec3 SpawnSys::getRandStart() {
-	return vec3((rand() % 2) * 2 - 1, 0.0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.3));
+	return vec3((rand() % 2) * 2 - 1, 0.0, (rand() % 2) * 2 - 1) * float((MAP_SIZE /2.0)-1);
 }
 
 void SpawnSys::initBear(float gameTime) {
@@ -41,7 +41,7 @@ void SpawnSys::initBear(float gameTime) {
 			startPos, //vec3 nextTile
 			false, // bool exploding;
 			0, // int explodeFrame;
-			0.7, // speed
+			0.65, // speed
 			SIMPLE_PATH
 		});
 
@@ -109,12 +109,12 @@ void SpawnSys::initWolf(float gameTime) {
 	gCoordinator.AddComponent(
 		wolfEnt,
 		Enemy{
-			2.0, // float boRad;
+			1.8, // float boRad;
 			startPos, // vec3 vel;
 			startPos, //start poosition (nextTile)
 			false, // bool exploding;
 			0, // int explodeFrame;
-			1.25, //SPEED
+			1.1, //SPEED
 			FLANK_PATH
 		});
 
@@ -191,6 +191,7 @@ void SpawnSys::init(int mapSize, float poisonTickTime, ShapeGroup* wolfPtr, Shap
 
 void SpawnSys::update(float frameTime, std::shared_ptr<AnimationSys> animationSys, float gameTime) {
 	spawnTime = (std::max)(spawnTime - SPAWN_TIME_DECREASE * frameTime, MIN_SPAWN_TIME);
+	//cout << "spawntime: " << spawnTime << endl;
 	spawnTimer += frameTime;
 	if (spawnTimer > spawnTime) {
 		spawnEnemy(animationSys, gameTime);

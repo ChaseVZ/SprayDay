@@ -11,7 +11,7 @@ using namespace std;
 using namespace glm;
 
 /* HELPER INFO */
-float speeds[2] = { 22, 10 };  // from 0.65 and 2.0
+float speeds[2] = { 25, 10 };  // from 0.65 and 2.0
 vec3 up = vec3(0, 1, 0);
 
 float interpolate(float x1, float x2, float y1, float y2, float x)
@@ -109,17 +109,8 @@ vec3 Player::calcNextPos(vec3 lookAt, bool goCamera, float frametime, bool *isMo
 		nortempv = vec3(0.0);
 	}
 		
-	vel.x = nortempv.x;
-	vel.z = nortempv.z;
-
-	if (mvm_type == 1) { //walking
-		vel.x = 10.0f * vel.x;
-		vel.z = 10.0f * vel.z;
-	}
-	else {				 //running
-		vel.x = 20.0f * vel.x;
-		vel.z = 20.0f * vel.z;
-	}
+	vel.x = speeds[mvm_type] * nortempv.x;
+	vel.z = speeds[mvm_type] * nortempv.z;
 
 	// Only involve gravity when player is jumping or falling
 	if (jumping || falling) {

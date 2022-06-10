@@ -638,7 +638,6 @@ public:
 
 		initShadow();
 		int fError = initFont();
-		cout << "Font error?: " << fError << endl;
 
 		grassTexture = make_shared<Texture>();
 		grassTexture->setFilename(resourceDirectory + "/chase_resources/darkerGrass4.jpg");
@@ -1458,7 +1457,6 @@ public:
 	}
 	
 	void resetGame() {
-		cout << "resetting game" << endl;
 		player.health = 100.0;
 		gameOver = false;
 		removeAllEnemies();
@@ -1555,7 +1553,6 @@ public:
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
 		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
 		// do not want transparency when drawing shadows
-		
 		
 		hudSys->update(Projection, player);
 		if (!debugMode && !gameOver) { 
@@ -1683,7 +1680,7 @@ int main(int argc, char *argv[])
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
-	PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/Garbage_Day.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
+	//PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/Garbage_Day.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state
@@ -1692,12 +1689,8 @@ int main(int argc, char *argv[])
 
 	application->init(resourceDir);
 	application->registerSystems();
-	//cout << "doing geom" << endl;
 	application->initGeom(resourceDir);
-	//cout << "doing geom2" << endl;
 	application->initSystems();
-	
-	
 
 	auto lastTime = chrono::high_resolution_clock::now();
 	// Loop until the user closes the window.
