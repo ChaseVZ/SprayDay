@@ -101,14 +101,14 @@ void particleGen::drawMe(std::shared_ptr<Program> prog) {
 	glDisableVertexAttribArray(0);
 }
 
-void particleGen::update() {
+void particleGen::update(float frameTime) {
 
   vec3 pos;
   vec4 col;
 
   //update the particles (called in render)
   for(auto particle : particles) {
-      particle->update(t, h, g, start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high);
+      particle->update(t, h, g, start, r_low, r_high, g_low, g_high, b_low, b_high, scale_low, scale_high, frameTime);
   }
   t += h;
 

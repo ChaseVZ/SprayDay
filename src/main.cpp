@@ -1551,7 +1551,7 @@ public:
 		}
 		updateSkybox(frametime);
 		RenderSystem::drawGround(texProg, Projection, View, grassTexture, gameOver, depthMap);
-		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime);
+		renderSys->update(Projection, View, depthMap, LSpace, gameOver, gameTime, frametime);
 		// do not want transparency when drawing shadows
 		
 		hudSys->update(Projection, player);
@@ -1628,7 +1628,7 @@ public:
 	}
 
 	void initSystems() {
-		partGen = new particleGen(vec3(0, -10, 0), 0.5f, 0.9f, 0.0f, 0.5f, 0.4f, 1.0f, 0.1f, 0.4f); // start off screen
+		partGen = new particleGen(vec3(0, -10, 0), 0.5f, 0.8f, 0.0f, 0.5f, 0.4f, 1.0f, 0.1f, 0.4f); // start off screen
 		partGen->setnumP(PARTICLES_PER_SPRAY * MAX_SPRAY_SPHERES);
 		partGen->gpuSetup();
 

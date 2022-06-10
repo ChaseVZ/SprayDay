@@ -31,7 +31,7 @@ public:
 	void load(vec3 start, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
 	void rebirth(float t, vec3 start, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
 	void update(float t, float h, const glm::vec3 &g, const vec3 start,
-				float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
+				float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high, float frameTime);
 	const vec3 &getPosition() const { return x; };
 	const vec3 &getVelocity() const { return v; };
 	const vec4 &getColor() const { return color; };

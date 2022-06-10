@@ -436,7 +436,7 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 }
 #pragma endregion
 
-void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime)
+void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint depthMap, mat4 LSpace, bool isGrey, float gameTime, float frameTime)
 {
 	cullCount = 0;
 	objCount = 0;
@@ -459,7 +459,7 @@ void RenderSys::update(shared_ptr<MatrixStack> Projection, mat4 View, GLuint dep
 			draw(Projection, View, &rc, &tr, depthMap, LSpace, isGrey, gameTime);
 		}
 	}
-	drawParticles(sprayParticleGen, View, Projection->topMatrix(), mat4(1.0), isGrey);
+	drawParticles(sprayParticleGen, View, Projection->topMatrix(), mat4(1.0), isGrey, frameTime);
 
 	// draw all transparent entities second
 	for (Entity entity : transparentEnts) {
@@ -592,7 +592,7 @@ int RenderSys::ViewFrustCull(vec3 center, float radius) {
 	return 0; 
 }
 
-void RenderSys::drawParticles(particleGen* partGen, mat4 view, mat4 projection, mat4 model, bool isGrey) {
+void RenderSys::drawParticles(particleGen* partGen, mat4 view, mat4 projection, mat4 model, bool isGrey, float frameTime) {
 	partGen->setCamera(view);
 	partProg->bind();
 	glUniform1i(partProg->getUniform("isGrey"), isGrey);
@@ -601,7 +601,7 @@ void RenderSys::drawParticles(particleGen* partGen, mat4 view, mat4 projection, 
 	CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("V"), 1, GL_FALSE, value_ptr(view)));
 	CHECKED_GL_CALL(glUniformMatrix4fv(partProg->getUniform("M"), 1, GL_FALSE, value_ptr(model)));
 	partGen->drawMe(partProg);
-	partGen->update();
+	partGen->update(frameTime);
 	partProg->unbind();
 }
 

@@ -63,7 +63,7 @@ public:
 	particleGen(vec3 source, float r_low, float r_high, float g_low, float g_high, float b_low, float b_high, float scale_low, float scale_high);
 	void drawMe(std::shared_ptr<Program> prog);
 	void gpuSetup();
-	void update();
+	void update(float frameTime);
 	void reSet();
 	void setCamera(mat4 inC) {theCamera = inC;}
 	void setStart(vec3 setStart) { start = setStart; }
