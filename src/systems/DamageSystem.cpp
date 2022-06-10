@@ -1,7 +1,7 @@
 #include "DamageSystem.h"
 #include <iostream>
 
-const int SPRAY_HITBOX_FACTOR = 1; // increase for better performance
+const int SPRAY_HITBOX_FACTOR = 2; // increase for better performance
 const int SPRAY_BOUNDING_RADIUS = 3;
 
 extern Coordinator gCoordinator;

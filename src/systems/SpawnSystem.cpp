@@ -8,7 +8,7 @@ float BEAR_BASE_HP = 10.0;
 float STARTING_SPAWN_TIME = 5.0;
 float TIME_TO_FIRST_SPAWN =  2.0;
 float MIN_SPAWN_TIME = 0.7;
-float SPAWN_TIME_DECREASE = .02; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
+float SPAWN_TIME_DECREASE = .026; // every 1/spawn_time_decrease seconds, increase spawn time by 1 sec
 float spawnTime;
 float spawnTimer;
 

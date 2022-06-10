@@ -1042,9 +1042,6 @@ public:
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
-
-		//cout << "ramp @: " << pos.x << " " << pos.z << endl;
-		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
 
@@ -1083,9 +1080,6 @@ public:
 				pos.z - rampScale,
 				pos.z + rampScale
 			});
-
-		//cout << "ramp negZ @: " << pos.x << " " << pos.z << endl;
-		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
 
@@ -1124,9 +1118,6 @@ public:
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
-
-		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
-		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
 
@@ -1165,9 +1156,6 @@ public:
 				pos.x - rampScale,
 				pos.x + rampScale
 			});
-
-		//cout << "ramp posX @: " << pos.x << " " << pos.z << endl;
-		//cout << "bounds: " << pos.z - rampScale << " " << pos.z + rampScale << endl;
 		return rampEnt;
 	};
 #pragma endregion
@@ -1396,7 +1384,6 @@ public:
 		player.localGround = co.height;
 		player.updatePos(co.dir, co.isCollide, collisionSys);
 		if (move != vec3(0, 0, 0)){
-			//cout <<"roto player" <<endl;
 			int frame = int(gameTime*10.0f);
 			if (frame % (2+player.mvm_type) == 0.0) {
 				skunkTR.rotation = vec3(0, 0, 0.1);
@@ -1419,7 +1406,7 @@ public:
 	
 	void healPlayer(float frametime) {
 		//if (player.mvm_type == 0) {
-			player.health = std::min(player.health + frametime*5, player.maxHP);
+			player.health = std::min(player.health + frametime*2, player.maxHP);
 		//}
 	}
 
@@ -1680,7 +1667,7 @@ int main(int argc, char *argv[])
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
-	//PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/Garbage_Day.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
+	PlaySound(TEXT("C:/Users/xhw20/Documents/CS/CSC_476/SprayDay/resources/Garbage_Day.wav"), NULL, SND_FILENAME|SND_ASYNC|SND_LOOP);
 
 	// This is the code that will likely change program to program as you
 	// may need to initialize or set up different data and state

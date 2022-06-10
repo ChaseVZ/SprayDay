@@ -285,13 +285,6 @@ Tree::TreeNode RenderSys::getTree() {
 		madeTree = true;
 		cout << "making tree!" << endl;
 		tree = Tree::initTree(mEntities);
-		//cout << "Tree radius: " << tree.radius << endl;
-		//cout << "Tree next root: " << endl;
-		// while (!tn.children.empty()) {
-		// 	for (Tree::TreeNode tn2 : tn.children)
-		// 		cout<<"TN: " << tn.pos.x << " " << tn.pos.z << " rad: " << tn.radius <<endl;
-
-		// }
 		Tree::TraverseTree(tree);
 	}
 	return tree;
@@ -328,8 +321,6 @@ std::pair<uint, float> getTimeFraction(std::vector<float>& times, float& dt, flo
 	float start = times[segment - 1];
 	float end = times[segment];
 	float frac = (tempDt - start) / (end - start);
-
-	//cout << "seg: " << start << " | " << end << " | " << frac << " @: " << dt << endl;
 
 	return { segment, frac };
 }
@@ -386,7 +377,6 @@ void getPose(Animation& animation, Bone& skeleton, float dt, std::vector<glm::ma
 	output[skeleton.id] = globalInverseTransform * globalTransform * skeleton.offset;
 	//update values for children bones
 	for (Bone& child : skeleton.children) {
-		//cout << "child bone: " << child.name << endl;
 		if (child.name.length() > 1)
 			getPose(animation, child, dt, output, globalTransform, globalInverseTransform, animDur, animSpeed);
 	}
@@ -425,8 +415,6 @@ void RenderSys::drawSkeletal(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, s
 
 	// Texture and Draw
 	(rc->sg)->textures[0]->bind(curS->getUniform("Texture0"));
-	//cout << (rc->sg)->textures[0]->
-	//(rc->sg)->shapes[0]->bindTex(sc.vao, curS, sc);
 	glDrawElements(GL_TRIANGLES, sc.indices.size(), GL_UNSIGNED_INT, 0);
 
 	// reset & end
@@ -522,7 +510,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   l = length(n);
   planes[0] = Left = Left/l;
   //normalize plane eq for every plane
-  //cout << "Left' " << Left.x << " " << Left.y << " " <<Left.z << " " << Left.w << endl;
   
   Right.x = comp[0][3] - comp[0][0];
   Right.y = comp[1][3] - comp[1][0];
@@ -531,7 +518,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   n = vec3(Right.x, Right.y, Right.z);
   l = length(n);
   planes[1] = Right = Right/l;
-  //cout << "Right " << Right.x << " " << Right.y << " " <<Right.z << " " << Right.w << endl;
 
   Bottom.x = comp[0][3] + comp[0][1];
   Bottom.y = comp[1][3] + comp[1][1];
@@ -540,7 +526,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   n = vec3(Bottom.x, Bottom.y, Bottom.z);
   l = length(n);
   planes[2] = Bottom = Bottom/l;
-  //cout << "Bottom " << Bottom.x << " " << Bottom.y << " " <<Bottom.z << " " << Bottom.w << endl;
   
   Top.x = comp[0][3] - comp[0][1];
   Top.y = comp[1][3] - comp[1][1];
@@ -549,7 +534,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   n = vec3(Top.x, Top.y, Top.z);
   l = length(n);
   planes[3] = Top = Top/l;
-  //cout << "Top " << Top.x << " " << Top.y << " " <<Top.z << " " << Top.w << endl;
 
   Near.x = comp[0][2];
   Near.y = comp[1][2];
@@ -558,7 +542,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   n = vec3(Near.x, Near.y, Near.z);
   l = length(n);
   planes[4] = Near = Near/l;
-  //cout << "Near " << Near.x << " " << Near.y << " " <<Near.z << " " << Near.w << endl;
 
   Far.x = comp[0][3] - comp[0][2];
   Far.y = comp[1][3] - comp[1][2];
@@ -567,7 +550,6 @@ void RenderSys::ExtractVFPlanes(mat4 P, mat4 V) {
   n = vec3(Far.x, Far.y, Far.z);
   l = length(n);
   planes[5] = Far = Far/l;
-  //cout << "Far " << Far.x << " " << Far.y << " " <<Far.z << " " << Far.w << endl;
 }
 
 /* helper function to compute distance to the plane */

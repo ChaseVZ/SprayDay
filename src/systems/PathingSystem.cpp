@@ -99,6 +99,18 @@ void applyDamageToPlayer(Player* p,  float damageFromEnemies, float frameTime, b
 	}
 }
 
+void moveEnemiesInVec(vector<Entity> enemiesVec,float frameTime, Player* player, shared_ptr<CollisionSys> collSys, 
+	float* damageFromEnemies,
+	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* simpleStoredMoves,
+	array<array<array<vec3, IDX_SIZE>, IDX_SIZE>, 2>* flankStoredMoves) {
+	for (Entity const& entity : enemiesVec) {
+		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
+		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
+		move(player, frameTime * 50, &entityEnemyComp, &entityTransComp, collSys, entity, damageFromEnemies, simpleStoredMoves, flankStoredMoves);
+	}
+	return;
+}
+
 void PathingSys::update(float frameTime, Player* player, shared_ptr<CollisionSys> collSys, bool* gameOver) {
 	/*
 	for (Entity const& entity : mEntities) {
@@ -124,11 +136,22 @@ void PathingSys::update(float frameTime, Player* player, shared_ptr<CollisionSys
 			}
 		}
 	}
+	vector<Entity> bearsVec;
+	vector<Entity> wolvesVec;
+
 	for (Entity const& entity : mEntities) {
-		Enemy& entityEnemyComp = gCoordinator.GetComponent<Enemy>(entity);
-		Transform& entityTransComp = gCoordinator.GetComponent<Transform>(entity);
-		move(player, frameTime*50, &entityEnemyComp, &entityTransComp, collSys, entity, &damageFromEnemies, simpleStoredMoves, flankStoredMoves);
+		Enemy& entityEnemyComp = gCoordinator.GetComponent < Enemy>(entity);
+		if (entityEnemyComp.pathingType == FLANK_PATH) {
+			wolvesVec.push_back(entity);
+		}
+		if (entityEnemyComp.pathingType == SIMPLE_PATH) {
+			bearsVec.push_back(entity);
+		}
 	}
+	thread th1(moveEnemiesInVec, wolvesVec, frameTime, player, collSys, &damageFromEnemies, simpleStoredMoves, flankStoredMoves);
+	moveEnemiesInVec(bearsVec, frameTime, player, collSys, &damageFromEnemies, simpleStoredMoves, flankStoredMoves);
+	th1.join();
+
 	delete simpleStoredMoves;
 	delete flankStoredMoves;
 	applyDamageToPlayer(player, damageFromEnemies, frameTime, gameOver);

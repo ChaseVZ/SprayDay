@@ -55,7 +55,7 @@ void Particle::rebirth(float t, vec3 start, float r_low, float r_high, float g_l
 	v.x = randFloat(-0.1f, 0.1f);
 	v.y = randFloat(-0.1f, 0.1f);
 	v.z = randFloat(-0.1f, 0.1f);
-	lifespan = randFloat(0.5f, 2.5f); 
+	lifespan = randFloat(1.0f, 2.7f); 
 	tEnd = t + lifespan;
 	scale = randFloat(scale_low, scale_high);
 
@@ -76,7 +76,7 @@ void Particle::update(float t, float h, const vec3 &g, const vec3 start, float r
 
 	// change velocity based on gravity
 	//v = v + g * (tEnd - t);
-	x += v * vec3(scale* frameTime * 7.0);
+	x += v * vec3(scale* frameTime * 9.0);
 
 }
 

@@ -5,7 +5,8 @@
 extern Coordinator gCoordinator;
 particleGen* myPartGen;
 
-float TIME_UNTIL_SPRAY = .15;
+const float TIME_UNTIL_SPRAY = .2;
+const float SPRAY_DELAY_ON_SPRINT = 0.13;
 float timeSinceLastSpray = 0;
 
 void SpraySys::generateSpray(vector<Entity>* trail, vec3 playerPos, vec3 lookDir) {
@@ -63,13 +64,13 @@ void SpraySys::update(float frametime, vector<Entity> * trail, int mvmType, vec3
 		}
 	}
 	
-	if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
-		if (mvmType == 1) {
+	if (mvmType == 0) {
+		timeSinceLastSpray = -SPRAY_DELAY_ON_SPRINT;
+	}
+	else{
+		if (timeSinceLastSpray >= TIME_UNTIL_SPRAY) {
 			timeSinceLastSpray -= TIME_UNTIL_SPRAY;
 			generateSpray(trail, playerPos, lookDir);
-		}
-		else {
-			timeSinceLastSpray = TIME_UNTIL_SPRAY; // cap time
 		}
 	}
 }
